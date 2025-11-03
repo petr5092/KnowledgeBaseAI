@@ -1,0 +1,81 @@
+{"uid":"SKL-SIMPLIFY","subject_uid":"SUB-MATH","title":"Приведение подобных","definition":"Суммировать/вычитать подобные члены выражения."}
+{"uid":"SKL-SOLVE-LIN","subject_uid":"SUB-MATH","title":"Решение линейного уравнения","definition":"Изолировать переменную и находить её значение."}
+{"uid":"SKL-ADD-SUB","subject_uid":"SUB-MATH","title":"Сложение и вычитание","definition":"Выполнять операции сложения и вычитания над числами."}
+{"uid":"SKL-MULT-DIV","subject_uid":"SUB-MATH","title":"Умножение и деление","definition":"Выполнять операции умножения и деления."}
+{"uid":"SKL-FRACTIONS","subject_uid":"SUB-MATH","title":"Операции с дробями","definition":"Складывать, вычитать, умножать и делить дроби."}
+{"uid":"SKL-DECIMAL-OPS","subject_uid":"SUB-MATH","title":"Десятичные дроби","definition":"Выполнять операции с десятичными дробями и перевод форматов."}
+{"uid":"SKL-PERCENT-CALC","subject_uid":"SUB-MATH","title":"Проценты","definition":"Вычислять процент от числа и процентные изменения."}
+{"uid":"SKL-RATIO-PROP","subject_uid":"SUB-MATH","title":"Отношения и пропорции","definition":"Решать пропорции и задачи масштаба."}
+{"uid":"SKL-POWERS-RULES","subject_uid":"SUB-MATH","title":"Правила степеней","definition":"Применять свойства степеней при преобразованиях."}
+{"uid":"SKL-ROOTS-OPS","subject_uid":"SUB-MATH","title":"Операции с корнями","definition":"Извлекать корни и упрощать радикалы."}
+{"uid":"SKL-ROUNDING","subject_uid":"SUB-MATH","title":"Округление","definition":"Округлять числа и оценивать погрешности."}
+
+{"uid":"SKL-SOLVE-LIN-SYS","subject_uid":"SUB-MATH","title":"Решение систем линейных уравнений","definition":"Методы подстановки и исключения."}
+{"uid":"SKL-SOLVE-INEQ","subject_uid":"SUB-MATH","title":"Решение неравенств","definition":"Решать линейные неравенства и записывать ответ интервалами."}
+{"uid":"SKL-POLY-OPS","subject_uid":"SUB-MATH","title":"Операции с многочленами","definition":"Сложение, умножение, деление многочленов."}
+{"uid":"SKL-FACTOR-TECH","subject_uid":"SUB-MATH","title":"Разложение на множители","definition":"Вынос общего множителя, группировка, формулы сокращённого умножения."}
+{"uid":"SKL-RATIONAL-SIMPLIFY","subject_uid":"SUB-MATH","title":"Упрощение рациональных выражений","definition":"Сокращение дробей, нахождение общих знаменателей."}
+{"uid":"SKL-QUAD-FORMULA","subject_uid":"SUB-MATH","title":"Формула квадратного уравнения","definition":"Применять дискриминант и формулу для решения."}
+{"uid":"SKL-COMPLETE-SQUARE","subject_uid":"SUB-MATH","title":"Выделение полного квадрата","definition":"Преобразовывать выражения и уравнения методом выделения квадрата."}
+{"uid":"SKL-EXP-RULES","subject_uid":"SUB-MATH","title":"Показательные правила","definition":"Применять свойства показательных выражений."}
+{"uid":"SKL-LOG-RULES","subject_uid":"SUB-MATH","title":"Логарифмы","definition":"Свойства логарифмов и преобразования."}
+{"uid":"SKL-SEQUENCES-CALC","subject_uid":"SUB-MATH","title":"Прогрессии","definition":"Вычислять члены и суммы арифметической и геометрической прогрессий."}
+
+{"uid":"SKL-ANGLE-CALC","subject_uid":"SUB-MATH","title":"Вычисление углов","definition":"Находить величины углов и использовать свойства."}
+{"uid":"SKL-PYTH-APPLY","subject_uid":"SUB-MATH","title":"Теорема Пифагора","definition":"Применять теорему в задачах."}
+{"uid":"SKL-TRIANGLE-PROPS","subject_uid":"SUB-MATH","title":"Свойства треугольников","definition":"Использовать признаки равенства и подобия."}
+{"uid":"SKL-QUAD-PROPS","subject_uid":"SUB-MATH","title":"Свойства четырёхугольников","definition":"Распознавать и использовать свойства основных видов."}
+{"uid":"SKL-CIRCLE-PROPS","subject_uid":"SUB-MATH","title":"Свойства окружности","definition":"Работать с хордами, дугами, касательными и секущими."}
+{"uid":"SKL-AREA-CALC","subject_uid":"SUB-MATH","title":"Площади","definition":"Вычислять площади стандартных фигур."}
+{"uid":"SKL-VOLUME-CALC","subject_uid":"SUB-MATH","title":"Объёмы","definition":"Вычислять объёмы стандартных тел."}
+{"uid":"SKL-SIMILARITY","subject_uid":"SUB-MATH","title":"Подобие","definition":"Определять и применять подобие фигур."}
+{"uid":"SKL-CONGRUENCE","subject_uid":"SUB-MATH","title":"Равенство фигур","definition":"Определять равные фигуры по признакам."}
+{"uid":"SKL-COORD-OPS","subject_uid":"SUB-MATH","title":"Координаты","definition":"Расстояния, середина, уравнение прямой."}
+{"uid":"SKL-TRANSFORM-APPLY","subject_uid":"SUB-MATH","title":"Преобразования","definition":"Применять перенос, поворот, симметрию."}
+
+{"uid":"SKL-TRIG-DEF-APPLY","subject_uid":"SUB-MATH","title":"Определения тригонометрии","definition":"Использовать sin, cos, tan как отношения сторон."}
+{"uid":"SKL-UNIT-CIRCLE-USE","subject_uid":"SUB-MATH","title":"Единичная окружность","definition":"Определять значения функций по углу."}
+{"uid":"SKL-TRIG-IDENTITIES","subject_uid":"SUB-MATH","title":"Тождества","definition":"Применять базовые тригонометрические тождества."}
+{"uid":"SKL-TRIG-EQ-SOLVE","subject_uid":"SUB-MATH","title":"Тригонометрические уравнения","definition":"Решать базовые уравнения."}
+{"uid":"SKL-TRIG-GRAPH-READ","subject_uid":"SUB-MATH","title":"Графики тригонометрии","definition":"Читать и строить графики тригонометрических функций."}
+{"uid":"SKL-TRIANGLE-SOLVE","subject_uid":"SUB-MATH","title":"Решение треугольника","definition":"Использовать теоремы синусов и косинусов."}
+
+{"uid":"SKL-FUNC-DOM-RNG","subject_uid":"SUB-MATH","title":"Область определения","definition":"Находить область определения и значения функции."}
+{"uid":"SKL-FUNC-LIN-GRAPH","subject_uid":"SUB-MATH","title":"Линейный график","definition":"Строить и анализировать график линейной функции."}
+{"uid":"SKL-FUNC-ABS","subject_uid":"SUB-MATH","title":"Модуль","definition":"Работать с функцией |x| и её графиком."}
+{"uid":"SKL-FUNC-QUAD-GRAPH","subject_uid":"SUB-MATH","title":"Квадратный график","definition":"Строить параболу и анализировать её свойства."}
+{"uid":"SKL-FUNC-EXP","subject_uid":"SUB-MATH","title":"Показательная функция","definition":"Анализировать свойства и график."}
+{"uid":"SKL-FUNC-LOG","subject_uid":"SUB-MATH","title":"Логарифмическая функция","definition":"Анализировать свойства и график."}
+{"uid":"SKL-FUNC-RATIONAL-ANALYZE","subject_uid":"SUB-MATH","title":"Рациональная функция","definition":"Определять асимптоты и разрывы."}
+{"uid":"SKL-FUNC-TRANSFORM","subject_uid":"SUB-MATH","title":"Преобразования графиков","definition":"Выполнять сдвиги, растяжения, отражения."}
+{"uid":"SKL-FUNC-INVERSE","subject_uid":"SUB-MATH","title":"Обратная функция","definition":"Находить и проверять обратность."}
+{"uid":"SKL-FUNC-COMPOSE","subject_uid":"SUB-MATH","title":"Композиция","definition":"Выполнять и анализировать композицию функций."}
+
+{"uid":"SKL-COMBI-COUNT","subject_uid":"SUB-MATH","title":"Комбинаторика","definition":"Считать перестановки, размещения, сочетания."}
+{"uid":"SKL-PROB-CALC","subject_uid":"SUB-MATH","title":"Вероятность","definition":"Вычислять классическую вероятность событий."}
+{"uid":"SKL-CONDITIONAL-PROB","subject_uid":"SUB-MATH","title":"Условная вероятность","definition":"Вычислять и анализировать независимость."}
+{"uid":"SKL-DIST-BASICS","subject_uid":"SUB-MATH","title":"Распределения","definition":"Понимать базовые дискретные/непрерывные распределения."}
+{"uid":"SKL-MEASURES-CALC","subject_uid":"SUB-MATH","title":"Показатели статистики","definition":"Считать среднее, медиану, моду, дисперсию, СКО."}
+{"uid":"SKL-DATA-REPRESENT","subject_uid":"SUB-MATH","title":"Представление данных","definition":"Строить диаграммы и гистограммы."}
+{"uid":"SKL-CORR-REG-APPLY","subject_uid":"SUB-MATH","title":"Корреляция и регрессия","definition":"Применять линейную корреляцию и МНК."}
+
+{"uid":"SKL-DIV-TESTS","subject_uid":"SUB-MATH","title":"Признаки делимости","definition":"Применять признаки и выполнять деление с остатком."}
+{"uid":"SKL-PRIME-FACT","subject_uid":"SUB-MATH","title":"Разложение на простые","definition":"Факторизовать числа на простые множители."}
+{"uid":"SKL-GCD-LCM","subject_uid":"SUB-MATH","title":"НОД/НОК","definition":"Вычислять НОД и НОК, применять свойства."}
+{"uid":"SKL-MOD-OPS","subject_uid":"SUB-MATH","title":"Модульная арифметика","definition":"Выполнять операции по модулю и применять свойства."}
+{"uid":"SKL-DIOPH-SOLVE","subject_uid":"SUB-MATH","title":"Диофантовы уравнения","definition":"Решать линейные диофантовы уравнения."}
+
+{"uid":"SKL-LIMIT-CALC","subject_uid":"SUB-MATH","title":"Вычисление пределов","definition":"Применять определения и техники вычисления пределов."}
+{"uid":"SKL-DERIV-CALC","subject_uid":"SUB-MATH","title":"Вычисление производных","definition":"Находить производные базовых функций."}
+{"uid":"SKL-DIFF-RULES","subject_uid":"SUB-MATH","title":"Правила дифференцирования","definition":"Применять сумму, произведение, частное, цепное правило."}
+{"uid":"SKL-DERIV-APPL","subject_uid":"SUB-MATH","title":"Применение производной","definition":"Находить экстремумы, исследовать монотонность, строить касательные."}
+{"uid":"SKL-INTEGR-CALC","subject_uid":"SUB-MATH","title":"Вычисление интегралов","definition":"Находить неопределённые и определённые интегралы."}
+{"uid":"SKL-INTEGR-METHODS","subject_uid":"SUB-MATH","title":"Методы интегрирования","definition":"Замена переменной, интегрирование по частям."}
+{"uid":"SKL-FT-UNDERSTAND","subject_uid":"SUB-MATH","title":"Основная теорема анализа","definition":"Понимать связь интеграла и производной."}
+{"uid":"SKL-AREA-INTEGRAL","subject_uid":"SUB-MATH","title":"Площадь через интеграл","definition":"Вычислять площадь под графиком."}
+
+{"uid":"SKL-VECTOR-OPS","subject_uid":"SUB-MATH","title":"Операции с векторами","definition":"Сложение, умножение на скаляр, направление."}
+{"uid":"SKL-DOT-PROD","subject_uid":"SUB-MATH","title":"Скалярное произведение","definition":"Находить скалярное произведение и проекции."}
+{"uid":"SKL-LINE-EQ","subject_uid":"SUB-MATH","title":"Уравнения прямой","definition":"Строить уравнение прямой, параметрическая форма."}
+{"uid":"SKL-PLANE-EQ","subject_uid":"SUB-MATH","title":"Уравнение плоскости","definition":"Строить уравнение плоскости (расширенный уровень)."}
+{"uid":"SKL-DIST-CALC","subject_uid":"SUB-MATH","title":"Расстояния","definition":"Вычислять расстояния в координатной геометрии."}

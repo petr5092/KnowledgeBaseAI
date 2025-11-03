@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Конструктор и визуализатор знаний</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="https://unpkg.com/axios@1.7.7/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/cytoscape@3.28.0/dist/cytoscape.min.js"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Конструктор и визуализатор знаний</h1>
+    </header>
+
+    <main class="layout">
+      <section class="left-panel">
+        <div class="panel-block">
+          <h2>Фильтр</h2>
+          <label>Предмет</label>
+          <select id="subjectFilter">
+            <option value="">Все</option>
+            {% for s in subjects %}
+              <option value="{{ s.uid }}">{{ s.title }}</option>
+            {% endfor %}
+          </select>
+          <button id="refreshGraph">Обновить граф</button>
+        </div>
+
+        <div class="panel-block">
+          <h2>Добавить предмет</h2>
+          <input id="subjTitle" placeholder="Название">
+          <input id="subjDesc" placeholder="Описание">
+          <button id="addSubjectBtn">Создать</button>
+        </div>
+
+        <div class="panel-block">
+          <h2>Добавить раздел</h2>
+          <label>Предмет</label>
+          <select id="sectionSubject">
+            {% for s in subjects %}
+              <option value="{{ s.uid }}">{{ s.title }}</option>
+            {% endfor %}
+          </select>
+          <input id="sectionTitle" placeholder="Название">
+          <input id="sectionDesc" placeholder="Описание">
+          <button id="addSectionBtn">Создать</button>
+        </div>
+
+        <div class="panel-block">
+          <h2>Добавить тему</h2>
+          <input id="topicSection" placeholder="UID раздела (SEC-...)">
+          <input id="topicTitle" placeholder="Название">
+          <input id="topicDesc" placeholder="Описание">
+          <button id="addTopicBtn">Создать</button>
+        </div>
+
+        <div class="panel-block">
+          <h2>Добавить навык</h2>
+          <label>Предмет</label>
+          <select id="skillSubject">
+            {% for s in subjects %}
+              <option value="{{ s.uid }}">{{ s.title }}</option>
+            {% endfor %}
+          </select>
+          <input id="skillTitle" placeholder="Название">
+          <input id="skillDef" placeholder="Определение">
+          <button id="addSkillBtn">Создать</button>
+        </div>
+
+        <div class="panel-block">
+          <h2>Добавить метод</h2>
+          <input id="methodTitle" placeholder="Название">
+          <textarea id="methodText" placeholder="Описание метода"></textarea>
+          <input id="methodTypes" placeholder="Типы применимости (через запятую)">
+          <button id="addMethodBtn">Создать</button>
+        </div>
+
+        <div class="panel-block">
+          <h2>Связать навык ↔ метод</h2>
+          <input id="linkSkill" placeholder="UID навыка (SKL-...)">
+          <input id="linkMethod" placeholder="UID метода (MET-...)">
+          <select id="linkWeight">
+            <option value="primary">primary</option>
+            <option value="secondary">secondary</option>
+            <option value="auxiliary">auxiliary</option>
+          </select>
+          <input id="linkConf" type="number" step="0.01" value="0.9">
+          <button id="linkBtn">Создать связь</button>
+        </div>
+      </section>
+
+      <section class="right-panel">
+        <div id="graph" class="graph"></div>
+      </section>
+    </main>
+
+    <script src="/static/js/knowledge.js"></script>
+  </body>
+</html>

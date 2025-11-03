@@ -1,0 +1,83 @@
+{"uid": "THE_SEC_SEC-ALG", "title": "Теория раздела: Алгебра", "content": "Уравнения, функции, выражения.", "section_uid": "SEC-ALG"}
+{"uid": "THE_SEC_SEC-ARITH", "title": "Теория раздела: Арифметика", "content": "Числа, действия, дроби, проценты, степени.", "section_uid": "SEC-ARITH"}
+{"uid": "THE_SEC_SEC-GEOM", "title": "Теория раздела: Геометрия", "content": "Фигуры, свойства, площади, объёмы, координаты.", "section_uid": "SEC-GEOM"}
+{"uid": "THE_SEC_SEC-TRIG", "title": "Теория раздела: Тригонометрия", "content": "Функции sin/cos/tan, тождества, уравнения, графики.", "section_uid": "SEC-TRIG"}
+{"uid": "THE_SEC_SEC-FUNC", "title": "Теория раздела: Функции и графики", "content": "Область определения, типы функций, преобразования графиков.", "section_uid": "SEC-FUNC"}
+{"uid": "THE_SEC_SEC-PROB", "title": "Теория раздела: Вероятность и статистика", "content": "Комбинаторика, вероятность, описательная статистика, регрессия.", "section_uid": "SEC-PROB"}
+{"uid": "THE_SEC_SEC-NUM", "title": "Теория раздела: Теория чисел", "content": "Делимость, простые числа, НОД/НОК, модули, диофантовы уравнения.", "section_uid": "SEC-NUM"}
+{"uid": "THE_SEC_SEC-CALC", "title": "Теория раздела: Математический анализ", "content": "Пределы, производные, интегралы и их приложения.", "section_uid": "SEC-CALC"}
+{"uid": "THE_SEC_SEC-VECT", "title": "Теория раздела: Векторы и аналитическая геометрия", "content": "Векторы, операции, линии и плоскости в координатах.", "section_uid": "SEC-VECT"}
+{"uid": "THE_TOP_TOP-LIN-EQ", "title": "Теория темы: Линейные уравнения", "content": "Решение уравнений вида ax + b = c.", "topic_uid": "TOP-LIN-EQ"}
+{"uid": "THE_TOP_TOP-ALG-LIN-SYS", "title": "Теория темы: Системы линейных уравнений", "content": "Решение систем методом подстановки и исключения.", "topic_uid": "TOP-ALG-LIN-SYS"}
+{"uid": "THE_TOP_TOP-ALG-INEQ", "title": "Теория темы: Линейные неравенства", "content": "Решение и запись ответа интервалами.", "topic_uid": "TOP-ALG-INEQ"}
+{"uid": "THE_TOP_TOP-ALG-QUAD-EQ", "title": "Теория темы: Квадратные уравнения", "content": "Формула, разложение, выделение квадрата.", "topic_uid": "TOP-ALG-QUAD-EQ"}
+{"uid": "THE_TOP_TOP-ALG-POLY", "title": "Теория темы: Многочлены", "content": "Операции, степень, коэффициенты.", "topic_uid": "TOP-ALG-POLY"}
+{"uid": "THE_TOP_TOP-ALG-FACTOR", "title": "Теория темы: Разложение на множители", "content": "Вынос общего множителя, группировка, формулы сокращённого умножения.", "topic_uid": "TOP-ALG-FACTOR"}
+{"uid": "THE_TOP_TOP-ALG-RATIONAL", "title": "Теория темы: Рациональные выражения", "content": "Сокращение дробей, общие знаменатели.", "topic_uid": "TOP-ALG-RATIONAL"}
+{"uid": "THE_TOP_TOP-ALG-EXP", "title": "Теория темы: Показательные выражения и уравнения", "content": "Правила степеней, решение уравнений.", "topic_uid": "TOP-ALG-EXP"}
+{"uid": "THE_TOP_TOP-ALG-LOG", "title": "Теория темы: Логарифмы", "content": "Свойства логарифмов, уравнения и неравенства.", "topic_uid": "TOP-ALG-LOG"}
+{"uid": "THE_TOP_TOP-ALG-SEQUENCES", "title": "Теория темы: Последовательности и прогрессии", "content": "Арифметическая и геометрическая прогрессии.", "topic_uid": "TOP-ALG-SEQUENCES"}
+{"uid": "THE_TOP_TOP-AR-NAT-NUM", "title": "Теория темы: Натуральные числа", "content": "Основные свойства и операции.", "topic_uid": "TOP-AR-NAT-NUM"}
+{"uid": "THE_TOP_TOP-AR-INTEGERS", "title": "Теория темы: Целые числа", "content": "Положительные и отрицательные, сравнение и действия.", "topic_uid": "TOP-AR-INTEGERS"}
+{"uid": "THE_TOP_TOP-AR-RATIONAL", "title": "Теория темы: Рациональные числа и дроби", "content": "Сложение, вычитание, умножение, деление дробей.", "topic_uid": "TOP-AR-RATIONAL"}
+{"uid": "THE_TOP_TOP-AR-DEC", "title": "Теория темы: Десятичные дроби", "content": "Операции и перевод из обычных дробей.", "topic_uid": "TOP-AR-DEC"}
+{"uid": "THE_TOP_TOP-AR-PERCENT", "title": "Теория темы: Проценты", "content": "Нахождение процентов, процентные изменения.", "topic_uid": "TOP-AR-PERCENT"}
+{"uid": "THE_TOP_TOP-AR-RATIO", "title": "Теория темы: Отношения и пропорции", "content": "Решение пропорций, масштаб.", "topic_uid": "TOP-AR-RATIO"}
+{"uid": "THE_TOP_TOP-AR-POWERS", "title": "Теория темы: Степени", "content": "Правила и вычисления степеней.", "topic_uid": "TOP-AR-POWERS"}
+{"uid": "THE_TOP_TOP-AR-ROOTS", "title": "Теория темы: Корни и радикалы", "content": "Извлечение корней, упрощение радикалов.", "topic_uid": "TOP-AR-ROOTS"}
+{"uid": "THE_TOP_TOP-AR-SCI-NOT", "title": "Теория темы: Научная нотация", "content": "Запись больших и малых чисел.", "topic_uid": "TOP-AR-SCI-NOT"}
+{"uid": "THE_TOP_TOP-AR-ROUND", "title": "Теория темы: Округление и погрешности", "content": "Правила округления, абсолютная и относительная ошибка.", "topic_uid": "TOP-AR-ROUND"}
+{"uid": "THE_TOP_TOP-GEO-ANGLES", "title": "Теория темы: Углы", "content": "Виды углов и их измерение.", "topic_uid": "TOP-GEO-ANGLES"}
+{"uid": "THE_TOP_TOP-GEO-TRIANGLES", "title": "Теория темы: Треугольники", "content": "Свойства, классификация, признаки равенства.", "topic_uid": "TOP-GEO-TRIANGLES"}
+{"uid": "THE_TOP_TOP-GEO-PYTH", "title": "Теория темы: Теорема Пифагора", "content": "Применение в задачах.", "topic_uid": "TOP-GEO-PYTH"}
+{"uid": "THE_TOP_TOP-GEO-QUADS", "title": "Теория темы: Четырёхугольники", "content": "Параллелограмм, прямоугольник, ромб, трапеция.", "topic_uid": "TOP-GEO-QUADS"}
+{"uid": "THE_TOP_TOP-GEO-CIRCLES", "title": "Теория темы: Окружность и круг", "content": "Дуги, хорды, касательные, секущие.", "topic_uid": "TOP-GEO-CIRCLES"}
+{"uid": "THE_TOP_TOP-GEO-POLYGONS", "title": "Теория темы: Многоугольники", "content": "Правильные и произвольные, внутренние углы.", "topic_uid": "TOP-GEO-POLYGONS"}
+{"uid": "THE_TOP_TOP-GEO-AREA", "title": "Теория темы: Площадь фигур", "content": "Формулы площадей плоских фигур.", "topic_uid": "TOP-GEO-AREA"}
+{"uid": "THE_TOP_TOP-GEO-VOLUME", "title": "Теория темы: Объём тел", "content": "Призма, цилиндр, пирамида, конус, шар.", "topic_uid": "TOP-GEO-VOLUME"}
+{"uid": "THE_TOP_TOP-GEO-SIMILAR", "title": "Теория темы: Подобие", "content": "Коэффициент подобия, признаки подобия.", "topic_uid": "TOP-GEO-SIMILAR"}
+{"uid": "THE_TOP_TOP-GEO-CONGRUENT", "title": "Теория темы: Равенство фигур", "content": "Признаки равенства треугольников.", "topic_uid": "TOP-GEO-CONGRUENT"}
+{"uid": "THE_TOP_TOP-GEO-COORD", "title": "Теория темы: Координатная геометрия", "content": "Расстояния, середина отрезка, уравнение прямой.", "topic_uid": "TOP-GEO-COORD"}
+{"uid": "THE_TOP_TOP-GEO-TRANSFORM", "title": "Теория темы: Преобразования", "content": "Перенос, поворот, симметрия.", "topic_uid": "TOP-GEO-TRANSFORM"}
+{"uid": "THE_TOP_TOP-TRIG-DEFS", "title": "Теория темы: Определения тригонометрических функций", "content": "Sin, cos, tan как отношения сторон.", "topic_uid": "TOP-TRIG-DEFS"}
+{"uid": "THE_TOP_TOP-TRIG-UNIT-CIRCLE", "title": "Теория темы: Единичная окружность", "content": "Значения функций по углу, квадранты.", "topic_uid": "TOP-TRIG-UNIT-CIRCLE"}
+{"uid": "THE_TOP_TOP-TRIG-IDENTITIES", "title": "Теория темы: Тождества", "content": "Основные и преобразования.", "topic_uid": "TOP-TRIG-IDENTITIES"}
+{"uid": "THE_TOP_TOP-TRIG-EQUATIONS", "title": "Теория темы: Уравнения", "content": "Решение базовых тригонометрических уравнений.", "topic_uid": "TOP-TRIG-EQUATIONS"}
+{"uid": "THE_TOP_TOP-TRIG-GRAPHS", "title": "Теория темы: Графики тригонометрических функций", "content": "Период, амплитуда, сдвиги.", "topic_uid": "TOP-TRIG-GRAPHS"}
+{"uid": "THE_TOP_TOP-TRIG-TRIANGLES", "title": "Теория темы: Решение треугольников", "content": "Синус/косинус теоремы.", "topic_uid": "TOP-TRIG-TRIANGLES"}
+{"uid": "THE_TOP_TOP-FUNC-DOM-RNG", "title": "Теория темы: Область определения и значения", "content": "Поиск ограничений и образа функции.", "topic_uid": "TOP-FUNC-DOM-RNG"}
+{"uid": "THE_TOP_TOP-FUNC-LIN", "title": "Теория темы: Линейная функция", "content": "Коэффициенты, график, наклон.", "topic_uid": "TOP-FUNC-LIN"}
+{"uid": "THE_TOP_TOP-FUNC-ABS", "title": "Теория темы: Функция модуля", "content": "График |x| и кусочная запись.", "topic_uid": "TOP-FUNC-ABS"}
+{"uid": "THE_TOP_TOP-FUNC-QUAD", "title": "Теория темы: Квадратная функция", "content": "Парабола, вершина, направления ветвей.", "topic_uid": "TOP-FUNC-QUAD"}
+{"uid": "THE_TOP_TOP-FUNC-EXP", "title": "Теория темы: Показательная функция", "content": "Свойства и график.", "topic_uid": "TOP-FUNC-EXP"}
+{"uid": "THE_TOP_TOP-FUNC-LOG", "title": "Теория темы: Логарифмическая функция", "content": "Свойства и график.", "topic_uid": "TOP-FUNC-LOG"}
+{"uid": "THE_TOP_TOP-FUNC-RATIONAL", "title": "Теория темы: Рациональная функция", "content": "Асимптоты, разрывы, поведение.", "topic_uid": "TOP-FUNC-RATIONAL"}
+{"uid": "THE_TOP_TOP-FUNC-TRANSFORM", "title": "Теория темы: Преобразования графиков", "content": "Сдвиги, растяжения, отражения.", "topic_uid": "TOP-FUNC-TRANSFORM"}
+{"uid": "THE_TOP_TOP-FUNC-INVERSE", "title": "Теория темы: Обратная функция", "content": "Определение и построение.", "topic_uid": "TOP-FUNC-INVERSE"}
+{"uid": "THE_TOP_TOP-FUNC-COMPOSE", "title": "Теория темы: Композиция функций", "content": "Порядок и свойства композиции.", "topic_uid": "TOP-FUNC-COMPOSE"}
+{"uid": "THE_TOP_TOP-PROB-COMBI", "title": "Теория темы: Комбинаторика", "content": "Правила произведения и сложения, перестановки, сочетания.", "topic_uid": "TOP-PROB-COMBI"}
+{"uid": "THE_TOP_TOP-PROB-FUND", "title": "Теория темы: Основы вероятности", "content": "Классическая вероятность, события.", "topic_uid": "TOP-PROB-FUND"}
+{"uid": "THE_TOP_TOP-PROB-CONDITIONAL", "title": "Теория темы: Условная вероятность", "content": "Независимость, формула Байеса.", "topic_uid": "TOP-PROB-CONDITIONAL"}
+{"uid": "THE_TOP_TOP-PROB-DIST", "title": "Теория темы: Распределения", "content": "Дискретные и непрерывные (базово).", "topic_uid": "TOP-PROB-DIST"}
+{"uid": "THE_TOP_TOP-STAT-MEASURES", "title": "Теория темы: Показатели", "content": "Среднее, медиана, мода, дисперсия, СКО.", "topic_uid": "TOP-STAT-MEASURES"}
+{"uid": "THE_TOP_TOP-STAT-DATA", "title": "Теория темы: Представление данных", "content": "Таблицы, диаграммы, гистограммы.", "topic_uid": "TOP-STAT-DATA"}
+{"uid": "THE_TOP_TOP-STAT-CORR-REG", "title": "Теория темы: Корреляция и регрессия", "content": "Линейная корреляция и МНК (базово).", "topic_uid": "TOP-STAT-CORR-REG"}
+{"uid": "THE_TOP_TOP-NUM-DIV", "title": "Теория темы: Делимость", "content": "Признаки делимости, деление с остатком.", "topic_uid": "TOP-NUM-DIV"}
+{"uid": "THE_TOP_TOP-NUM-PRIMES", "title": "Теория темы: Простые числа", "content": "Разложение на простые множители.", "topic_uid": "TOP-NUM-PRIMES"}
+{"uid": "THE_TOP_TOP-NUM-GCD-LCM", "title": "Теория темы: НОД и НОК", "content": "Евклидов алгоритм, свойства НОД/НОК.", "topic_uid": "TOP-NUM-GCD-LCM"}
+{"uid": "THE_TOP_TOP-NUM-MOD", "title": "Теория темы: Модульная арифметика", "content": "Операции по модулю (базово).", "topic_uid": "TOP-NUM-MOD"}
+{"uid": "THE_TOP_TOP-NUM-DIOPH", "title": "Теория темы: Диофантовы уравнения", "content": "Линейные диофантовы уравнения (базово).", "topic_uid": "TOP-NUM-DIOPH"}
+{"uid": "THE_TOP_TOP-CALC-LIMITS", "title": "Теория темы: Пределы", "content": "Определение предела, вычисление пределов.", "topic_uid": "TOP-CALC-LIMITS"}
+{"uid": "THE_TOP_TOP-CALC-DERIV", "title": "Теория темы: Производные", "content": "Определение, геометрический смысл.", "topic_uid": "TOP-CALC-DERIV"}
+{"uid": "THE_TOP_TOP-CALC-DIFF-TECH", "title": "Теория темы: Правила дифференцирования", "content": "Сумма, произведение, частное, цепное правило.", "topic_uid": "TOP-CALC-DIFF-TECH"}
+{"uid": "THE_TOP_TOP-CALC-APPL", "title": "Теория темы: Применения производной", "content": "Экстремумы, монотонность, касательные.", "topic_uid": "TOP-CALC-APPL"}
+{"uid": "THE_TOP_TOP-CALC-INTEGR", "title": "Теория темы: Интегралы", "content": "Неопределённый и определённый интегралы.", "topic_uid": "TOP-CALC-INTEGR"}
+{"uid": "THE_TOP_TOP-CALC-INT-TECH", "title": "Теория темы: Методы интегрирования", "content": "Замена переменной, интегрирование по частям.", "topic_uid": "TOP-CALC-INT-TECH"}
+{"uid": "THE_TOP_TOP-CALC-FT", "title": "Теория темы: Основная теорема анализа", "content": "Связь интеграла и производной.", "topic_uid": "TOP-CALC-FT"}
+{"uid": "THE_TOP_TOP-CALC-AREA", "title": "Теория темы: Площадь под графиком", "content": "Вычисление площади через интеграл.", "topic_uid": "TOP-CALC-AREA"}
+{"uid": "THE_TOP_TOP-VECT-BASICS", "title": "Теория темы: Основы векторов", "content": "Определение, модуль, направление.", "topic_uid": "TOP-VECT-BASICS"}
+{"uid": "THE_TOP_TOP-VECT-OPER", "title": "Теория темы: Операции с векторами", "content": "Сложение, умножение на скаляр.", "topic_uid": "TOP-VECT-OPER"}
+{"uid": "THE_TOP_TOP-VECT-DOT", "title": "Теория темы: Скалярное произведение", "content": "Проекции, угол между векторами.", "topic_uid": "TOP-VECT-DOT"}
+{"uid": "THE_TOP_TOP-VECT-LINES", "title": "Теория темы: Прямая", "content": "Уравнения прямой, параметрическая форма.", "topic_uid": "TOP-VECT-LINES"}
+{"uid": "THE_TOP_TOP-VECT-PLANES", "title": "Теория темы: Плоскость", "content": "Уравнения плоскости (расширенный уровень).", "topic_uid": "TOP-VECT-PLANES"}
+{"uid": "THE_TOP_TOP-VECT-DIST", "title": "Теория темы: Расстояния", "content": "Между точками, точкой и прямой.", "topic_uid": "TOP-VECT-DIST"}

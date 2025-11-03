@@ -1,0 +1,102 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: knowledge_base
+      POSTGRES_USER: kb_user
+      POSTGRES_PASSWORD: kb_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kb_user -d knowledge_base"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.4
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  app:
+    build: .
+    command: ["python", "web_app.py"]
+    environment:
+      DB_HOST: db
+      DB_NAME: knowledge_base
+      DB_USER: kb_user
+      DB_PASSWORD: kb_password
+      DB_PORT: 5432
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_started
+
+  db_schema:
+    build: .
+    command: ["python", "scripts/apply_schema.py"]
+    environment:
+      DB_HOST: db
+      DB_NAME: knowledge_base
+      DB_USER: kb_user
+      DB_PASSWORD: kb_password
+      DB_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db_loader:
+    build: .
+    command: ["python", "scripts/load_data.py"]
+    environment:
+      DB_HOST: db
+      DB_NAME: knowledge_base
+      DB_USER: kb_user
+      DB_PASSWORD: kb_password
+      DB_PORT: 5432
+    depends_on:
+      db_schema:
+        condition: service_started
+
+  es_indexer:
+    build: .
+    command: ["python", "scripts/index_to_es.py"]
+    environment:
+      ES_URL: http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+volumes:
+  db_data:
+  es_data:
