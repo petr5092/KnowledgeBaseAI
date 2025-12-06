@@ -541,6 +541,107 @@ def api_health():
     return jsonify(health())
 
 
+@app.get('/api/openapi.json')
+def api_openapi_spec():
+    spec = {
+        "openapi": "3.0.3",
+        "info": {"title": "KnowledgeBaseAI Flask API", "version": "1.0.0"},
+        "servers": [{"url": "/"}],
+        "components": {
+            "securitySchemes": {
+                "ApiKeyAuth": {"type": "apiKey", "in": "header", "name": "X-API-Key"}
+            }
+        },
+        "paths": {
+            "/api/graph": {
+                "get": {
+                    "summary": "Получить граф знаний",
+                    "parameters": [
+                        {"name": "subject_uid", "in": "query", "schema": {"type": "string"}, "required": False}
+                    ],
+                    "responses": {"200": {"description": "Граф", "content": {"application/json": {}}}}
+                }
+            },
+            "/api/neo4j_sync": {
+                "post": {
+                    "summary": "Синхронизация JSONL в Neo4j",
+                    "security": [{"ApiKeyAuth": []}],
+                    "responses": {"200": {"description": "Статистика синхронизации"}}
+                }
+            },
+            "/api/normalize_kb": {
+                "post": {
+                    "summary": "Нормализовать JSONL файлы",
+                    "security": [{"ApiKeyAuth": []}],
+                    "responses": {"200": {"description": "Отчёт нормализации"}}
+                }
+            },
+            "/api/analysis": {
+                "get": {
+                    "summary": "Аналитика качества графа",
+                    "responses": {"200": {"description": "Метрики"}}
+                }
+            },
+            "/api/list": {
+                "get": {
+                    "summary": "Список сущностей",
+                    "parameters": [
+                        {"name": "kind", "in": "query", "schema": {"type": "string"}, "required": True},
+                        {"name": "subject_uid", "in": "query", "schema": {"type": "string"}},
+                        {"name": "section_uid", "in": "query", "schema": {"type": "string"}}
+                    ],
+                    "responses": {"200": {"description": "Список", "content": {"application/json": {}}}}
+                }
+            },
+            "/api/node_details": {
+                "get": {
+                    "summary": "Детали узла",
+                    "parameters": [{"name": "uid", "in": "query", "schema": {"type": "string"}, "required": True}],
+                    "responses": {"200": {"description": "Детали", "content": {"application/json": {}}}}
+                }
+            },
+            "/api/delete_record": {
+                "post": {
+                    "summary": "Удалить запись из JSONL",
+                    "security": [{"ApiKeyAuth": []}],
+                    "requestBody": {"required": True, "content": {"application/json": {}}},
+                    "responses": {"200": {"description": "Результат"}}
+                }
+            },
+            "/api/subjects": {
+                "post": {"summary": "Добавить предмет", "requestBody": {"required": True, "content": {"application/json": {}}}, "responses": {"200": {"description": "OK"}}}
+            },
+            "/api/sections": {
+                "post": {"summary": "Добавить раздел", "requestBody": {"required": True, "content": {"application/json": {}}}, "responses": {"200": {"description": "OK"}}}
+            },
+            "/api/topics": {
+                "post": {"summary": "Добавить тему", "requestBody": {"required": True, "content": {"application/json": {}}}, "responses": {"200": {"description": "OK"}}}
+            },
+            "/api/skills": {
+                "post": {"summary": "Добавить навык", "requestBody": {"required": True, "content": {"application/json": {}}}, "responses": {"200": {"description": "OK"}}}
+            },
+            "/api/methods": {
+                "post": {"summary": "Добавить метод", "requestBody": {"required": True, "content": {"application/json": {}}}, "responses": {"200": {"description": "OK"}}}
+            },
+            "/api/skill_methods": {
+                "post": {"summary": "Связать навык и метод", "requestBody": {"required": True, "content": {"application/json": {}}}, "responses": {"200": {"description": "OK"}}}
+            },
+            "/api/topic_goals": {
+                "post": {"summary": "Добавить цель темы", "requestBody": {"required": True, "content": {"application/json": {}}}, "responses": {"200": {"description": "OK"}}}
+            },
+            "/api/topic_objectives": {
+                "post": {"summary": "Добавить задачу темы", "requestBody": {"required": True, "content": {"application/json": {}}}, "responses": {"200": {"description": "OK"}}}
+            }
+        }
+    }
+    return jsonify(spec)
+
+
+@app.get('/api/docs')
+def api_swagger_ui():
+    return render_template('swagger.html')
+
+
 @app.post('/api/delete_record')
 def api_delete_record():
     expected = os.getenv('ADMIN_API_KEY')

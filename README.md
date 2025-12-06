@@ -117,37 +117,21 @@ requirements.txt        # Зависимости (Flask, FastAPI, Neo4j и др.
 ## Переменные окружения
 
 - `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD` — доступ к Neo4j (обязательные)
-- `KB_DOMAIN`, `KB_ALT_DOMAIN` — домены для UI (`kb.studyninja.ru`, `kb.xteam.pro`)
+- `KB_DOMAIN`, `KB_ALT_DOMAIN` — домены для UI
 - `LETSENCRYPT_EMAIL` — email для Let’s Encrypt
+- `ADMIN_API_KEY` — ключ для небезопасных операций API
 
-### .env
+### Настройка .env
 
-Файл `.env` использует ссылки на локальные переменные, экспортируемые в окружение системы. Пример:
-
-```
-KB_DOMAIN=${KB_DOMAIN_VALUE}
-KB_ALT_DOMAIN=${KB_ALT_DOMAIN_VALUE}
-LETSENCRYPT_EMAIL=${LE_EMAIL_VALUE}
-NEO4J_URI=${NEO4J_URI_VALUE}
-NEO4J_USER=${NEO4J_USER_VALUE}
-NEO4J_PASSWORD=${NEO4J_PASSWORD_VALUE}
-```
-
-Перед запуском экспортируйте реальные значения:
+1. Скопируйте пример:
 
 ```
-export KB_DOMAIN_VALUE=kb.studyninja.ru
-export KB_ALT_DOMAIN_VALUE=kb.xteam.pro
-export LE_EMAIL_VALUE=admin@example.com
-export NEO4J_URI_VALUE="REDACTED_NEO4J_URI"
-export NEO4J_USER_VALUE=neo4j
-export NEO4J_PASSWORD_VALUE=REDACTED_NEO4J_PASSWORD
+cp .env.example .env
 ```
 
-Проверьте, что DNS записи указывают на IP сервера:
+2. Отредактируйте `.env`, указав свои значения для доменов, email и подключения к Neo4j.
 
-- `kb.studyninja.ru`, `api.kb.studyninja.ru` → `A 185.233.3.14`
-- `kb.xteam.pro`, `api.kb.xteam.pro` → `A 185.233.3.14`
+3. Убедитесь, что DNS‑записи для доменов UI и API указывают на IP сервера.
 
 ### Запуск в контейнерах
 
