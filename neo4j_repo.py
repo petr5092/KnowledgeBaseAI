@@ -42,6 +42,17 @@ class Neo4jRepo:
             return [dict(r) for r in res]
         return self._retry(_fn)
 
+    def _chunks(self, rows: List[Dict], size: int) -> List[List[Dict]]:
+        return [rows[i:i+size] for i in range(0, len(rows), size)]
+
+    def write_unwind(self, query: str, rows: List[Dict], chunk_size: int = 500) -> None:
+        if not rows:
+            return
+        for chunk in self._chunks(rows, chunk_size):
+            def _fn(session):
+                session.execute_write(lambda tx: tx.run(query, rows=chunk))
+            self._retry(_fn)
+
     # Convenience helpers
     def ensure_user(self, user_id: str) -> None:
         self.write("MERGE (:User {id:$id})", {"id": user_id})
@@ -73,4 +84,3 @@ class Neo4jRepo:
             {"uid": user_id, "suid": skill_uid}
         )
         return rows[0] if rows else None
-

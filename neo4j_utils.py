@@ -41,6 +41,19 @@ def ensure_constraints(session):
     session.run("CREATE CONSTRAINT method_uid_unique IF NOT EXISTS FOR (n:Method) REQUIRE n.uid IS UNIQUE")
     session.run("CREATE CONSTRAINT goal_uid_unique IF NOT EXISTS FOR (n:Goal) REQUIRE n.uid IS UNIQUE")
     session.run("CREATE CONSTRAINT objective_uid_unique IF NOT EXISTS FOR (n:Objective) REQUIRE n.uid IS UNIQUE")
+    session.run("CREATE INDEX subject_title_idx IF NOT EXISTS FOR (n:Subject) ON (n.title)")
+    session.run("CREATE INDEX section_title_idx IF NOT EXISTS FOR (n:Section) ON (n.title)")
+    session.run("CREATE INDEX topic_title_idx IF NOT EXISTS FOR (n:Topic) ON (n.title)")
+    session.run("CREATE INDEX skill_title_idx IF NOT EXISTS FOR (n:Skill) ON (n.title)")
+    session.run("CREATE INDEX method_title_idx IF NOT EXISTS FOR (n:Method) ON (n.title)")
+    session.run("CREATE CONSTRAINT section_title_scope_unique IF NOT EXISTS FOR (n:Section) REQUIRE (n.subject_uid, n.title) IS UNIQUE")
+    session.run("CREATE CONSTRAINT topic_title_scope_unique IF NOT EXISTS FOR (n:Topic) REQUIRE (n.section_uid, n.title) IS UNIQUE")
+    session.run("CREATE CONSTRAINT skill_title_scope_unique IF NOT EXISTS FOR (n:Skill) REQUIRE (n.subject_uid, n.title) IS UNIQUE")
+    session.run("CREATE INDEX subject_title_idx IF NOT EXISTS FOR (n:Subject) ON (n.title)")
+    session.run("CREATE INDEX section_title_idx IF NOT EXISTS FOR (n:Section) ON (n.title)")
+    session.run("CREATE INDEX topic_title_idx IF NOT EXISTS FOR (n:Topic) ON (n.title)")
+    session.run("CREATE INDEX skill_title_idx IF NOT EXISTS FOR (n:Skill) ON (n.title)")
+    session.run("CREATE INDEX method_title_idx IF NOT EXISTS FOR (n:Method) ON (n.title)")
 
 
 def ensure_weight_defaults(session):
@@ -71,89 +84,69 @@ def sync_from_jsonl() -> Dict:
     topic_goals = _load_jsonl(os.path.join(KB_DIR, 'topic_goals.jsonl'))
     topic_objectives = _load_jsonl(os.path.join(KB_DIR, 'topic_objectives.jsonl'))
 
-    driver = get_driver()
-    with driver.session() as session:
+    repo = Neo4jRepo()
+    with repo.driver.session() as session:
         ensure_constraints(session)
-        ensure_weight_defaults(session)
+    ensure_weight_defaults_repo(repo)
 
-        for s in subjects:
-            session.run(
-                "MERGE (n:Subject {uid:$uid}) SET n.title=$title, n.description=COALESCE($description,'')",
-                uid=s.get('uid'), title=s.get('title'), description=s.get('description')
-            )
+    repo.write_unwind(
+        "UNWIND $rows AS r MERGE (n:Subject {uid:r.uid}) SET n.title=r.title, n.description=COALESCE(r.description,'')",
+        subjects, 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MERGE (n:Section {uid:r.uid}) SET n.title=r.title, n.description=COALESCE(r.description,'')",
+        sections, 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MERGE (n:Topic {uid:r.uid}) SET n.title=r.title, n.description=COALESCE(r.description,'')",
+        topics, 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MERGE (n:Skill {uid:r.uid}) SET n.title=r.title, n.definition=COALESCE(r.definition,'')",
+        skills, 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MERGE (n:Method {uid:r.uid}) SET n.title=r.title, n.method_text=COALESCE(r.method_text,''), n.applicability_types=COALESCE(r.applicability_types,[])",
+        methods, 500
+    )
 
-        for sec in sections:
-            session.run(
-                "MERGE (n:Section {uid:$uid}) SET n.title=$title, n.description=COALESCE($description,'')",
-                uid=sec.get('uid'), title=sec.get('title'), description=sec.get('description')
-            )
-            if sec.get('subject_uid'):
-                session.run(
-                    "MATCH (a:Subject {uid:$su}), (b:Section {uid:$uid}) MERGE (a)-[:CONTAINS]->(b)",
-                    su=sec.get('subject_uid'), uid=sec.get('uid')
-                )
+    repo.write_unwind(
+        "UNWIND $rows AS r MATCH (a:Subject {uid:r.subject_uid}), (b:Section {uid:r.uid}) MERGE (a)-[:CONTAINS]->(b)",
+        [sec for sec in sections if sec.get('subject_uid')], 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MATCH (a:Section {uid:r.section_uid}), (b:Topic {uid:r.uid}) MERGE (a)-[:CONTAINS]->(b)",
+        [t for t in topics if t.get('section_uid')], 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MATCH (a:Subject {uid:r.subject_uid}), (b:Skill {uid:r.uid}) MERGE (a)-[:HAS_SKILL]->(b)",
+        [sk for sk in skills if sk.get('subject_uid')], 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MATCH (a:Skill {uid:r.skill_uid}), (b:Method {uid:r.method_uid}) MERGE (a)-[rel:LINKED]->(b) SET rel.weight=COALESCE(r.weight,'linked'), rel.confidence=COALESCE(r.confidence,0.9)",
+        [sm for sm in skill_methods if sm.get('skill_uid') and sm.get('method_uid')], 500
+    )
 
-        for t in topics:
-            session.run(
-                "MERGE (n:Topic {uid:$uid}) SET n.title=$title, n.description=COALESCE($description,'')",
-                uid=t.get('uid'), title=t.get('title'), description=t.get('description')
-            )
-            if t.get('section_uid'):
-                session.run(
-                    "MATCH (a:Section {uid:$su}), (b:Topic {uid:$uid}) MERGE (a)-[:CONTAINS]->(b)",
-                    su=t.get('section_uid'), uid=t.get('uid')
-                )
+    goals_rows = [{"uid": g.get('uid') or f"GOAL-{g.get('topic_uid')}-{abs(hash(g.get('title','')))%100000}", "title": g.get('title'), "topic_uid": g.get('topic_uid')} for g in topic_goals]
+    repo.write_unwind(
+        "UNWIND $rows AS r MERGE (n:Goal {uid:r.uid}) SET n.title=r.title",
+        goals_rows, 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MATCH (a:Topic {uid:r.topic_uid}), (b:Goal {uid:r.uid}) MERGE (a)-[:TARGETS]->(b)",
+        [g for g in goals_rows if g.get('topic_uid')], 500
+    )
+    objs_rows = [{"uid": o.get('uid') or f"OBJ-{o.get('topic_uid')}-{abs(hash(o.get('title','')))%100000}", "title": o.get('title'), "topic_uid": o.get('topic_uid')} for o in topic_objectives]
+    repo.write_unwind(
+        "UNWIND $rows AS r MERGE (n:Objective {uid:r.uid}) SET n.title=r.title",
+        objs_rows, 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MATCH (a:Topic {uid:r.topic_uid}), (b:Objective {uid:r.uid}) MERGE (a)-[:TARGETS]->(b)",
+        [o for o in objs_rows if o.get('topic_uid')], 500
+    )
 
-        for sk in skills:
-            session.run(
-                "MERGE (n:Skill {uid:$uid}) SET n.title=$title, n.definition=COALESCE($definition,'')",
-                uid=sk.get('uid'), title=sk.get('title'), definition=sk.get('definition')
-            )
-            if sk.get('subject_uid'):
-                session.run(
-                    "MATCH (a:Subject {uid:$su}), (b:Skill {uid:$uid}) MERGE (a)-[:HAS_SKILL]->(b)",
-                    su=sk.get('subject_uid'), uid=sk.get('uid')
-                )
-
-        for m in methods:
-            session.run(
-                "MERGE (n:Method {uid:$uid}) SET n.title=$title, n.method_text=COALESCE($text,''), n.applicability_types=$types",
-                uid=m.get('uid'), title=m.get('title'), text=m.get('method_text'), types=m.get('applicability_types', [])
-            )
-
-        for sm in skill_methods:
-            if not sm.get('skill_uid') or not sm.get('method_uid'):
-                continue
-            session.run(
-                "MATCH (a:Skill {uid:$su}), (b:Method {uid:$mu}) MERGE (a)-[r:LINKED]->(b) SET r.weight=$weight, r.confidence=$confidence",
-                su=sm.get('skill_uid'), mu=sm.get('method_uid'), weight=sm.get('weight', 'linked'), confidence=float(sm.get('confidence', 0.9))
-            )
-
-        for g in topic_goals:
-            gid = g.get('uid') or f"GOAL-{g.get('topic_uid')}-{abs(hash(g.get('title','')))%100000}"
-            session.run(
-                "MERGE (n:Goal {uid:$uid}) SET n.title=$title",
-                uid=gid, title=g.get('title')
-            )
-            if g.get('topic_uid'):
-                session.run(
-                    "MATCH (a:Topic {uid:$tu}), (b:Goal {uid:$uid}) MERGE (a)-[:TARGETS]->(b)",
-                    tu=g.get('topic_uid'), uid=gid
-                )
-
-        for obj in topic_objectives:
-            oid = obj.get('uid') or f"OBJ-{obj.get('topic_uid')}-{abs(hash(obj.get('title','')))%100000}"
-            session.run(
-                "MERGE (n:Objective {uid:$uid}) SET n.title=$title",
-                uid=oid, title=obj.get('title')
-            )
-            if obj.get('topic_uid'):
-                session.run(
-                    "MATCH (a:Topic {uid:$tu}), (b:Objective {uid:$uid}) MERGE (a)-[:TARGETS]->(b)",
-                    tu=obj.get('topic_uid'), uid=oid
-                )
-
-    driver.close()
+    repo.close()
     return {
         'subjects': len(subjects),
         'sections': len(sections),
@@ -358,7 +351,6 @@ def build_adaptive_roadmap(subject_uid: str | None = None, limit: int = 50) -> L
             "MATCH (sub:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$uid}) MATCH (sub)-[:HAS_SKILL]->(sk:Skill)-[:LINKED]->(m:Method) RETURN DISTINCT m.uid AS uid, m.title AS title",
             {"uid": it['uid']}
         )
-        methods = [{'uid': r['uid'], 'title': r['title']}] for r in method_rows
         methods = [{'uid': r['uid'], 'title': r['title']} for r in method_rows]
         roadmap.append({'topic': it, 'priority': pr, 'skills': skills, 'methods': methods})
     repo.close()

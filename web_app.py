@@ -40,6 +40,36 @@ def rewrite_jsonl(filepath: str, records: List[Dict]) -> None:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 
+VALID_UID_PREFIXES = {
+    'subjects': ['SUB-'],
+    'sections': ['SEC-'],
+    'topics': ['TOP-'],
+    'skills': ['SKL-'],
+    'methods': ['MET-'],
+    'topic_goals': ['GOAL-'],
+    'topic_objectives': ['OBJ-'],
+    'skill_methods': None,
+}
+
+
+def uid_has_valid_prefix(kind: str, uid: str | None) -> bool:
+    prefixes = VALID_UID_PREFIXES.get(kind)
+    if not prefixes or not uid:
+        return True
+    return any(uid.startswith(p) for p in prefixes)
+
+
+def uid_suffix_is_valid(uid: str) -> bool:
+    # everything after first '-' must be letters/digits (Unicode) or '-'/'_'
+    if '-' not in uid:
+        return False
+    suffix = uid.split('-', 1)[1]
+    for ch in suffix:
+        if not (ch.isalnum() or ch in ['-', '_']):
+            return False
+    return True
+
+
 def normalize_jsonl_file(filepath: str, kind: str) -> Dict:
     if not os.path.exists(filepath):
         return {'file': os.path.basename(filepath), 'exists': False, 'before': 0, 'after': 0}
@@ -50,9 +80,71 @@ def normalize_jsonl_file(filepath: str, kind: str) -> Dict:
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     before = len(lines)
     parsed: List[Dict] = []
+    invalid: List[Dict] = []
+    warnings: List[Dict] = []
     for l in lines:
         try:
-            parsed.append(json.loads(l))
+            rec = json.loads(l)
+            # basic schema checks
+            if kind in {'subjects','sections','topics','skills','methods'}:
+                if not isinstance(rec.get('uid'), str) or not rec.get('uid'):
+                    invalid.append({'line': l, 'reason': 'missing uid'})
+                    continue
+                if not uid_has_valid_prefix(kind, rec.get('uid')):
+                    invalid.append({'uid': rec.get('uid'), 'reason': 'bad uid prefix'})
+                    continue
+                if not uid_suffix_is_valid(rec.get('uid')):
+                    invalid.append({'uid': rec.get('uid'), 'reason': 'uid suffix must be alnum'})
+                    continue
+                if kind != 'methods':
+                    if not isinstance(rec.get('title'), str) or not rec.get('title').strip():
+                        invalid.append({'uid': rec.get('uid'), 'reason': 'missing title'})
+                        continue
+                    title = rec.get('title').strip()
+                    if len(title) < 3:
+                        warnings.append({'uid': rec.get('uid'), 'warning': 'title too short (<3)'})
+                    if len(title) > 200:
+                        warnings.append({'uid': rec.get('uid'), 'warning': 'title too long (>200)'})
+                else:
+                    if not isinstance(rec.get('title'), str) or not rec.get('title').strip():
+                        invalid.append({'uid': rec.get('uid'), 'reason': 'missing title'})
+                        continue
+                    if not isinstance(rec.get('method_text'), str) or len(rec.get('method_text').strip()) < 10:
+                        warnings.append({'uid': rec.get('uid'), 'warning': 'method_text too short (<10)'})
+                    if 'applicability_types' in rec and not isinstance(rec.get('applicability_types'), list):
+                        warnings.append({'uid': rec.get('uid'), 'warning': 'applicability_types not a list'})
+            if kind == 'sections' and not isinstance(rec.get('subject_uid'), str):
+                invalid.append({'uid': rec.get('uid'), 'reason': 'missing subject_uid'})
+                continue
+            if kind == 'topics' and not isinstance(rec.get('section_uid'), str):
+                invalid.append({'uid': rec.get('uid'), 'reason': 'missing section_uid'})
+                continue
+            if kind == 'skills' and not isinstance(rec.get('subject_uid'), str):
+                invalid.append({'uid': rec.get('uid'), 'reason': 'missing subject_uid'})
+                continue
+            if kind == 'skill_methods':
+                su, mu = rec.get('skill_uid'), rec.get('method_uid')
+                if not isinstance(su, str) or not isinstance(mu, str):
+                    invalid.append({'pair': (su, mu), 'reason': 'missing skill_uid/method_uid'})
+                    continue
+                if not uid_has_valid_prefix('skills', su) or not uid_has_valid_prefix('methods', mu):
+                    invalid.append({'pair': (su, mu), 'reason': 'bad uid prefix'})
+                    continue
+                if not uid_suffix_is_valid(su) or not uid_suffix_is_valid(mu):
+                    invalid.append({'pair': (su, mu), 'reason': 'uid suffix must be alnum'})
+                    continue
+            # description warnings
+            if kind in {'subjects','sections','topics'}:
+                if not isinstance(rec.get('description'), str) or not rec.get('description').strip():
+                    warnings.append({'uid': rec.get('uid'), 'warning': 'empty description'})
+            if kind in {'topic_goals','topic_objectives'}:
+                if not isinstance(rec.get('topic_uid'), str) or not rec.get('topic_uid').strip():
+                    invalid.append({'uid': rec.get('uid'), 'reason': 'missing topic_uid'})
+                    continue
+                if not isinstance(rec.get('title'), str) or len(rec.get('title').strip()) < 5:
+                    invalid.append({'uid': rec.get('uid'), 'reason': 'title too short (<5)'})
+                    continue
+            parsed.append(rec)
         except json.JSONDecodeError:
             continue
     if kind == 'skill_methods':
@@ -78,7 +170,7 @@ def normalize_jsonl_file(filepath: str, kind: str) -> Dict:
             dedup.append(r)
         parsed = dedup
     rewrite_jsonl(filepath, parsed)
-    return {'file': os.path.basename(filepath), 'exists': True, 'before': before, 'after': len(parsed)}
+    return {'file': os.path.basename(filepath), 'exists': True, 'before': before, 'after': len(parsed), 'invalid': invalid, 'warnings': warnings}
 
 
 def build_graph(subject_filter: str | None = None) -> Dict:
@@ -282,6 +374,8 @@ def api_add_section():
     if not title or not subject_uid:
         return jsonify({'ok': False, 'error': 'title and subject_uid are required'}), 400
     uid = payload.get('uid') or make_uid('SEC', title)
+    if payload.get('uid') and (not uid_has_valid_prefix('sections', payload.get('uid')) or not uid_suffix_is_valid(payload.get('uid'))):
+        return jsonify({'ok': False, 'error': 'bad uid prefix'}), 400
     record = {'uid': uid, 'subject_uid': subject_uid, 'title': title, 'description': description}
     append_jsonl(os.path.join(KB_DIR, 'sections.jsonl'), record)
     return jsonify({'ok': True, 'record': record})
@@ -296,6 +390,8 @@ def api_add_topic():
     if not title or not section_uid:
         return jsonify({'ok': False, 'error': 'title and section_uid are required'}), 400
     uid = payload.get('uid') or make_uid('TOP', title)
+    if payload.get('uid') and (not uid_has_valid_prefix('topics', payload.get('uid')) or not uid_suffix_is_valid(payload.get('uid'))):
+        return jsonify({'ok': False, 'error': 'bad uid prefix'}), 400
     record = {
         'uid': uid,
         'section_uid': section_uid,
@@ -319,6 +415,8 @@ def api_add_skill():
     if not title or not subject_uid:
         return jsonify({'ok': False, 'error': 'title and subject_uid are required'}), 400
     uid = payload.get('uid') or make_uid('SKL', title)
+    if payload.get('uid') and (not uid_has_valid_prefix('skills', payload.get('uid')) or not uid_suffix_is_valid(payload.get('uid'))):
+        return jsonify({'ok': False, 'error': 'bad uid prefix'}), 400
     record = {'uid': uid, 'subject_uid': subject_uid, 'title': title, 'definition': definition}
     append_jsonl(os.path.join(KB_DIR, 'skills.jsonl'), record)
     return jsonify({'ok': True, 'record': record})
@@ -333,6 +431,8 @@ def api_add_method():
     if not title:
         return jsonify({'ok': False, 'error': 'title is required'}), 400
     uid = payload.get('uid') or make_uid('MET', title)
+    if payload.get('uid') and (not uid_has_valid_prefix('methods', payload.get('uid')) or not uid_suffix_is_valid(payload.get('uid'))):
+        return jsonify({'ok': False, 'error': 'bad uid prefix'}), 400
     record = {'uid': uid, 'title': title, 'method_text': method_text, 'applicability_types': applicability_types}
     append_jsonl(os.path.join(KB_DIR, 'methods.jsonl'), record)
     return jsonify({'ok': True, 'record': record})
@@ -346,6 +446,8 @@ def api_add_topic_goal():
     if not title or not topic_uid:
         return jsonify({'ok': False, 'error': 'title and topic_uid are required'}), 400
     uid = payload.get('uid') or make_uid('GOAL', title)
+    if payload.get('uid') and (not uid_has_valid_prefix('topic_goals', payload.get('uid')) or not uid_suffix_is_valid(payload.get('uid'))):
+        return jsonify({'ok': False, 'error': 'bad uid prefix'}), 400
     record = {'uid': uid, 'topic_uid': topic_uid, 'title': title}
     append_jsonl(os.path.join(KB_DIR, 'topic_goals.jsonl'), record)
     return jsonify({'ok': True, 'record': record})
@@ -359,6 +461,8 @@ def api_add_topic_objective():
     if not title or not topic_uid:
         return jsonify({'ok': False, 'error': 'title and topic_uid are required'}), 400
     uid = payload.get('uid') or make_uid('OBJ', title)
+    if payload.get('uid') and (not uid_has_valid_prefix('topic_objectives', payload.get('uid')) or not uid_suffix_is_valid(payload.get('uid'))):
+        return jsonify({'ok': False, 'error': 'bad uid prefix'}), 400
     record = {'uid': uid, 'topic_uid': topic_uid, 'title': title}
     append_jsonl(os.path.join(KB_DIR, 'topic_objectives.jsonl'), record)
     return jsonify({'ok': True, 'record': record})
@@ -381,6 +485,8 @@ def api_link_skill_method():
         'confidence': confidence,
         'is_auto_generated': is_auto_generated
     }
+    if (not uid_has_valid_prefix('skills', skill_uid) or not uid_has_valid_prefix('methods', method_uid) or not uid_suffix_is_valid(skill_uid) or not uid_suffix_is_valid(method_uid)):
+        return jsonify({'ok': False, 'error': 'bad uid prefix'}), 400
     append_jsonl(os.path.join(KB_DIR, 'skill_methods.jsonl'), record)
     return jsonify({'ok': True, 'record': record})
 
