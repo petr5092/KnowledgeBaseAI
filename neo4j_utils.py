@@ -305,6 +305,7 @@ def update_skill_dynamic_weight(skill_uid: str, score: float) -> Dict:
             uid=skill_uid, dw=new_dw
         )
     driver.close()
+    recompute_adaptive_for_skill(skill_uid)
     return {'uid': cur['uid'], 'title': cur['title'], 'static_weight': cur['static_weight'], 'dynamic_weight': new_dw}
 
 
@@ -360,6 +361,17 @@ def recompute_relationship_weights() -> Dict:
     repo = Neo4jRepo()
     ensure_weight_defaults_repo(repo)
     rows = repo.read("MATCH (sk:Skill)-[r:LINKED]->(m:Method) SET r.adaptive_weight = COALESCE(sk.dynamic_weight, sk.static_weight, 0.5) RETURN count(r) AS c")
+    repo.close()
+    return {"updated_links": (rows[0]['c'] if rows else 0)}
+
+
+def recompute_adaptive_for_skill(skill_uid: str) -> Dict:
+    repo = Neo4jRepo()
+    ensure_weight_defaults_repo(repo)
+    rows = repo.read(
+        "MATCH (sk:Skill {uid:$uid})-[r:LINKED]->(m:Method) SET r.adaptive_weight = COALESCE(sk.dynamic_weight, sk.static_weight, 0.5) RETURN count(r) AS c",
+        {"uid": skill_uid}
+    )
     repo.close()
     return {"updated_links": (rows[0]['c'] if rows else 0)}
 
@@ -441,6 +453,7 @@ def update_user_skill_weight(user_id: str, skill_uid: str, score: float) -> Dict
             uid=user_id, suid=skill_uid, dw=new_dw
         )
     repo.close()
+    recompute_adaptive_for_skill(skill_uid)
     return {'uid': skill_uid, 'user_id': user_id, 'title': title, 'dynamic_weight': new_dw}
 
 
@@ -464,7 +477,7 @@ def get_user_skill_level(user_id: str, skill_uid: str) -> Dict:
     return {'uid': skill_uid, 'user_id': user_id, 'title': rec['title'], 'static_weight': rec['sw'], 'dynamic_weight': rec['dw']}
 
 
-def build_user_roadmap(user_id: str, subject_uid: str | None = None, limit: int = 50) -> List[Dict]:
+def build_user_roadmap(user_id: str, subject_uid: str | None = None, limit: int = 50, penalty_factor: float = 0.15) -> List[Dict]:
     repo = Neo4jRepo()
     ensure_weight_defaults_repo(repo)
     repo.ensure_user(user_id)
@@ -478,6 +491,15 @@ def build_user_roadmap(user_id: str, subject_uid: str | None = None, limit: int 
     roadmap: List[Dict] = []
     for it in items:
         pr = 'high' if (it['dynamic_weight'] or 0.0) >= 0.7 else ('medium' if (it['dynamic_weight'] or 0.0) >= 0.4 else 'low')
+        # prereq penalty: lower effective weight if prerequisites not satisfied (user dynamic_weight > 0.3)
+        prereq_rows = repo.read(
+            "MATCH (t:Topic {uid:$uid})-[:PREREQ]->(p:Topic) OPTIONAL MATCH (:User {id:$u})-[r:PROGRESS_TOPIC]->(p) RETURN p.uid AS puid, COALESCE(r.dynamic_weight, p.dynamic_weight, p.static_weight) AS pw",
+            {"uid": it['uid'], "u": user_id}
+        )
+        missing = sum(1 for r in prereq_rows if (r['pw'] or 0.0) > 0.3)
+        effective_dw = (it['dynamic_weight'] or 0.0) - (penalty_factor * missing)
+        if effective_dw < 0:
+            effective_dw = 0.0
         skills_rows = repo.read(
             "MATCH (sub:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$uid}) MATCH (sub)-[:HAS_SKILL]->(sk:Skill) OPTIONAL MATCH (:User {id:$u})-[r:PROGRESS_SKILL]->(sk) RETURN DISTINCT sk.uid AS uid, sk.title AS title, sk.static_weight AS sw, COALESCE(r.dynamic_weight, sk.dynamic_weight, sk.static_weight) AS dw",
             {"uid": it['uid'], "u": user_id}
@@ -488,9 +510,33 @@ def build_user_roadmap(user_id: str, subject_uid: str | None = None, limit: int 
             {"uid": it['uid'], "u": user_id}
         )
         methods = [{'uid': r['uid'], 'title': r['title'], 'weight': r['weight']} for r in method_rows]
-        roadmap.append({'topic': it, 'priority': pr, 'skills': skills, 'methods': methods})
+        roadmap.append({'topic': {**it, 'effective_dynamic_weight': effective_dw, 'missing_prereqs': missing}, 'priority': pr, 'skills': skills, 'methods': methods})
+    # reorder by effective_dynamic_weight
+    roadmap.sort(key=lambda x: (x['topic'].get('effective_dynamic_weight') or 0.0), reverse=True)
     repo.close()
     return roadmap
+
+
+def complete_user_topic(user_id: str, topic_uid: str, time_spent_sec: float, errors: int) -> Dict:
+    repo = Neo4jRepo()
+    repo.ensure_user(user_id)
+    repo.write(
+        "MATCH (u:User {id:$uid}), (t:Topic {uid:$tuid}) MERGE (u)-[r:COMPLETED]->(t) SET r.time_spent_sec=$ts, r.errors=$err, r.ts=datetime()",
+        {"uid": user_id, "tuid": topic_uid, "ts": float(time_spent_sec), "err": int(errors)}
+    )
+    repo.close()
+    return {"ok": True}
+
+
+def complete_user_skill(user_id: str, skill_uid: str, time_spent_sec: float, errors: int) -> Dict:
+    repo = Neo4jRepo()
+    repo.ensure_user(user_id)
+    repo.write(
+        "MATCH (u:User {id:$uid}), (s:Skill {uid:$suid}) MERGE (u)-[r:COMPLETED]->(s) SET r.time_spent_sec=$ts, r.errors=$err, r.ts=datetime()",
+        {"uid": user_id, "suid": skill_uid, "ts": float(time_spent_sec), "err": int(errors)}
+    )
+    repo.close()
+    return {"ok": True}
 
 
 def fix_orphan_section(section_uid: str, subject_uid: str) -> Dict:

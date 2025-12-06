@@ -155,6 +155,7 @@ class UserRoadmapRequest(BaseModel):
     user_id: str
     subject_uid: str | None = None
     limit: int = 50
+    penalty_factor: float | None = 0.15
 
 
 @app.post("/user/roadmap", summary="Персональная дорожная карта обучения", description=(
@@ -163,8 +164,42 @@ class UserRoadmapRequest(BaseModel):
 ))
 def get_user_roadmap(payload: UserRoadmapRequest) -> Dict:
     try:
-        items = build_user_roadmap(payload.user_id, payload.subject_uid, payload.limit)
+        items = build_user_roadmap(payload.user_id, payload.subject_uid, payload.limit, payload.penalty_factor or 0.15)
         return {"ok": True, "roadmap": items}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+class CompleteTopicRequest(BaseModel):
+    user_id: str
+    topic_uid: str
+    time_spent_sec: float
+    errors: int = 0
+
+
+@app.post("/user/complete_topic", summary="Зафиксировать завершение темы", description=(
+    "Создаёт связь User-[:COMPLETED]->Topic с метриками времени и ошибок."
+))
+def api_complete_topic(payload: CompleteTopicRequest) -> Dict:
+    try:
+        return complete_user_topic(payload.user_id, payload.topic_uid, payload.time_spent_sec, payload.errors)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+class CompleteSkillRequest(BaseModel):
+    user_id: str
+    skill_uid: str
+    time_spent_sec: float
+    errors: int = 0
+
+
+@app.post("/user/complete_skill", summary="Зафиксировать завершение навыка", description=(
+    "Создаёт связь User-[:COMPLETED]->Skill с метриками времени и ошибок."
+))
+def api_complete_skill(payload: CompleteSkillRequest) -> Dict:
+    try:
+        return complete_user_skill(payload.user_id, payload.skill_uid, payload.time_spent_sec, payload.errors)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
