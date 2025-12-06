@@ -16,16 +16,19 @@ CREATE TABLE IF NOT EXISTS subjects (
 CREATE TABLE IF NOT EXISTS sections (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   uid TEXT NOT NULL UNIQUE,
-  subject_id UUID NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  subject_id UUID REFERENCES subjects(id) ON DELETE CASCADE,
+  subject_uid TEXT REFERENCES subjects(uid) ON DELETE CASCADE,
   title TEXT NOT NULL,
-  description TEXT
+  description TEXT,
+  order_index INTEGER NOT NULL DEFAULT 0
 );
 
 -- Topics within a section
 CREATE TABLE IF NOT EXISTS topics (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   uid TEXT NOT NULL UNIQUE,
-  section_id UUID NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+  section_id UUID REFERENCES sections(id) ON DELETE CASCADE,
+  section_uid TEXT REFERENCES sections(uid) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
   -- mastery thresholds per base_concept.md
@@ -38,9 +41,12 @@ CREATE TABLE IF NOT EXISTS topics (
 CREATE TABLE IF NOT EXISTS skills (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   uid TEXT NOT NULL UNIQUE,
-  subject_id UUID NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  subject_id UUID REFERENCES subjects(id) ON DELETE CASCADE,
+  subject_uid TEXT REFERENCES subjects(uid) ON DELETE CASCADE,
   title TEXT NOT NULL,
+  description TEXT,
   definition TEXT,
+  applicability_types TEXT[],
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','archived'))
 );
 
@@ -57,11 +63,13 @@ CREATE TABLE IF NOT EXISTS methods (
 CREATE TABLE IF NOT EXISTS examples (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   uid TEXT NOT NULL UNIQUE,
-  subject_id UUID NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  subject_id UUID REFERENCES subjects(id) ON DELETE CASCADE,
+  subject_uid TEXT REFERENCES subjects(uid) ON DELETE CASCADE,
   topic_id UUID REFERENCES topics(id) ON DELETE SET NULL,
+  topic_uid TEXT REFERENCES topics(uid) ON DELETE SET NULL,
   title TEXT NOT NULL,
   statement TEXT NOT NULL,
-  difficulty INTEGER NOT NULL DEFAULT 3 CHECK (difficulty BETWEEN 1 AND 5)
+  difficulty_level TEXT NOT NULL DEFAULT 'medium'
 );
 
 -- Errors taxonomy
@@ -69,7 +77,8 @@ CREATE TABLE IF NOT EXISTS errors (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   uid TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
-  error_text TEXT
+  description TEXT,
+  error_type TEXT
 );
 
 -- Relations
@@ -81,15 +90,9 @@ CREATE TABLE IF NOT EXISTS topic_skills (
   PRIMARY KEY (topic_id, skill_id)
 );
 
--- Skill ↔ Method
-CREATE TABLE IF NOT EXISTS skill_methods (
-  skill_id UUID NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
-  method_id UUID NOT NULL REFERENCES methods(id) ON DELETE CASCADE,
-  PRIMARY KEY (skill_id, method_id)
-);
+-- Removed id-based skill_methods in favor of uid-based version below
 
--- Таблица связей навыков (DAG)
-CREATE TABLE skill_dependencies (
+CREATE TABLE IF NOT EXISTS skill_dependencies (
     parent_skill_uid VARCHAR(50) REFERENCES skills(uid) ON DELETE CASCADE,
     child_skill_uid VARCHAR(50) REFERENCES skills(uid) ON DELETE CASCADE,
     dependency_type VARCHAR(20) NOT NULL DEFAULT 'prerequisite', -- prerequisite, reinforces, extends
@@ -101,7 +104,7 @@ CREATE TABLE skill_dependencies (
 );
 
 -- Таблица связей навыков и методов
-CREATE TABLE skill_methods (
+CREATE TABLE IF NOT EXISTS skill_methods (
     skill_uid VARCHAR(50) REFERENCES skills(uid) ON DELETE CASCADE,
     method_uid VARCHAR(50) REFERENCES methods(uid) ON DELETE CASCADE,
     weight VARCHAR(20) NOT NULL DEFAULT 'secondary', -- primary, secondary, auxiliary
@@ -231,9 +234,27 @@ CREATE TABLE IF NOT EXISTS attempt_error_events (
 
 -- Helpful indexes
 CREATE INDEX IF NOT EXISTS idx_sections_subject ON sections(subject_id);
+CREATE INDEX IF NOT EXISTS idx_sections_subject_uid ON sections(subject_uid);
 CREATE INDEX IF NOT EXISTS idx_topics_section ON topics(section_id);
+CREATE INDEX IF NOT EXISTS idx_topics_section_uid ON topics(section_uid);
 CREATE INDEX IF NOT EXISTS idx_skills_subject ON skills(subject_id);
+CREATE INDEX IF NOT EXISTS idx_skills_subject_uid ON skills(subject_uid);
 CREATE INDEX IF NOT EXISTS idx_examples_subject ON examples(subject_id);
+CREATE INDEX IF NOT EXISTS idx_examples_subject_uid ON examples(subject_uid);
+CREATE INDEX IF NOT EXISTS idx_examples_topic_uid ON examples(topic_uid);
 CREATE INDEX IF NOT EXISTS idx_example_skills_role ON example_skills(role);
+
+-- Safe alterations to ensure columns exist when upgrading from older schema
+ALTER TABLE sections ADD COLUMN IF NOT EXISTS subject_uid TEXT REFERENCES subjects(uid) ON DELETE CASCADE;
+ALTER TABLE sections ADD COLUMN IF NOT EXISTS order_index INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE topics ADD COLUMN IF NOT EXISTS section_uid TEXT REFERENCES sections(uid) ON DELETE CASCADE;
+ALTER TABLE skills ADD COLUMN IF NOT EXISTS subject_uid TEXT REFERENCES subjects(uid) ON DELETE CASCADE;
+ALTER TABLE skills ADD COLUMN IF NOT EXISTS applicability_types TEXT[];
+ALTER TABLE skills ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE examples ADD COLUMN IF NOT EXISTS subject_uid TEXT REFERENCES subjects(uid) ON DELETE CASCADE;
+ALTER TABLE examples ADD COLUMN IF NOT EXISTS topic_uid TEXT REFERENCES topics(uid) ON DELETE SET NULL;
+ALTER TABLE examples ADD COLUMN IF NOT EXISTS difficulty_level TEXT NOT NULL DEFAULT 'medium';
+ALTER TABLE errors ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE errors ADD COLUMN IF NOT EXISTS error_type TEXT;
 
 -- End of schema

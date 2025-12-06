@@ -13,6 +13,8 @@ function typeColor(type) {
     case 'topic': return '#f7c948';
     case 'skill': return '#ff8c69';
     case 'method': return '#c792ea';
+    case 'goal': return '#4fc3f7';
+    case 'objective': return '#26a69a';
     default: return '#9aa4b2';
   }
 }
@@ -106,9 +108,22 @@ async function bindActions() {
     await axios.post('/api/skill_methods', payload);
     await renderGraph();
   });
+
+  $('addTopicGoalBtn').addEventListener('click', async () => {
+    const payload = { title: $('goalTitle').value, topic_uid: $('goalTopic').value };
+    await axios.post('/api/topic_goals', payload);
+    await renderGraph();
+  });
+
+  $('addTopicObjectiveBtn').addEventListener('click', async () => {
+    const payload = { title: $('objTitle').value, topic_uid: $('objTopic').value };
+    await axios.post('/api/topic_objectives', payload);
+    await renderGraph();
+  });
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
   await bindActions();
   await renderGraph();
 });
+

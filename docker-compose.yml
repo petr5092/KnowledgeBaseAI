@@ -1,102 +1,142 @@
 version: '3.9'
 
 services:
+  # Reverse proxy with Let's Encrypt
+  traefik:
+    image: traefik:v2.11
+    command:
+      - --log.level=INFO
+      - --api.dashboard=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.email=${LETSENCRYPT_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - proxy
+
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: knowledge_base
-      POSTGRES_USER: kb_user
-      POSTGRES_PASSWORD: kb_password
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kb_user -d knowledge_base"]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 10
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    ports:
-      - "9200:9200"
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9200"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.13.4
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
+    networks:
+      - default
 
   app:
     build: .
     command: ["python", "web_app.py"]
     environment:
       DB_HOST: db
-      DB_NAME: knowledge_base
-      DB_USER: kb_user
-      DB_PASSWORD: kb_password
-      DB_PORT: 5432
-    ports:
-      - "5001:5000"
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT:-5432}
     volumes:
       - ./:/app
     depends_on:
       db:
         condition: service_healthy
-      elasticsearch:
-        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      # HTTPS router for root domain
+      - "traefik.http.routers.kb-app.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.kb-app.entrypoints=websecure"
+      - "traefik.http.routers.kb-app.tls=true"
+      - "traefik.http.routers.kb-app.tls.certresolver=le"
+      - "traefik.http.routers.kb-app.service=kb-app"
+      - "traefik.http.services.kb-app.loadbalancer.server.port=5000"
+      # HTTP router redirect to HTTPS
+      - "traefik.http.routers.kb-app-web.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.kb-app-web.entrypoints=web"
+      - "traefik.http.routers.kb-app-web.middlewares=redirect-to-https"
+      - "traefik.http.routers.kb-app-web.service=kb-app"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      # Wildcard subdomain support (issued per-subdomain via HTTP challenge)
+      - "traefik.http.routers.kb-wild.rule=HostRegexp(`{subdomain:.+}.${KB_DOMAIN}`)"
+      - "traefik.http.routers.kb-wild.entrypoints=websecure"
+      - "traefik.http.routers.kb-wild.tls=true"
+      - "traefik.http.routers.kb-wild.tls.certresolver=le"
+      - "traefik.http.routers.kb-wild.service=kb-app"
+    networks:
+      - proxy
+      - default
 
   db_schema:
     build: .
     command: ["python", "scripts/apply_schema.py"]
     environment:
       DB_HOST: db
-      DB_NAME: knowledge_base
-      DB_USER: kb_user
-      DB_PASSWORD: kb_password
-      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT:-5432}
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - default
 
   db_loader:
     build: .
     command: ["python", "scripts/load_data.py"]
     environment:
       DB_HOST: db
-      DB_NAME: knowledge_base
-      DB_USER: kb_user
-      DB_PASSWORD: kb_password
-      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT:-5432}
     depends_on:
       db_schema:
         condition: service_started
+    networks:
+      - default
 
   es_indexer:
     build: .
     command: ["python", "scripts/index_to_es.py"]
     environment:
-      ES_URL: http://elasticsearch:9200
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
+      ES_URL: ${ES_URL}
+      ES_USER: ${ES_USER}
+      ES_PASSWORD: ${ES_PASSWORD}
+      ES_VERIFY_SSL: ${ES_VERIFY_SSL:-false}
+    networks:
+      - default
+
+  neo4j_push:
+    build: .
+    command: ["python", "scripts/push_to_neo4j.py"]
+    environment:
+      NEO4J_URI: ${NEO4J_URI}
+      NEO4J_USER: ${NEO4J_USER}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+    networks:
+      - default
 
 volumes:
   db_data:
-  es_data:
+  traefik_letsencrypt:
+
+networks:
+  proxy:
+    driver: bridge

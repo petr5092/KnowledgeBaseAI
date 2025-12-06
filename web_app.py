@@ -3,6 +3,7 @@ import json
 from typing import List, Dict
 
 from flask import Flask, jsonify, request, render_template, redirect, url_for
+from neo4j_utils import build_graph_from_neo4j, analyze_knowledge, sync_from_jsonl
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -39,6 +40,8 @@ def build_graph(subject_filter: str | None = None) -> Dict:
     skills = load_jsonl(os.path.join(KB_DIR, 'skills.jsonl'))
     methods = load_jsonl(os.path.join(KB_DIR, 'methods.jsonl'))
     skill_methods = load_jsonl(os.path.join(KB_DIR, 'skill_methods.jsonl'))
+    topic_goals = load_jsonl(os.path.join(KB_DIR, 'topic_goals.jsonl'))
+    topic_objectives = load_jsonl(os.path.join(KB_DIR, 'topic_objectives.jsonl'))
 
     nodes = []
     edges = []
@@ -101,6 +104,38 @@ def build_graph(subject_filter: str | None = None) -> Dict:
                 'rel': 'contains'
             }
         })
+
+    # topic goals and objectives
+    goal_by_topic = {}
+    for g in topic_goals:
+        tuid = g.get('topic_uid')
+        gid = g.get('uid') or f"GOAL-{tuid}-{abs(hash(g.get('title','')))%100000}"
+        goal_by_topic.setdefault(tuid, []).append({'uid': gid, 'title': g.get('title')})
+    for obj in topic_objectives:
+        tuid = obj.get('topic_uid')
+        oid = obj.get('uid') or f"OBJ-{tuid}-{abs(hash(obj.get('title','')))%100000}"
+        goal_by_topic.setdefault(tuid, []).append({'uid': oid, 'title': obj.get('title'), 'is_objective': True})
+
+    for tuid, items in goal_by_topic.items():
+        # only add nodes if topic is present in allowed graph
+        if not any(n.get('data', {}).get('id') == tuid for n in nodes):
+            continue
+        for it in items:
+            nodes.append({
+                'data': {
+                    'id': it['uid'],
+                    'label': it['title'],
+                    'type': 'objective' if it.get('is_objective') else 'goal'
+                }
+            })
+            edges.append({
+                'data': {
+                    'id': f"{tuid}->{it['uid']}",
+                    'source': tuid,
+                    'target': it['uid'],
+                    'rel': 'targets'
+                }
+            })
 
     # skills, grouped by subject (edge to subject for now)
     for sk in skills:
@@ -166,7 +201,10 @@ def knowledge():
 @app.get('/api/graph')
 def api_graph():
     subject_uid = request.args.get('subject_uid')
-    graph = build_graph(subject_uid)
+    if os.getenv('NEO4J_URI') and os.getenv('NEO4J_USER') and os.getenv('NEO4J_PASSWORD'):
+        graph = build_graph_from_neo4j(subject_uid)
+    else:
+        graph = build_graph(subject_uid)
     return jsonify(graph)
 
 
@@ -244,6 +282,28 @@ def api_add_method():
     return jsonify({'ok': True, 'record': record})
 
 
+@app.post('/api/topic_goals')
+def api_add_topic_goal():
+    payload = request.get_json(force=True)
+    title = payload.get('title')
+    topic_uid = payload.get('topic_uid')
+    uid = payload.get('uid') or make_uid('GOAL', title)
+    record = {'uid': uid, 'topic_uid': topic_uid, 'title': title}
+    append_jsonl(os.path.join(KB_DIR, 'topic_goals.jsonl'), record)
+    return jsonify({'ok': True, 'record': record})
+
+
+@app.post('/api/topic_objectives')
+def api_add_topic_objective():
+    payload = request.get_json(force=True)
+    title = payload.get('title')
+    topic_uid = payload.get('topic_uid')
+    uid = payload.get('uid') or make_uid('OBJ', title)
+    record = {'uid': uid, 'topic_uid': topic_uid, 'title': title}
+    append_jsonl(os.path.join(KB_DIR, 'topic_objectives.jsonl'), record)
+    return jsonify({'ok': True, 'record': record})
+
+
 @app.post('/api/skill_methods')
 def api_link_skill_method():
     payload = request.get_json(force=True)
@@ -261,6 +321,19 @@ def api_link_skill_method():
     }
     append_jsonl(os.path.join(KB_DIR, 'skill_methods.jsonl'), record)
     return jsonify({'ok': True, 'record': record})
+
+
+@app.post('/api/neo4j_sync')
+def api_neo4j_sync():
+    stats = sync_from_jsonl()
+    return jsonify({'ok': True, 'stats': stats})
+
+
+@app.get('/api/analysis')
+def api_analysis():
+    subject_uid = request.args.get('subject_uid')
+    metrics = analyze_knowledge(subject_uid)
+    return jsonify({'ok': True, 'metrics': metrics})
 
 
 if __name__ == '__main__':

@@ -143,12 +143,12 @@ class DataLoader:
         cursor = conn.cursor()
         for item in data:
             cursor.execute("""
-                INSERT INTO skills (uid, subject_uid, title, description, applicability_types)
+                INSERT INTO skills (uid, subject_uid, title, definition, applicability_types)
                 VALUES (%s, %s, %s, %s, %s)
                 ON CONFLICT (uid) DO UPDATE SET
                     subject_uid = EXCLUDED.subject_uid,
                     title = EXCLUDED.title,
-                    description = EXCLUDED.description,
+                    definition = EXCLUDED.definition,
                     applicability_types = EXCLUDED.applicability_types
             """, (
                 item['uid'],
@@ -233,7 +233,7 @@ class DataLoader:
             """, (
                 item['uid'],
                 item['title'],
-                item['description'],
+                item.get('description') or item.get('error_text'),
                 item.get('error_type', 'conceptual')
             ))
         
