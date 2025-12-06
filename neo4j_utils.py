@@ -50,6 +50,13 @@ def ensure_weight_defaults(session):
     session.run("MATCH (s:Skill) WHERE s.dynamic_weight IS NULL SET s.dynamic_weight = s.static_weight")
 
 
+def ensure_weight_defaults_repo(repo: Neo4jRepo):
+    repo.write("MATCH (t:Topic) WHERE t.static_weight IS NULL SET t.static_weight = 0.5")
+    repo.write("MATCH (t:Topic) WHERE t.dynamic_weight IS NULL SET t.dynamic_weight = t.static_weight")
+    repo.write("MATCH (s:Skill) WHERE s.static_weight IS NULL SET s.static_weight = 0.5")
+    repo.write("MATCH (s:Skill) WHERE s.dynamic_weight IS NULL SET s.dynamic_weight = s.static_weight")
+
+
 def ensure_user_profile(session, user_id: str):
     session.run("MERGE (:User {id:$id})", id=user_id)
 
@@ -310,77 +317,60 @@ def update_skill_dynamic_weight(skill_uid: str, score: float) -> Dict:
 
 
 def get_current_knowledge_level(topic_uid: str) -> Dict:
-    driver = get_driver()
-    with driver.session() as session:
-        ensure_weight_defaults(session)
-        rec = session.run(
-            "MATCH (t:Topic {uid:$uid}) RETURN t.uid AS uid, t.title AS title, t.static_weight AS static_weight, t.dynamic_weight AS dynamic_weight",
-            uid=topic_uid
-        ).single()
-    driver.close()
+    repo = Neo4jRepo()
+    ensure_weight_defaults_repo(repo)
+    rows = repo.read("MATCH (t:Topic {uid:$uid}) RETURN t.uid AS uid, t.title AS title, t.static_weight AS static_weight, t.dynamic_weight AS dynamic_weight", {"uid": topic_uid})
+    repo.close()
+    rec = rows[0] if rows else {'uid': topic_uid, 'title': None, 'static_weight': None, 'dynamic_weight': None}
     return {'uid': rec['uid'], 'title': rec['title'], 'static_weight': rec['static_weight'], 'dynamic_weight': rec['dynamic_weight']}
 
 
 def get_current_skill_level(skill_uid: str) -> Dict:
-    driver = get_driver()
-    with driver.session() as session:
-        ensure_weight_defaults(session)
-        rec = session.run(
-            "MATCH (s:Skill {uid:$uid}) RETURN s.uid AS uid, s.title AS title, s.static_weight AS static_weight, s.dynamic_weight AS dynamic_weight",
-            uid=skill_uid
-        ).single()
-    driver.close()
+    repo = Neo4jRepo()
+    ensure_weight_defaults_repo(repo)
+    rows = repo.read("MATCH (s:Skill {uid:$uid}) RETURN s.uid AS uid, s.title AS title, s.static_weight AS static_weight, s.dynamic_weight AS dynamic_weight", {"uid": skill_uid})
+    repo.close()
+    rec = rows[0] if rows else {'uid': skill_uid, 'title': None, 'static_weight': None, 'dynamic_weight': None}
     return {'uid': rec['uid'], 'title': rec['title'], 'static_weight': rec['static_weight'], 'dynamic_weight': rec['dynamic_weight']}
 
 
 def build_adaptive_roadmap(subject_uid: str | None = None, limit: int = 50) -> List[Dict]:
-    driver = get_driver()
-    roadmap: List[Dict] = []
-    with driver.session() as session:
-        ensure_weight_defaults(session)
-        if subject_uid:
-            topics = session.run(
-                "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) RETURN t.uid AS uid, t.title AS title, t.static_weight AS sw, t.dynamic_weight AS dw",
-                su=subject_uid
-            )
-        else:
-            topics = session.run("MATCH (t:Topic) RETURN t.uid AS uid, t.title AS title, t.static_weight AS sw, t.dynamic_weight AS dw")
-        items = [{'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']} for r in topics]
-        items.sort(key=lambda x: (x['dynamic_weight'] or 0.0), reverse=True)
-        items = items[:limit]
+    repo = Neo4jRepo()
+    ensure_weight_defaults_repo(repo)
+    if subject_uid:
+        rows = repo.read("MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) RETURN t.uid AS uid, t.title AS title, t.static_weight AS sw, t.dynamic_weight AS dw", {"su": subject_uid})
+    else:
+        rows = repo.read("MATCH (t:Topic) RETURN t.uid AS uid, t.title AS title, t.static_weight AS sw, t.dynamic_weight AS dw")
+    items = [{'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']}] if rows else []
+    items = [{'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']} for r in rows]
+    items.sort(key=lambda x: (x['dynamic_weight'] or 0.0), reverse=True)
+    items = items[:limit]
 
-        for it in items:
-            pr = 'high' if (it['dynamic_weight'] or 0.0) >= 0.7 else ('medium' if (it['dynamic_weight'] or 0.0) >= 0.4 else 'low')
-            skills = []
-            methods = []
-            res = session.run(
-                "MATCH (sub:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$uid}) MATCH (sub)-[:HAS_SKILL]->(sk:Skill) RETURN DISTINCT sk.uid AS uid, sk.title AS title, sk.static_weight AS sw, sk.dynamic_weight AS dw",
-                uid=it['uid']
-            )
-            for r in res:
-                skills.append({'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']})
-            res = session.run(
-                "MATCH (sub:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$uid}) MATCH (sub)-[:HAS_SKILL]->(sk:Skill)-[:LINKED]->(m:Method) RETURN DISTINCT m.uid AS uid, m.title AS title",
-                uid=it['uid']
-            )
-            for r in res:
-                methods.append({'uid': r['uid'], 'title': r['title']})
-            roadmap.append({'topic': it, 'priority': pr, 'skills': skills, 'methods': methods})
-    driver.close()
+    roadmap: List[Dict] = []
+    for it in items:
+        pr = 'high' if (it['dynamic_weight'] or 0.0) >= 0.7 else ('medium' if (it['dynamic_weight'] or 0.0) >= 0.4 else 'low')
+        skills_rows = repo.read(
+            "MATCH (sub:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$uid}) MATCH (sub)-[:HAS_SKILL]->(sk:Skill) RETURN DISTINCT sk.uid AS uid, sk.title AS title, sk.static_weight AS sw, sk.dynamic_weight AS dw",
+            {"uid": it['uid']}
+        )
+        skills = [{'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']} for r in skills_rows]
+        method_rows = repo.read(
+            "MATCH (sub:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$uid}) MATCH (sub)-[:HAS_SKILL]->(sk:Skill)-[:LINKED]->(m:Method) RETURN DISTINCT m.uid AS uid, m.title AS title",
+            {"uid": it['uid']}
+        )
+        methods = [{'uid': r['uid'], 'title': r['title']}] for r in method_rows
+        methods = [{'uid': r['uid'], 'title': r['title']} for r in method_rows]
+        roadmap.append({'topic': it, 'priority': pr, 'skills': skills, 'methods': methods})
+    repo.close()
     return roadmap
 
 
 def recompute_relationship_weights() -> Dict:
-    driver = get_driver()
-    updated = 0
-    with driver.session() as session:
-        ensure_weight_defaults(session)
-        res = session.run(
-            "MATCH (sk:Skill)-[r:LINKED]->(m:Method) SET r.adaptive_weight = COALESCE(sk.dynamic_weight, sk.static_weight, 0.5) RETURN count(r) AS c"
-        ).single()
-        updated = res['c'] if res else 0
-    driver.close()
-    return {"updated_links": updated}
+    repo = Neo4jRepo()
+    ensure_weight_defaults_repo(repo)
+    rows = repo.read("MATCH (sk:Skill)-[r:LINKED]->(m:Method) SET r.adaptive_weight = COALESCE(sk.dynamic_weight, sk.static_weight, 0.5) RETURN count(r) AS c")
+    repo.close()
+    return {"updated_links": (rows[0]['c'] if rows else 0)}
 
 
 def update_user_topic_weight(user_id: str, topic_uid: str, score: float) -> Dict:
@@ -464,68 +454,51 @@ def update_user_skill_weight(user_id: str, skill_uid: str, score: float) -> Dict
 
 
 def get_user_topic_level(user_id: str, topic_uid: str) -> Dict:
-    driver = get_driver()
-    with driver.session() as session:
-        ensure_weight_defaults(session)
-        ensure_user_profile(session, user_id)
-        rec = session.run(
-            "MATCH (t:Topic {uid:$tuid}) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t) RETURN t.title AS title, t.static_weight AS sw, COALESCE(r.dynamic_weight, t.dynamic_weight, t.static_weight) AS dw",
-            uid=user_id, tuid=topic_uid
-        ).single()
-    driver.close()
+    repo = Neo4jRepo()
+    ensure_weight_defaults_repo(repo)
+    repo.ensure_user(user_id)
+    rows = repo.read("MATCH (t:Topic {uid:$tuid}) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t) RETURN t.title AS title, t.static_weight AS sw, COALESCE(r.dynamic_weight, t.dynamic_weight, t.static_weight) AS dw", {"uid": user_id, "tuid": topic_uid})
+    repo.close()
+    rec = rows[0] if rows else {'title': None, 'sw': None, 'dw': None}
     return {'uid': topic_uid, 'user_id': user_id, 'title': rec['title'], 'static_weight': rec['sw'], 'dynamic_weight': rec['dw']}
 
 
 def get_user_skill_level(user_id: str, skill_uid: str) -> Dict:
-    driver = get_driver()
-    with driver.session() as session:
-        ensure_weight_defaults(session)
-        ensure_user_profile(session, user_id)
-        rec = session.run(
-            "MATCH (s:Skill {uid:$suid}) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_SKILL]->(s) RETURN s.title AS title, s.static_weight AS sw, COALESCE(r.dynamic_weight, s.dynamic_weight, s.static_weight) AS dw",
-            uid=user_id, suid=skill_uid
-        ).single()
-    driver.close()
+    repo = Neo4jRepo()
+    ensure_weight_defaults_repo(repo)
+    repo.ensure_user(user_id)
+    rows = repo.read("MATCH (s:Skill {uid:$suid}) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_SKILL]->(s) RETURN s.title AS title, s.static_weight AS sw, COALESCE(r.dynamic_weight, s.dynamic_weight, s.static_weight) AS dw", {"uid": user_id, "suid": skill_uid})
+    repo.close()
+    rec = rows[0] if rows else {'title': None, 'sw': None, 'dw': None}
     return {'uid': skill_uid, 'user_id': user_id, 'title': rec['title'], 'static_weight': rec['sw'], 'dynamic_weight': rec['dw']}
 
 
 def build_user_roadmap(user_id: str, subject_uid: str | None = None, limit: int = 50) -> List[Dict]:
-    driver = get_driver()
+    repo = Neo4jRepo()
+    ensure_weight_defaults_repo(repo)
+    repo.ensure_user(user_id)
+    if subject_uid:
+        rows = repo.read("MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t) RETURN t.uid AS uid, t.title AS title, t.static_weight AS sw, COALESCE(r.dynamic_weight, t.dynamic_weight, t.static_weight) AS dw", {"su": subject_uid, "uid": user_id})
+    else:
+        rows = repo.read("MATCH (t:Topic) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t) RETURN t.uid AS uid, t.title AS title, t.static_weight AS sw, COALESCE(r.dynamic_weight, t.dynamic_weight, t.static_weight) AS dw", {"uid": user_id})
+    items = [{'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']} for r in rows]
+    items.sort(key=lambda x: (x['dynamic_weight'] or 0.0), reverse=True)
+    items = items[:limit]
     roadmap: List[Dict] = []
-    with driver.session() as session:
-        ensure_weight_defaults(session)
-        ensure_user_profile(session, user_id)
-        if subject_uid:
-            res = session.run(
-                "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t) RETURN t.uid AS uid, t.title AS title, t.static_weight AS sw, COALESCE(r.dynamic_weight, t.dynamic_weight, t.static_weight) AS dw",
-                su=subject_uid, uid=user_id
-            )
-        else:
-            res = session.run(
-                "MATCH (t:Topic) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t) RETURN t.uid AS uid, t.title AS title, t.static_weight AS sw, COALESCE(r.dynamic_weight, t.dynamic_weight, t.static_weight) AS dw",
-                uid=user_id
-            )
-        items = [{'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']} for r in res]
-        items.sort(key=lambda x: (x['dynamic_weight'] or 0.0), reverse=True)
-        items = items[:limit]
-        for it in items:
-            pr = 'high' if (it['dynamic_weight'] or 0.0) >= 0.7 else ('medium' if (it['dynamic_weight'] or 0.0) >= 0.4 else 'low')
-            skills = []
-            methods = []
-            res_sk = session.run(
-                "MATCH (sub:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$uid}) MATCH (sub)-[:HAS_SKILL]->(sk:Skill) OPTIONAL MATCH (:User {id:$u})-[r:PROGRESS_SKILL]->(sk) RETURN DISTINCT sk.uid AS uid, sk.title AS title, sk.static_weight AS sw, COALESCE(r.dynamic_weight, sk.dynamic_weight, sk.static_weight) AS dw",
-                uid=it['uid'], u=user_id
-            )
-            for r in res_sk:
-                skills.append({'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']})
-            res_m = session.run(
-                "MATCH (sub:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$uid}) MATCH (sub)-[:HAS_SKILL]->(sk:Skill)-[lk:LINKED]->(m:Method) OPTIONAL MATCH (:User {id:$u})-[r:PROGRESS_SKILL]->(sk) RETURN DISTINCT m.uid AS uid, m.title AS title, COALESCE(r.dynamic_weight, sk.dynamic_weight, sk.static_weight) AS weight",
-                uid=it['uid'], u=user_id
-            )
-            for r in res_m:
-                methods.append({'uid': r['uid'], 'title': r['title'], 'weight': r['weight']})
-            roadmap.append({'topic': it, 'priority': pr, 'skills': skills, 'methods': methods})
-    driver.close()
+    for it in items:
+        pr = 'high' if (it['dynamic_weight'] or 0.0) >= 0.7 else ('medium' if (it['dynamic_weight'] or 0.0) >= 0.4 else 'low')
+        skills_rows = repo.read(
+            "MATCH (sub:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$uid}) MATCH (sub)-[:HAS_SKILL]->(sk:Skill) OPTIONAL MATCH (:User {id:$u})-[r:PROGRESS_SKILL]->(sk) RETURN DISTINCT sk.uid AS uid, sk.title AS title, sk.static_weight AS sw, COALESCE(r.dynamic_weight, sk.dynamic_weight, sk.static_weight) AS dw",
+            {"uid": it['uid'], "u": user_id}
+        )
+        skills = [{'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']} for r in skills_rows]
+        method_rows = repo.read(
+            "MATCH (sub:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$uid}) MATCH (sub)-[:HAS_SKILL]->(sk:Skill)-[lk:LINKED]->(m:Method) OPTIONAL MATCH (:User {id:$u})-[r:PROGRESS_SKILL]->(sk) RETURN DISTINCT m.uid AS uid, m.title AS title, COALESCE(r.dynamic_weight, sk.dynamic_weight, sk.static_weight) AS weight",
+            {"uid": it['uid'], "u": user_id}
+        )
+        methods = [{'uid': r['uid'], 'title': r['title'], 'weight': r['weight']} for r in method_rows]
+        roadmap.append({'topic': it, 'priority': pr, 'skills': skills, 'methods': methods})
+    repo.close()
     return roadmap
 
 
