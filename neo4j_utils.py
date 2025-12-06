@@ -539,6 +539,26 @@ def complete_user_skill(user_id: str, skill_uid: str, time_spent_sec: float, err
     return {"ok": True}
 
 
+def search_titles(q: str, limit: int = 20) -> List[Dict]:
+    repo = Neo4jRepo()
+    rows = repo.read(
+        "MATCH (n) WHERE toLower(n.title) CONTAINS toLower($q) RETURN n.uid AS uid, labels(n)[0] AS type, n.title AS title LIMIT $limit",
+        {"q": q, "limit": int(limit)}
+    )
+    repo.close()
+    return rows
+
+
+def health() -> Dict:
+    try:
+        repo = Neo4jRepo()
+        rows = repo.read("RETURN 1 AS ok")
+        repo.close()
+        return {"ok": True}
+    except Exception:
+        return {"ok": False}
+
+
 def list_items(kind: str, subject_uid: str | None = None, section_uid: str | None = None) -> List[Dict]:
     repo = Neo4jRepo()
     if kind == 'subjects':

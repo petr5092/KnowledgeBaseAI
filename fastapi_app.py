@@ -1,6 +1,6 @@
 import os
 from typing import List, Dict
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel
 
 from neo4j_utils import (
@@ -53,6 +53,13 @@ def startup_event():
     with driver.session() as session:
         ensure_weight_defaults(session)
     driver.close()
+
+
+def require_api_key(x_api_key: str | None) -> None:
+    import os
+    expected = os.getenv('ADMIN_API_KEY')
+    if expected and x_api_key != expected:
+        raise HTTPException(status_code=401, detail="invalid api key")
 
 
 @app.post("/test_result", summary="Обновить результат теста темы", description=(
@@ -208,8 +215,9 @@ def api_complete_skill(payload: CompleteSkillRequest) -> Dict:
     "Пересчитывает свойство adaptive_weight для всех связей Skill-[:LINKED]->Method"
     " на основе текущих динамичных весов навыков (глобально или после обновлений пользователя)."
 ))
-def recompute_links() -> Dict:
+def recompute_links(x_api_key: str | None = Header(default=None)) -> Dict:
     try:
+        require_api_key(x_api_key)
         stats = recompute_relationship_weights()
         return {"ok": True, "stats": stats}
     except Exception as e:

@@ -4,7 +4,7 @@ from typing import List, Dict
 
 from flask import Flask, jsonify, request, render_template, redirect, url_for
 from neo4j_utils import build_graph_from_neo4j, analyze_knowledge, sync_from_jsonl
-from neo4j_utils import list_items, get_node_details
+from neo4j_utils import list_items, get_node_details, search_titles, health
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -494,6 +494,10 @@ def api_link_skill_method():
 
 @app.post('/api/normalize_kb')
 def api_normalize_kb():
+    expected = os.getenv('ADMIN_API_KEY')
+    provided = request.headers.get('X-API-Key')
+    if expected and provided != expected:
+        return jsonify({'ok': False, 'error': 'invalid api key'}), 401
     files = [
         ('subjects', os.path.join(KB_DIR, 'subjects.jsonl')),
         ('sections', os.path.join(KB_DIR, 'sections.jsonl')),
@@ -524,8 +528,25 @@ def api_node_details():
     return jsonify({'ok': True, 'details': details})
 
 
+@app.get('/api/search')
+def api_search():
+    q = request.args.get('q', '')
+    limit = int(request.args.get('limit', '20'))
+    items = search_titles(q, limit)
+    return jsonify({'ok': True, 'items': items})
+
+
+@app.get('/health')
+def api_health():
+    return jsonify(health())
+
+
 @app.post('/api/delete_record')
 def api_delete_record():
+    expected = os.getenv('ADMIN_API_KEY')
+    provided = request.headers.get('X-API-Key')
+    if expected and provided != expected:
+        return jsonify({'ok': False, 'error': 'invalid api key'}), 401
     payload = request.get_json(force=True)
     kind = payload.get('type')
     uid = payload.get('uid')
@@ -560,6 +581,11 @@ def api_delete_record():
 
 @app.post('/api/neo4j_sync')
 def api_neo4j_sync():
+    # simple header-based key protection
+    expected = os.getenv('ADMIN_API_KEY')
+    provided = request.headers.get('X-API-Key')
+    if expected and provided != expected:
+        return jsonify({'ok': False, 'error': 'invalid api key'}), 401
     stats = sync_from_jsonl()
     return jsonify({'ok': True, 'stats': stats})
 

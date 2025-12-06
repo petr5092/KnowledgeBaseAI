@@ -114,11 +114,15 @@ async function renderGraph() {
   });
 
   $('searchBtn').addEventListener('click', () => {
-    const q = $('searchBox').value.trim().toLowerCase();
-    cy.nodes().forEach(n => {
-      const match = (n.data('label') || '').toLowerCase().includes(q);
-      n.style('border-width', match ? 3 : 0);
-      n.style('border-color', match ? '#f5a623' : '#000');
+    const q = $('searchBox').value.trim();
+    axios.get('/api/search', { params: { q, limit: 50 } }).then(({ data }) => {
+      const ids = new Set((data.items || []).map(it => it.uid));
+      cy.nodes().forEach(n => {
+        const match = ids.has(n.id());
+        n.style('border-width', match ? 3 : 0);
+        n.style('border-color', match ? '#f5a623' : '#000');
+        if (match) n.style('label', n.data('label'));
+      });
     });
   });
 }
