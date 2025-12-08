@@ -8,3 +8,5 @@
 {"uid": "SEC-CALC", "subject_uid": "SUB-MATH", "title": "Математический анализ", "description": "Пределы, производные, интегралы и их приложения."}
 {"uid": "SEC-VECT", "subject_uid": "SUB-MATH", "title": "Векторы и аналитическая геометрия", "description": "Векторы, операции, линии и плоскости в координатах."}
 {"uid": "SEC-АЛГЕБРА", "subject_uid": "SUB-MATH", "title": "Алгебра", "description": ""}
+{"uid": "SEC-GENERATEDSECTION-8f8754", "subject_uid": "SUB-MATH", "title": "Generated Section", "description": ""}
+{"uid": "SEC-AUTOGEN-SECTION-8ed61e", "subject_uid": "SUB-MATH", "title": "Autogen Section", "description": ""}
