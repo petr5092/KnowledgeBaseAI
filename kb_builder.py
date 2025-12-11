@@ -229,6 +229,17 @@ def add_example(title: str, statement: str = '', topic_uid: Optional[str] = None
     return {'uid': uid}
 
 
+def link_topic_prereq(target_topic_uid: str, prereq_topic_uid: str, weight: float = 1.0) -> Dict:
+    append_jsonl(get_path('topic_prereqs.jsonl'), {'target_uid': target_topic_uid, 'prereq_uid': prereq_topic_uid, 'weight': float(weight)})
+    return {'ok': True}
+
+
+def add_content_unit(topic_uid: str, branch: str, unit_type: str, content: Dict, complexity: float = 0.0, uid: Optional[str] = None) -> Dict:
+    uid = uid or make_uid('UNIT', f"{topic_uid}-{unit_type}")
+    append_jsonl(get_path('content_units.jsonl'), {'uid': uid, 'topic_uid': topic_uid, 'branch': branch, 'type': unit_type, 'payload': content, 'complexity': float(complexity)})
+    return {'uid': uid}
+
+
 def link_example_skill(example_uid: str, skill_uid: str, role: str = 'target') -> Dict:
     append_jsonl(get_path('example_skills.jsonl'), {'example_uid': example_uid, 'skill_uid': skill_uid, 'role': role})
     return {'ok': True}

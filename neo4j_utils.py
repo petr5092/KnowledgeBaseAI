@@ -50,6 +50,7 @@ def ensure_constraints(session):
     session.run("CREATE CONSTRAINT topic_uid_unique IF NOT EXISTS FOR (n:Topic) REQUIRE n.uid IS UNIQUE")
     session.run("CREATE CONSTRAINT skill_uid_unique IF NOT EXISTS FOR (n:Skill) REQUIRE n.uid IS UNIQUE")
     session.run("CREATE CONSTRAINT method_uid_unique IF NOT EXISTS FOR (n:Method) REQUIRE n.uid IS UNIQUE")
+    session.run("CREATE CONSTRAINT contentunit_uid_unique IF NOT EXISTS FOR (n:ContentUnit) REQUIRE n.uid IS UNIQUE")
     session.run("CREATE CONSTRAINT goal_uid_unique IF NOT EXISTS FOR (n:Goal) REQUIRE n.uid IS UNIQUE")
     session.run("CREATE CONSTRAINT objective_uid_unique IF NOT EXISTS FOR (n:Objective) REQUIRE n.uid IS UNIQUE")
     session.run("CREATE INDEX subject_title_idx IF NOT EXISTS FOR (n:Subject) ON (n.title)")
@@ -102,6 +103,8 @@ def sync_from_jsonl() -> Dict:
         topic_skills = _load_jsonl(os.path.join(KB_DIR, 'skill_topics.jsonl'))
     topic_goals = _load_jsonl(os.path.join(KB_DIR, 'topic_goals.jsonl'))
     topic_objectives = _load_jsonl(os.path.join(KB_DIR, 'topic_objectives.jsonl'))
+    topic_prereqs = _load_jsonl(os.path.join(KB_DIR, 'topic_prereqs.jsonl'))
+    content_units = _load_jsonl(os.path.join(KB_DIR, 'content_units.jsonl'))
 
     repo = Neo4jRepo()
     with repo.driver.session() as session:
@@ -128,6 +131,18 @@ def sync_from_jsonl() -> Dict:
         "UNWIND $rows AS r MERGE (n:Method {uid:r.uid}) SET n.title=r.title, n.method_text=COALESCE(r.method_text,''), n.applicability_types=COALESCE(r.applicability_types,[])",
         methods, 500
     )
+    unit_rows = [{
+        "uid": (u.get("uid") or f"UNIT-{u.get('topic_uid')}-{abs(hash((u.get('type') or '')+(u.get('branch') or '')))%100000}"),
+        "topic_uid": u.get("topic_uid"),
+        "branch": u.get("branch"),
+        "type": u.get("type"),
+        "payload": json.dumps(u.get("payload", {}), ensure_ascii=False),
+        "complexity": float(u.get("complexity", 0.0) or 0.0)
+    } for u in content_units if u.get("topic_uid")]
+    repo.write_unwind(
+        "UNWIND $rows AS r MERGE (n:ContentUnit {uid:r.uid}) SET n.branch=r.branch, n.type=r.type, n.payload=r.payload, n.complexity=r.complexity",
+        unit_rows, 500
+    )
 
     repo.write_unwind(
         "UNWIND $rows AS r MATCH (a:Subject {uid:r.subject_uid}), (b:Section {uid:r.uid}) MERGE (a)-[:CONTAINS]->(b)",
@@ -145,6 +160,22 @@ def sync_from_jsonl() -> Dict:
     repo.write_unwind(
         "UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (s:Skill {uid:r.skill_uid}) MERGE (t)-[rel:USES_SKILL]->(s) SET rel.weight=COALESCE(r.weight,'linked'), rel.confidence=COALESCE(r.confidence,0.9)",
         [ts for ts in topic_skills if ts.get('topic_uid') and ts.get('skill_uid')], 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MATCH (t:Topic {uid:r.target_uid}), (p:Topic {uid:r.prereq_uid}) MERGE (t)-[rel:PREREQ]->(p) SET rel.weight=COALESCE(r.weight,1.0)",
+        [pr for pr in topic_prereqs if pr.get('target_uid') and pr.get('prereq_uid')], 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (u:ContentUnit {uid:r.uid}) WHERE r.branch='learning' MERGE (t)-[:HAS_LEARNING_PATH]->(u)",
+        unit_rows, 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (u:ContentUnit {uid:r.uid}) WHERE r.branch='consolidation' MERGE (t)-[:HAS_PRACTICE_PATH]->(u)",
+        unit_rows, 500
+    )
+    repo.write_unwind(
+        "UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (u:ContentUnit {uid:r.uid}) WHERE r.branch='repetition' MERGE (t)-[:HAS_MASTERY_PATH]->(u)",
+        unit_rows, 500
     )
     repo.write_unwind(
         "UNWIND $rows AS r MATCH (a:Skill {uid:r.skill_uid}), (b:Method {uid:r.method_uid}) MERGE (a)-[rel:LINKED]->(b) SET rel.weight=COALESCE(r.weight,'linked'), rel.confidence=COALESCE(r.confidence,0.9)",
@@ -181,6 +212,8 @@ def sync_from_jsonl() -> Dict:
         'skill_methods': len(skill_methods),
         'goals': len(topic_goals),
         'objectives': len(topic_objectives)
+        , 'prereqs': len(topic_prereqs)
+        , 'content_units': len(content_units)
     }
 
 
