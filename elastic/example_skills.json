@@ -1,9 +1,0 @@
-{
-  "settings": {"number_of_shards": 1},
-  "mappings": {
-    "properties": {
-      "example_uid": {"type": "keyword"},
-      "skill_uid": {"type": "keyword"}
-    }
-  }
-}
