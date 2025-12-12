@@ -2,6 +2,7 @@ import os
 import json
 from functools import lru_cache
 from typing import Dict, List, Set
+from neo4j_repo import Neo4jRepo
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 KB_DIR = os.path.join(os.path.dirname(BASE_DIR), 'kb')
@@ -43,17 +44,41 @@ def select_examples_for_topics(
     difficulty_max: int = 5,
     exclude_uids: Set[str] | None = None,
 ):
-    idx = get_examples_indexed()
     exclude = exclude_uids or set()
     pool: List[Dict] = []
-    for tu in topic_uids:
-        for e in idx["by_topic"].get(tu, []):
-            d = int(e.get('difficulty', 3) or 3)
-            if d < difficulty_min or d > difficulty_max:
-                continue
-            if e.get('uid') in exclude:
-                continue
-            pool.append(e)
+    # Try Neo4j if configured
+    if os.getenv('NEO4J_URI') and os.getenv('NEO4J_USER') and os.getenv('NEO4J_PASSWORD'):
+        try:
+            repo = Neo4jRepo()
+            rows = repo.read(
+                (
+                    "UNWIND $t AS tuid "
+                    "MATCH (t:Topic {uid:tuid})-[:HAS_QUESTION]->(q:Question) "
+                    "RETURN q.uid AS uid, q.title AS title, q.statement AS statement, q.difficulty AS difficulty, t.uid AS topic_uid"
+                ),
+                {"t": topic_uids}
+            )
+            for r in rows:
+                d = int(r.get('difficulty', 3) or 3)
+                if d < difficulty_min or d > difficulty_max:
+                    continue
+                if r.get('uid') in exclude:
+                    continue
+                pool.append(r)
+            repo.close()
+        except Exception:
+            pool = []
+    # Fallback to JSONL
+    if not pool:
+        idx = get_examples_indexed()
+        for tu in topic_uids:
+            for e in idx["by_topic"].get(tu, []):
+                d = int(e.get('difficulty', 3) or 3)
+                if d < difficulty_min or d > difficulty_max:
+                    continue
+                if e.get('uid') in exclude:
+                    continue
+                pool.append(e)
     # simple diversity: round-robin by topic order
     selected: List[Dict] = []
     seen_by_topic: Dict[str, int] = {tu: 0 for tu in topic_uids}
@@ -74,3 +99,6 @@ def select_examples_for_topics(
                 break
     return selected
 
+def all_topic_uids_from_examples() -> List[str]:
+    idx = get_examples_indexed()
+    return list(idx["by_topic"].keys())

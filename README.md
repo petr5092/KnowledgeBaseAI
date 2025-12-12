@@ -1,14 +1,14 @@
-# KnowledgeBaseAI — граф знаний с персонализацией (Neo4j + Flask + FastAPI)
+# KnowledgeBaseAI — ядро графа знаний (Neo4j + Flask + FastAPI)
 
-Единый граф базы знаний в Neo4j, веб‑интерфейс для визуализации, API для синхронизации данных, аналитики и построения персонализированных дорожных карт обучения. Глобальные статичные веса задают сложность материала, а динамичные веса обновляются по прогрессу учащихся (персонально на пользователя).
+Единый граф базы знаний в Neo4j, веб‑интерфейс для визуализации, API для синхронизации данных, аналитики и построения адаптивных дорожных карт. Ядро статлес: оно не хранит пользователей и их прогресс; персональные веса приходят извне (из ЛМС) и используются только для вычислений.
 
 ## Структура проекта
 
 ```
 web_app.py              # Flask UI и REST для графа/синхронизации/аналитики
 static/js/knowledge.js  # Визуализация графа (Cytoscape)
-neo4j_utils.py          # Клиент Neo4j, синхронизация, аналитика, веса, пререквизиты, персонализация
-fastapi_app.py          # FastAPI: тесты, обновление весов, дорожные карты, пользовательские API
+neo4j_utils.py          # Клиент Neo4j, синхронизация, аналитика, веса, пререквизиты, stateless вычисления
+fastapi_app.py          # FastAPI: stateless эндпоинты тестов/весов/дорожных карт/вопросов
 kb_builder.py           # Автогенерация целей/задач и автосвязи навыков-методов
 scripts/clear_neo4j.py  # Полная очистка Neo4j (узлы/связи/индексы/констрейнты)
 kb/*.jsonl              # Источники данных (JSONL сиды)
@@ -17,7 +17,7 @@ requirements.txt        # Зависимости (Flask, FastAPI, Neo4j и др.
 
 ## Модель графа
 
-- Узлы: `Subject`, `Section`, `Topic`, `Skill`, `Method`, `Goal`, `Objective`, `User`
+- Узлы: `Subject`, `Section`, `Topic`, `Skill`, `Method`, `Goal`, `Objective`
 - Связи:
   - `Subject-[:CONTAINS]->Section`
   - `Section-[:CONTAINS]->Topic`
@@ -25,12 +25,9 @@ requirements.txt        # Зависимости (Flask, FastAPI, Neo4j и др.
   - `Skill-[:LINKED]->Method` (свойства `weight`, `confidence`, `adaptive_weight`)
   - `Topic-[:TARGETS]->(Goal|Objective)`
   - `Topic-[:PREREQ]->Topic` (пререквизиты)
-  - `User-[:PROGRESS_TOPIC]->Topic` (персональные динамичные веса темы)
-  - `User-[:PROGRESS_SKILL]->Skill` (персональные динамичные веса навыка)
 - Веса:
-  - `static_weight` — базовая сложность (эвристика от текста/терминов)
-  - `dynamic_weight` — глобальная динамика (если пользователь не задан)
-  - пользовательские `dynamic_weight` — на связях `PROGRESS_*`
+  - `static_weight` — базовая сложность (эвристика по содержимому)
+  - `dynamic_weight` — глобальная динамика графа
   - `adaptive_weight` — на `LINKED` (пересчитывается из динамичного веса навыка)
 
 ## Быстрый старт (локально)
@@ -89,20 +86,16 @@ requirements.txt        # Зависимости (Flask, FastAPI, Neo4j и др.
   - `POST /api/subjects`, `/api/sections`, `/api/topics`, `/api/skills`, `/api/methods`
   - `POST /api/topic_goals`, `/api/topic_objectives`, `/api/skill_methods`
 
-## FastAPI (тесты, веса, дорожные карты)
+## FastAPI (stateless ядро)
 
-- Глобальные обновления (без пользователя):
-  - `POST /test_result` — обновляет `dynamic_weight` темы и пересчитывает `adaptive_weight`
-  - `POST /skill_test_result` — обновляет `dynamic_weight` навыка и пересчитывает `adaptive_weight`
-- Пользовательские обновления/просмотр:
-  - `POST /test_result` с `user_id` — обновляет `User-[:PROGRESS_TOPIC]->Topic`
-  - `POST /skill_test_result` с `user_id` — обновляет `User-[:PROGRESS_SKILL]->Skill`
-  - `GET /user/knowledge_level/{user_id}/{topic_uid}`
-  - `GET /user/skill_level/{user_id}/{skill_uid}`
-- Дорожные карты:
-  - Глобальная: `POST /roadmap {subject_uid?, limit}`
-  - Персональная: `POST /user/roadmap {user_id, subject_uid?, limit}`
-- Перерасчёт связей:
+- Эндпоинты тестов/весов (stateless вычисления без записи):
+  - `POST /test_result {topic_uid, score, base_weight?}` → `{topic_uid, base_weight, user_weight}`
+  - `POST /skill_test_result {skill_uid, score, base_weight?}` → `{skill_uid, base_weight, user_weight}`
+- Дорожные карты (принимают веса из ЛМС):
+  - `POST /user/roadmap {subject_uid?, topic_weights{}, skill_weights{}, limit?, penalty_factor?}` → `[{topic_uid, effective_weight, ...}]`
+- Адаптивные вопросы по темам:
+  - `POST /adaptive/questions {subject_uid?, topic_weights{}, skill_weights{}, question_count, difficulty_min?, difficulty_max?, exclude_question_uids?}` → `[questions]`
+- Служебное:
   - `POST /recompute_links` — обновляет `adaptive_weight` на `LINKED`
 
 ## Пререквизиты и статичные веса
@@ -113,6 +106,10 @@ requirements.txt        # Зависимости (Flask, FastAPI, Neo4j и др.
 ## Служебные утилиты
 
 - Очистка графа: `python scripts/clear_neo4j.py` (удаляет узлы/связи/индексы/констрейнты)
+
+## Данные пользователя
+
+- Данные пользователя и его веса хранятся во внешней ЛМС, ядро KnowledgeBaseAI остаётся универсальным сервисом графа предметной области. Ядро никогда не создаёт узлы `User` и не пишет персональные связи в граф.
 
 ## Переменные окружения
 
@@ -149,6 +146,14 @@ Traefik выпустит сертификаты автоматически (HTTP
   - FastAPI (`uvicorn fastapi_app:app --host 0.0.0.0 --port 8000`)
 - Traefik/Nginx — по желанию, для маршрутизации HTTP‑трафика на порты 5000/8000. Секреты передавайте только через переменные окружения. 
 
+## Формат вопросов
+
+- JSONL (`kb/examples.jsonl`):
+
+```
+{"uid":"EX-123","title":"Найдите корень","statement":"2x - 5 = 11","topic_uid":"TOP-LINEQ","difficulty":3}
+```
+
 ## Примеры
 
 - Синхронизация:
@@ -163,15 +168,21 @@ Traefik выпустит сертификаты автоматически (HTTP
   curl http://localhost:5000/api/analysis
   ```
 
-- Тест пользователя (персонализация):
+– Пример stateless расчёта веса темы:
 
   ```
   curl -X POST http://localhost:8000/test_result \
     -H 'Content-Type: application/json' \
-    -d '{"topic_uid":"TOP-ALG-QUAD-EQ","score":42,"user_id":"user-001"}'
+    -d '{"topic_uid":"TOP-ALG-QUAD-EQ","score":42}'
   ```
 
 ## Примечания безопасности
 
 - Не храните пароли/URI в коде и файлах репозитория. Используйте только переменные окружения.
-- Глобальные данные графа отделены от пользовательских весов: персональные динамичные веса хранятся на связях с `User` и не изменяют первичные сущности.
+– Глобальные данные графа отделены от пользовательских весов: персональные веса не хранятся в ядре и приходят из ЛМС как параметры.
+- Пайплайн создания KB (см. `/kb/rebuild_async`):
+  1. Загрузка/генерация сидов (`kb/*.jsonl`)
+  2. Импорт в Neo4j (`sync_from_jsonl()`)
+  3. Запуск `compute_static_weights()` и `add_prereqs_heuristic()`
+  4. Аналитика (`/api/analysis` или `analyze_knowledge()`): логирование проблем
+  5. Возврат статуса джоба: `ok`, `warnings`, `errors`

@@ -148,7 +148,7 @@ def ensure_weight_defaults_repo(repo: Neo4jRepo):
 
 
 def ensure_user_profile(session, user_id: str):
-    """Гарантировать наличие узла User в графе."""
+    """LEGACY: use external LMS for user data."""
     session.run("MERGE (:User {id:$id})", id=user_id)
 
 

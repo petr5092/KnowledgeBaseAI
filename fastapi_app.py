@@ -32,7 +32,7 @@ from neo4j_utils import (
     knowledge_level_from_weight,
     build_user_roadmap_stateless,
 )
-from services.question_selector import select_examples_for_topics
+from services.question_selector import select_examples_for_topics, all_topic_uids_from_examples
 from kb_jobs import start_rebuild_async, get_job_status
 
 app = FastAPI(
@@ -215,7 +215,7 @@ def get_adaptive_questions(payload: AdaptiveTestRequest) -> Dict:
         user_skill_weights=payload.skill_weights,
         limit=payload.question_count * 3,
     )
-    topic_uids = [t["topic_uid"] for t in roadmap]
+    topic_uids = [t["topic_uid"] for t in roadmap] or all_topic_uids_from_examples()
     examples = select_examples_for_topics(
         topic_uids=topic_uids,
         limit=payload.question_count,

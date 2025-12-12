@@ -76,10 +76,12 @@ class Neo4jRepo:
     # Convenience helpers
     def ensure_user(self, user_id: str) -> None:
         """Гарантировать наличие узла User."""
+        # LEGACY: use external LMS for user data.
         self.write("MERGE (:User {id:$id})", {"id": user_id})
 
     def set_topic_user_weight(self, user_id: str, topic_uid: str, weight: float) -> None:
         """Установить персональный вес пользователя по теме."""
+        # LEGACY: use external LMS for user data.
         self.ensure_user(user_id)
         self.write(
             "MATCH (u:User {id:$uid}), (t:Topic {uid:$tuid}) MERGE (u)-[r:PROGRESS_TOPIC]->(t) SET r.dynamic_weight=$dw",
@@ -88,6 +90,7 @@ class Neo4jRepo:
 
     def get_topic_user_weight(self, user_id: str, topic_uid: str) -> Dict | None:
         """Получить персональный вес пользователя по теме."""
+        # LEGACY: use external LMS for user data.
         rows = self.read(
             "MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t:Topic {uid:$tuid}) RETURN r.dynamic_weight AS dw, t.static_weight AS sw, t.title AS title",
             {"uid": user_id, "tuid": topic_uid}
@@ -96,6 +99,7 @@ class Neo4jRepo:
 
     def set_skill_user_weight(self, user_id: str, skill_uid: str, weight: float) -> None:
         """Установить персональный вес пользователя по навыку."""
+        # LEGACY: use external LMS for user data.
         self.ensure_user(user_id)
         self.write(
             "MATCH (u:User {id:$uid}), (s:Skill {uid:$suid}) MERGE (u)-[r:PROGRESS_SKILL]->(s) SET r.dynamic_weight=$dw",
@@ -104,6 +108,7 @@ class Neo4jRepo:
 
     def get_skill_user_weight(self, user_id: str, skill_uid: str) -> Dict | None:
         """Получить персональный вес пользователя по навыку."""
+        # LEGACY: use external LMS for user data.
         rows = self.read(
             "MATCH (:User {id:$uid})-[r:PROGRESS_SKILL]->(s:Skill {uid:$suid}) RETURN r.dynamic_weight AS dw, s.static_weight AS sw, s.title AS title",
             {"uid": user_id, "suid": skill_uid}
