@@ -1,45 +1,10 @@
-# StudyNinja 2.0 — Список задач по концепции и мини‑урокам
+# Рефактор KnowledgeBaseAI Core
 
-## Модель данных и файлы KB
-- [ ] Добавить `topic_prereqs.jsonl` и функцию `link_topic_prereq` в `kb_builder.py` для связи `Topic -> PREREQ -> Topic`.
-- [ ] Добавить `content_units.jsonl` и функцию `add_content_unit` с полями `branch`, `type`, `payload`, `complexity`.
-- [ ] Расширить `kb_builder.py` генерацией структуры трех веток (learning/consolidation/repetition) для каждой темы.
-- [ ] Нормализовать существующие данные: сконвертировать `skill_topics.jsonl` → `topic_skills.jsonl` и создать базовые `content_units` для ключевых тем.
-- [ ] Пересмотреть стратегию генерации UID: перейти на `UUIDv4/KSUID`, добавить миграционные утилиты для переименования ссылок.
-
-## Neo4j схема и синхронизация
-- [ ] Добавить узел `ContentUnit` и связи `Topic-[:HAS_LEARNING_PATH]->ContentUnit`, `Topic-[:HAS_PRACTICE_PATH]->ContentUnit`, `Topic-[:HAS_MASTERY_PATH]->ContentUnit`.
-- [ ] Добавить связь `Topic-[:PREREQ]->Topic` и индексы/констрейнты для новых типов.
-- [ ] Расширить `neo4j_utils.sync_from_jsonl()` поддержкой новых файлов (`content_units.jsonl`, `topic_prereqs.jsonl`) и соответствующих связей.
-- [ ] Обновить `/user/roadmap` для учета веток и выдачи `ContentUnit` по активной ветке.
-
-## AI‑генерация и семантика
-- [ ] Переписать `generate_topic_bundle_openai` на структурированный JSON формата I/We/You для трех веток.
-- [ ] Вынести промпты в шаблоны с Few‑Shot и параметризацией профилем пользователя.
-- [ ] Реализовать асинхронные батч‑вызовы OpenAI (aiohttp/asyncio) для массовой генерации.
-- [ ] Заменить `autolink_skills_methods` на семантическую автолинковку через embeddings и косинусное сходство (порог 0.85).
-- [ ] Добавить кэш/векторное хранилище (FAISS/Qdrant) для повторного использования эмбеддингов.
-
-## Адаптивная логика и эндпоинты API
-- [ ] Реализовать эндпоинт `/api/lesson/start` (вход: `topic_id`, `branch_type`; выход: структура урока I/We/You).
-- [ ] Реализовать эндпоинт `/api/lesson/submit_step` с проверкой шага решения и фидбеком от LLM.
-- [ ] Добавить фоновый воркер пересчета весов `recalculate_user_graph` и хранение `User-[PROGRESS {dynamic_weight,last_branch}]->Topic`.
-- [ ] Реализовать диагностическое тестирование (бинарный поиск по графу) и эндпоинт `/api/diagnostics/start`.
-
-## Профилирование пользователя
-- [ ] Добавить таблицу `user_profile` в PostgreSQL и API для прохождения укороченных тестов (MBTI/VARK).
-- [ ] Интегрировать профиль пользователя в System Prompt ИИ‑репетитора.
-
-## Визуализация фронтенда
-- [ ] Построить компонент графа (React Flow) с узлами‑темами и тремя прогресс‑барами.
-- [ ] Реализовать блокировки веток: Consolidation открывается при Learning ≥ 80%, Repetition при Consolidation ≥ 90%.
-- [ ] Добавить чат‑интерфейс ИИ‑репетитора с реакциями и персонализацией.
-
-## Валидация целостности графа
-- [ ] Реализовать `validate_graph_integrity`: поиск циклов, «сирот», отчет для методиста.
-- [ ] Запланировать периодическую проверку целостности и автоматические рекомендации по исправлениям.
-
-## Тестирование и эксплуатация
-- [ ] Добавить unit‑тесты для `kb_builder`, `neo4j_utils` и lesson‑эндпоинтов.
-- [ ] Провести нагрузочные тесты генерации контента и пересчета весов.
-- [ ] Ввести очередь задач и rate limiting для OpenAI API.
+- [x] Пометить user-функции в `neo4j_repo.py` как deprecated
+- [x] Переписать `neo4j_utils.py` на stateless-логику весов/дорожной карты
+- [x] Добавить `services/question_selector.py` и выбор вопросов из KB
+- [x] Переработать `fastapi_app.py` под stateless API
+- [x] Обновить `sync_from_jsonl()` для PREREQ и веса
+- [x] Добавить `analyze_prereqs()` и монотонность статических весов
+- [x] Создать `docs/core_architecture.md` с описанием ядра
+- [x] Обновлять этот файл и отмечать выполнение

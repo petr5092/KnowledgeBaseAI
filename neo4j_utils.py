@@ -16,6 +16,69 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 KB_DIR = os.path.join(BASE_DIR, 'kb')
 
 
+def compute_user_weight(base_weight: float, score: float) -> float:
+    """Статическая функция перерасчёта пользовательского веса без записи в граф."""
+    delta = (50.0 - float(score)) / 100.0
+    new_weight = max(0.0, min(1.0, float(base_weight) + delta))
+    return new_weight
+
+
+def compute_topic_user_weight(topic_uid: str, score: float, base_weight: float | None = None) -> Dict:
+    """Статeless перерасчёт веса темы для пользователя: возвращает базовый и новый пользовательский вес."""
+    if base_weight is None:
+        if not (os.getenv('NEO4J_URI') and os.getenv('NEO4J_USER') and os.getenv('NEO4J_PASSWORD')):
+            base_weight = 0.5
+        else:
+            try:
+                repo = Neo4jRepo()
+                rows = repo.read(
+                    "MATCH (t:Topic {uid:$uid}) RETURN coalesce(t.dynamic_weight, t.static_weight, 0.5) AS w",
+                    {"uid": topic_uid}
+                )
+                base_weight = rows[0]["w"] if rows else 0.5
+                repo.close()
+            except Exception:
+                base_weight = 0.5
+    return {
+        "topic_uid": topic_uid,
+        "base_weight": base_weight,
+        "user_weight": compute_user_weight(base_weight, score),
+    }
+
+
+def compute_skill_user_weight(skill_uid: str, score: float, base_weight: float | None = None) -> Dict:
+    """Статeless перерасчёт веса навыка для пользователя: возвращает базовый и новый пользовательский вес."""
+    if base_weight is None:
+        if not (os.getenv('NEO4J_URI') and os.getenv('NEO4J_USER') and os.getenv('NEO4J_PASSWORD')):
+            base_weight = 0.5
+        else:
+            try:
+                repo = Neo4jRepo()
+                rows = repo.read(
+                    "MATCH (s:Skill {uid:$uid}) RETURN coalesce(s.dynamic_weight, s.static_weight, 0.5) AS w",
+                    {"uid": skill_uid}
+                )
+                base_weight = rows[0]["w"] if rows else 0.5
+                repo.close()
+            except Exception:
+                base_weight = 0.5
+    return {
+        "skill_uid": skill_uid,
+        "base_weight": base_weight,
+        "user_weight": compute_user_weight(base_weight, score),
+    }
+
+
+def knowledge_level_from_weight(weight: float) -> str:
+    """Определить уровень знания по весу."""
+    w = float(weight)
+    if w < 0.3:
+        return "high"
+    if w < 0.7:
+        return "medium"
+    return "low"
+
+
 def _load_jsonl(filepath: str) -> List[Dict]:
     """Загрузить JSONL как список словарей, игнорируя битые строки."""
     data: List[Dict] = []
@@ -161,9 +224,21 @@ def sync_from_jsonl() -> Dict:
         "UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (s:Skill {uid:r.skill_uid}) MERGE (t)-[rel:USES_SKILL]->(s) SET rel.weight=COALESCE(r.weight,'linked'), rel.confidence=COALESCE(r.confidence,0.9)",
         [ts for ts in topic_skills if ts.get('topic_uid') and ts.get('skill_uid')], 500
     )
+    pr_rows = []
+    for pr in topic_prereqs:
+        tu = pr.get('topic_uid') or pr.get('target_uid')
+        pu = pr.get('prereq_uid')
+        if not tu or not pu:
+            continue
+        pr_rows.append({
+            'topic_uid': tu,
+            'prereq_uid': pu,
+            'weight': pr.get('weight', 1.0),
+            'confidence': pr.get('confidence', 0.9),
+        })
     repo.write_unwind(
-        "UNWIND $rows AS r MATCH (t:Topic {uid:r.target_uid}), (p:Topic {uid:r.prereq_uid}) MERGE (t)-[rel:PREREQ]->(p) SET rel.weight=COALESCE(r.weight,1.0)",
-        [pr for pr in topic_prereqs if pr.get('target_uid') and pr.get('prereq_uid')], 500
+        "UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (p:Topic {uid:r.prereq_uid}) MERGE (t)-[rel:PREREQ]->(p) SET rel.weight=COALESCE(r.weight,1.0), rel.confidence=COALESCE(r.confidence,0.9)",
+        pr_rows, 500
     )
     repo.write_unwind(
         "UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (u:ContentUnit {uid:r.uid}) WHERE r.branch='learning' MERGE (t)-[:HAS_LEARNING_PATH]->(u)",
@@ -421,6 +496,82 @@ def build_adaptive_roadmap(subject_uid: str | None = None, limit: int = 50) -> L
     return roadmap
 
 
+def build_user_roadmap_stateless(
+    subject_uid: str | None,
+    user_topic_weights: Dict[str, float],
+    user_skill_weights: Dict[str, float] | None = None,
+    limit: int = 50,
+    penalty_factor: float = 0.15,
+) -> List[Dict]:
+    """Построить статическую персональную дорожную карту на основе переданных весов без записи в граф."""
+    if not (os.getenv('NEO4J_URI') and os.getenv('NEO4J_USER') and os.getenv('NEO4J_PASSWORD')):
+        return []
+    repo = Neo4jRepo()
+    if subject_uid:
+        rows = repo.read(
+            (
+                "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) "
+                "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                "RETURN t.uid AS uid, t.title AS title, "
+                "coalesce(t.static_weight, 0.5) AS sw, "
+                "coalesce(t.dynamic_weight, t.static_weight, 0.5) AS dw, "
+                "collect(pre.uid) AS prereqs"
+            ),
+            {"su": subject_uid}
+        )
+    else:
+        rows = repo.read(
+            (
+                "MATCH (t:Topic) "
+                "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                "RETURN t.uid AS uid, t.title AS title, "
+                "coalesce(t.static_weight, 0.5) AS sw, "
+                "coalesce(t.dynamic_weight, t.static_weight, 0.5) AS dw, "
+                "collect(pre.uid) AS prereqs"
+            )
+        )
+    topic_index = {r["uid"]: r for r in rows}
+    roadmap: List[Dict] = []
+    for r in rows:
+        tuid = r["uid"]
+        base_weight = float(r["dw"] or r["sw"] or 0.5)
+        user_w = float(user_topic_weights.get(tuid, base_weight))
+        missing = 0
+        for pre_uid in r.get("prereqs", []) or []:
+            pre_base = 0.5
+            if pre_uid in user_topic_weights:
+                pre_w = float(user_topic_weights.get(pre_uid, pre_base))
+            else:
+                pre_row = topic_index.get(pre_uid)
+                pre_w = float((pre_row.get("dw") if pre_row else pre_base) or pre_base)
+            if pre_w <= 0.3:
+                missing += 1
+        effective_weight = max(0.0, user_w - penalty_factor * missing)
+        pr = "high" if user_w < 0.3 else ("medium" if user_w < 0.7 else "low")
+        skills_rows = repo.read(
+            "MATCH (t:Topic {uid:$uid})-[:USES_SKILL]->(sk:Skill) RETURN DISTINCT sk.uid AS uid, sk.title AS title, coalesce(sk.dynamic_weight, sk.static_weight, 0.5) AS w",
+            {"uid": tuid}
+        )
+        skills = []
+        for s in skills_rows:
+            suid = s["uid"]
+            bw = float(s["w"] or 0.5)
+            uw = float((user_skill_weights or {}).get(suid, bw))
+            skills.append({"uid": suid, "title": s["title"], "base_weight": bw, "user_weight": uw})
+        roadmap.append({
+            "topic_uid": tuid,
+            "title": r["title"],
+            "base_weight": base_weight,
+            "user_weight": user_w,
+            "effective_weight": effective_weight,
+            "priority": pr,
+            "prereqs": r.get("prereqs", []) or [],
+            "skills": skills,
+        })
+    repo.close()
+    roadmap.sort(key=lambda x: x.get("effective_weight", 0.0), reverse=True)
+    return roadmap[:limit]
+
 def recompute_relationship_weights() -> Dict:
     """Пересчитать adaptive_weight на всех связях Skill→Method из динамичных весов навыков."""
     repo = Neo4jRepo()
@@ -443,173 +594,52 @@ def recompute_adaptive_for_skill(skill_uid: str) -> Dict:
 
 
 def update_user_topic_weight(user_id: str, topic_uid: str, score: float) -> Dict:
-    """Обновить персональный вес пользователя по теме (с созданием связи при отсутствии)."""
-    repo = Neo4jRepo()
-    delta = (50.0 - float(score)) / 100.0
-    with repo.driver.session() as session:
-        ensure_weight_defaults(session)
-        ensure_user_profile(session, user_id)
-        cur = session.run(
-            "MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t:Topic {uid:$tuid}) RETURN r.dynamic_weight AS dw, t.static_weight AS sw, t.title AS title",
-            uid=user_id, tuid=topic_uid
-        ).single()
-        if cur is None:
-            base = session.run(
-                "MATCH (t:Topic {uid:$tuid}) RETURN t.static_weight AS sw, t.title AS title",
-                tuid=topic_uid
-            ).single()
-            if base is None:
-                driver.close()
-                return {'uid': topic_uid, 'user_id': user_id, 'title': None, 'static_weight': None, 'dynamic_weight': None}
-            dw = float(base['sw'] or 0.5)
-            session.run(
-                "MATCH (u:User {id:$uid}), (t:Topic {uid:$tuid}) MERGE (u)-[r:PROGRESS_TOPIC]->(t) SET r.dynamic_weight = $dw",
-                uid=user_id, tuid=topic_uid, dw=dw
-            )
-            title = base['title']
-        else:
-            dw = float((cur['dw'] if cur['dw'] is not None else cur['sw'] or 0.5))
-            title = cur['title']
-        new_dw = dw + delta
-        if new_dw < 0.0:
-            new_dw = 0.0
-        if new_dw > 1.0:
-            new_dw = 1.0
-        session.run(
-            "MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t:Topic {uid:$tuid}) SET r.dynamic_weight = $dw",
-            uid=user_id, tuid=topic_uid, dw=new_dw
-        )
-    repo.close()
-    return {'uid': topic_uid, 'user_id': user_id, 'title': title, 'dynamic_weight': new_dw}
+    """Stateless: вернуть переработанный пользовательский вес по теме без записи в граф."""
+    res = compute_topic_user_weight(topic_uid=topic_uid, score=score)
+    return {"user_id": user_id, **res}
 
 
 def update_user_skill_weight(user_id: str, skill_uid: str, score: float) -> Dict:
-    """Обновить персональный вес пользователя по навыку (с пересчётом адаптивных весов связей)."""
-    repo = Neo4jRepo()
-    delta = (50.0 - float(score)) / 100.0
-    with repo.driver.session() as session:
-        ensure_weight_defaults(session)
-        ensure_user_profile(session, user_id)
-        cur = session.run(
-            "MATCH (:User {id:$uid})-[r:PROGRESS_SKILL]->(s:Skill {uid:$suid}) RETURN r.dynamic_weight AS dw, s.static_weight AS sw, s.title AS title",
-            uid=user_id, suid=skill_uid
-        ).single()
-        if cur is None:
-            base = session.run(
-                "MATCH (s:Skill {uid:$suid}) RETURN s.static_weight AS sw, s.title AS title",
-                suid=skill_uid
-            ).single()
-            if base is None:
-                driver.close()
-                return {'uid': skill_uid, 'user_id': user_id, 'title': None, 'static_weight': None, 'dynamic_weight': None}
-            dw = float(base['sw'] or 0.5)
-            session.run(
-                "MATCH (u:User {id:$uid}), (s:Skill {uid:$suid}) MERGE (u)-[r:PROGRESS_SKILL]->(s) SET r.dynamic_weight = $dw",
-                uid=user_id, suid=skill_uid, dw=dw
-            )
-            title = base['title']
-        else:
-            dw = float((cur['dw'] if cur['dw'] is not None else cur['sw'] or 0.5))
-            title = cur['title']
-        new_dw = dw + delta
-        if new_dw < 0.0:
-            new_dw = 0.0
-        if new_dw > 1.0:
-            new_dw = 1.0
-        session.run(
-            "MATCH (:User {id:$uid})-[r:PROGRESS_SKILL]->(s:Skill {uid:$suid}) SET r.dynamic_weight = $dw",
-            uid=user_id, suid=skill_uid, dw=new_dw
-        )
-    repo.close()
-    recompute_adaptive_for_skill(skill_uid)
-    return {'uid': skill_uid, 'user_id': user_id, 'title': title, 'dynamic_weight': new_dw}
+    """Stateless: вернуть переработанный пользовательский вес по навыку без записи в граф."""
+    res = compute_skill_user_weight(skill_uid=skill_uid, score=score)
+    return {"user_id": user_id, **res}
 
 
 def get_user_topic_level(user_id: str, topic_uid: str) -> Dict:
-    """Получить статичный и персональный вес пользователя по теме."""
+    """Stateless: вернуть базовый вес темы и вычисленный уровень пользователя (без графа)."""
     repo = Neo4jRepo()
-    ensure_weight_defaults_repo(repo)
-    repo.ensure_user(user_id)
-    rows = repo.read("MATCH (t:Topic {uid:$tuid}) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t) RETURN t.title AS title, t.static_weight AS sw, COALESCE(r.dynamic_weight, t.dynamic_weight, t.static_weight) AS dw", {"uid": user_id, "tuid": topic_uid})
+    rows = repo.read("MATCH (t:Topic {uid:$uid}) RETURN t.title AS title, coalesce(t.dynamic_weight,t.static_weight,0.5) AS bw", {"uid": topic_uid})
     repo.close()
-    rec = rows[0] if rows else {'title': None, 'sw': None, 'dw': None}
-    return {'uid': topic_uid, 'user_id': user_id, 'title': rec['title'], 'static_weight': rec['sw'], 'dynamic_weight': rec['dw']}
+    if not rows:
+        return {"uid": topic_uid, "user_id": user_id, "title": None, "base_weight": 0.5, "level": knowledge_level_from_weight(0.5)}
+    bw = float(rows[0]["bw"] or 0.5)
+    return {"uid": topic_uid, "user_id": user_id, "title": rows[0]["title"], "base_weight": bw, "level": knowledge_level_from_weight(bw)}
 
 
 def get_user_skill_level(user_id: str, skill_uid: str) -> Dict:
-    """Получить статичный и персональный вес пользователя по навыку."""
+    """Stateless: вернуть базовый вес навыка и вычисленный уровень пользователя (без графа)."""
     repo = Neo4jRepo()
-    ensure_weight_defaults_repo(repo)
-    repo.ensure_user(user_id)
-    rows = repo.read("MATCH (s:Skill {uid:$suid}) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_SKILL]->(s) RETURN s.title AS title, s.static_weight AS sw, COALESCE(r.dynamic_weight, s.dynamic_weight, s.static_weight) AS dw", {"uid": user_id, "suid": skill_uid})
+    rows = repo.read("MATCH (s:Skill {uid:$uid}) RETURN s.title AS title, coalesce(s.dynamic_weight,s.static_weight,0.5) AS bw", {"uid": skill_uid})
     repo.close()
-    rec = rows[0] if rows else {'title': None, 'sw': None, 'dw': None}
-    return {'uid': skill_uid, 'user_id': user_id, 'title': rec['title'], 'static_weight': rec['sw'], 'dynamic_weight': rec['dw']}
+    if not rows:
+        return {"uid": skill_uid, "user_id": user_id, "title": None, "base_weight": 0.5, "level": knowledge_level_from_weight(0.5)}
+    bw = float(rows[0]["bw"] or 0.5)
+    return {"uid": skill_uid, "user_id": user_id, "title": rows[0]["title"], "base_weight": bw, "level": knowledge_level_from_weight(bw)}
 
 
 def build_user_roadmap(user_id: str, subject_uid: str | None = None, limit: int = 50, penalty_factor: float = 0.15) -> List[Dict]:
-    """Построить персональную дорожную карту: темы по персональным весам, их skills/methods по связям темы."""
-    repo = Neo4jRepo()
-    ensure_weight_defaults_repo(repo)
-    repo.ensure_user(user_id)
-    if subject_uid:
-        rows = repo.read("MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t) RETURN t.uid AS uid, t.title AS title, t.static_weight AS sw, COALESCE(r.dynamic_weight, t.dynamic_weight, t.static_weight) AS dw", {"su": subject_uid, "uid": user_id})
-    else:
-        rows = repo.read("MATCH (t:Topic) OPTIONAL MATCH (:User {id:$uid})-[r:PROGRESS_TOPIC]->(t) RETURN t.uid AS uid, t.title AS title, t.static_weight AS sw, COALESCE(r.dynamic_weight, t.dynamic_weight, t.static_weight) AS dw", {"uid": user_id})
-    items = [{'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']} for r in rows]
-    items.sort(key=lambda x: (x['dynamic_weight'] or 0.0), reverse=True)
-    items = items[:limit]
-    roadmap: List[Dict] = []
-    for it in items:
-        pr = 'high' if (it['dynamic_weight'] or 0.0) >= 0.7 else ('medium' if (it['dynamic_weight'] or 0.0) >= 0.4 else 'low')
-        # prereq penalty: lower effective weight if prerequisites not satisfied (user dynamic_weight > 0.3)
-        prereq_rows = repo.read(
-            "MATCH (t:Topic {uid:$uid})-[:PREREQ]->(p:Topic) OPTIONAL MATCH (:User {id:$u})-[r:PROGRESS_TOPIC]->(p) RETURN p.uid AS puid, COALESCE(r.dynamic_weight, p.dynamic_weight, p.static_weight) AS pw",
-            {"uid": it['uid'], "u": user_id}
-        )
-        missing = sum(1 for r in prereq_rows if (r['pw'] or 0.0) > 0.3)
-        effective_dw = (it['dynamic_weight'] or 0.0) - (penalty_factor * missing)
-        if effective_dw < 0:
-            effective_dw = 0.0
-        skills_rows = repo.read(
-            "MATCH (t:Topic {uid:$uid})-[:USES_SKILL]->(sk:Skill) OPTIONAL MATCH (:User {id:$u})-[r:PROGRESS_SKILL]->(sk) RETURN DISTINCT sk.uid AS uid, sk.title AS title, sk.static_weight AS sw, COALESCE(r.dynamic_weight, sk.dynamic_weight, sk.static_weight) AS dw",
-            {"uid": it['uid'], "u": user_id}
-        )
-        skills = [{'uid': r['uid'], 'title': r['title'], 'static_weight': r['sw'], 'dynamic_weight': r['dw']} for r in skills_rows]
-        method_rows = repo.read(
-            "MATCH (t:Topic {uid:$uid})-[:USES_SKILL]->(sk:Skill)-[lk:LINKED]->(m:Method) OPTIONAL MATCH (:User {id:$u})-[r:PROGRESS_SKILL]->(sk) RETURN DISTINCT m.uid AS uid, m.title AS title, COALESCE(r.dynamic_weight, sk.dynamic_weight, sk.static_weight) AS weight",
-            {"uid": it['uid'], "u": user_id}
-        )
-        methods = [{'uid': r['uid'], 'title': r['title'], 'weight': r['weight']} for r in method_rows]
-        roadmap.append({'topic': {**it, 'effective_dynamic_weight': effective_dw, 'missing_prereqs': missing}, 'priority': pr, 'skills': skills, 'methods': methods})
-    # reorder by effective_dynamic_weight
-    roadmap.sort(key=lambda x: (x['topic'].get('effective_dynamic_weight') or 0.0), reverse=True)
-    repo.close()
-    return roadmap
+    """Stateless: совместимость — возвращает дорожную карту на основе глобальных весов (без пользовательских записей)."""
+    return build_user_roadmap_stateless(subject_uid=subject_uid, user_topic_weights={}, user_skill_weights={}, limit=limit, penalty_factor=penalty_factor)
 
 
 def complete_user_topic(user_id: str, topic_uid: str, time_spent_sec: float, errors: int) -> Dict:
-    """Создать связь завершения темы пользователем с метриками."""
-    repo = Neo4jRepo()
-    repo.ensure_user(user_id)
-    repo.write(
-        "MATCH (u:User {id:$uid}), (t:Topic {uid:$tuid}) MERGE (u)-[r:COMPLETED]->(t) SET r.time_spent_sec=$ts, r.errors=$err, r.ts=datetime()",
-        {"uid": user_id, "tuid": topic_uid, "ts": float(time_spent_sec), "err": int(errors)}
-    )
-    repo.close()
-    return {"ok": True}
+    """Stateless-ядро: не хранит завершения; функция-совместимость, не выполняет запись."""
+    return {"ok": True, "stored": False}
 
 
 def complete_user_skill(user_id: str, skill_uid: str, time_spent_sec: float, errors: int) -> Dict:
-    """Создать связь завершения навыка пользователем с метриками."""
-    repo = Neo4jRepo()
-    repo.ensure_user(user_id)
-    repo.write(
-        "MATCH (u:User {id:$uid}), (s:Skill {uid:$suid}) MERGE (u)-[r:COMPLETED]->(s) SET r.time_spent_sec=$ts, r.errors=$err, r.ts=datetime()",
-        {"uid": user_id, "suid": skill_uid, "ts": float(time_spent_sec), "err": int(errors)}
-    )
-    repo.close()
-    return {"ok": True}
+    """Stateless-ядро: не хранит завершения; функция-совместимость, не выполняет запись."""
+    return {"ok": True, "stored": False}
 
 
 def search_titles(q: str, limit: int = 20) -> List[Dict]:
@@ -748,8 +778,74 @@ def compute_static_weights() -> Dict:
             )
             updated_skills += 1
 
+    # enforce monotonicity: if A -> B then weight(A) <= weight(B)
+    with driver.session() as session:
+        res = session.run("MATCH (a:Topic)-[:PREREQ]->(b:Topic) RETURN a.uid AS au, b.uid AS bu, a.static_weight AS aw, b.static_weight AS bw")
+        for r in res:
+            aw = float(r["aw"] or 0.0)
+            bw = float(r["bw"] or 0.0)
+            if aw > bw:
+                session.run("MATCH (t:Topic {uid:$uid}) SET t.static_weight = $bw", uid=r["au"], bw=bw)
+                updated_topics += 1
     driver.close()
     return {"topics": updated_topics, "skills": updated_skills}
+
+
+def analyze_prereqs(subject_uid: str | None = None) -> Dict:
+    """Анализ пререквизитов: поиск циклов, межпредметных связей и аномальных весов."""
+    driver = get_driver()
+    cycles: List[List[str]] = []
+    cross_subject_errors: List[Dict] = []
+    anomalies: List[Dict] = []
+    with driver.session() as session:
+        if subject_uid:
+            rows = session.run(
+                "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) RETURN collect(t.uid) AS uids",
+                su=subject_uid
+            ).single()
+            allowed = set(rows["uids"]) if rows else set()
+        else:
+            allowed = None
+        # detect cycles via simple DFS over PREREQ edges
+        graph = {}
+        res = session.run("MATCH (a:Topic)-[:PREREQ]->(b:Topic) RETURN a.uid AS au, b.uid AS bu")
+        for r in res:
+            graph.setdefault(r["au"], []).append(r["bu"])
+        visited = set()
+        stack = set()
+
+        def dfs(u: str, path: List[str]):
+            if u in stack:
+                # cycle detected
+                cycle_start = path.index(u) if u in path else 0
+                cycles.append(path[cycle_start:] + [u])
+                return
+            if u in visited:
+                return
+            visited.add(u)
+            stack.add(u)
+            for v in graph.get(u, []):
+                dfs(v, path + [u])
+            stack.remove(u)
+
+        for node in list(graph.keys()):
+            dfs(node, [])
+
+        # cross-subject errors: edges between topics belonging to different subjects
+        res = session.run(
+            "MATCH (sa:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(a:Topic)-[:PREREQ]->(b:Topic)<-[:CONTAINS]-(:Section)<-[:CONTAINS]-(sb:Subject) RETURN a.uid AS au, b.uid AS bu, sa.uid AS asu, sb.uid AS bsu"
+        )
+        for r in res:
+            if allowed is None or (r["au"] in allowed and r["bu"] in allowed):
+                if r["asu"] != r["bsu"]:
+                    cross_subject_errors.append({"topic_uid": r["au"], "prereq_uid": r["bu"], "subject": r["asu"], "prereq_subject": r["bsu"]})
+
+        # anomalous weights: rel.weight not in [0,1]
+        res = session.run("MATCH (:Topic)-[rel:PREREQ]->(:Topic) WHERE rel.weight < 0 OR rel.weight > 1 RETURN rel")
+        anomalies = ["edge" for _ in res]
+
+    driver.close()
+    return {"cycles": cycles, "cross_subject_errors": cross_subject_errors, "anomalies": anomalies}
 
 
 def add_prereqs_heuristic() -> Dict:

@@ -3,6 +3,9 @@ import time
 from typing import Callable, Any, Dict, List, Optional
 from neo4j import GraphDatabase
 
+# NOTE: User-related relations are deprecated.
+# KnowledgeBaseAI core no longer stores any user data inside Neo4j.
+
 
 class Neo4jRepo:
     """Адаптер-репозиторий для работы с Neo4j.
@@ -66,6 +69,9 @@ class Neo4jRepo:
             def _fn(session):
                 session.execute_write(lambda tx: tx.run(query, rows=chunk))
             self._retry(_fn)
+
+    # NOTE: User-related relations are deprecated.
+    # KnowledgeBaseAI core no longer stores any user data inside Neo4j.
 
     # Convenience helpers
     def ensure_user(self, user_id: str) -> None:

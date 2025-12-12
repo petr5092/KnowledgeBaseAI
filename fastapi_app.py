@@ -27,12 +27,13 @@ from neo4j_utils import (
     get_driver,
     ensure_weight_defaults,
     recompute_relationship_weights,
-    update_user_topic_weight,
-    update_user_skill_weight,
-    get_user_topic_level,
-    get_user_skill_level,
-    build_user_roadmap,
+    compute_topic_user_weight,
+    compute_skill_user_weight,
+    knowledge_level_from_weight,
+    build_user_roadmap_stateless,
 )
+from services.question_selector import select_examples_for_topics
+from kb_jobs import start_rebuild_async, get_job_status
 
 app = FastAPI(
     title="KnowledgeBaseAI API",
@@ -45,24 +46,16 @@ app = FastAPI(
 )
 
 
-class TestResult(BaseModel):
-    """Пейлоад результата теста по теме.
-
-    При наличии user_id обновляется персональный вес пользователя; иначе — глобальный dynamic_weight темы.
-    """
+class TopicTestInput(BaseModel):
     topic_uid: str
     score: float
-    user_id: str | None = None
+    base_weight: float | None = None
 
 
-class SkillTestResult(BaseModel):
-    """Пейлоад результата теста по навыку.
-
-    При наличии user_id обновляется персональный вес пользователя; иначе — глобальный dynamic_weight навыка.
-    """
+class SkillTestInput(BaseModel):
     skill_uid: str
     score: float
-    user_id: str | None = None
+    base_weight: float | None = None
 
 
 class RoadmapRequest(BaseModel):
@@ -73,11 +66,14 @@ class RoadmapRequest(BaseModel):
 
 @app.on_event("startup")
 def startup_event():
-    """Инициализация приложения: выставление значений по умолчанию для весов узлов в графе."""
-    driver = get_driver()
-    with driver.session() as session:
-        ensure_weight_defaults(session)
-    driver.close()
+    """Инициализация приложения: выставление значений по умолчанию для весов узлов в графе (при наличии Neo4j)."""
+    try:
+        driver = get_driver()
+        with driver.session() as session:
+            ensure_weight_defaults(session)
+        driver.close()
+    except Exception:
+        pass
 
 
 def require_api_key(x_api_key: str | None) -> None:
@@ -88,42 +84,22 @@ def require_api_key(x_api_key: str | None) -> None:
         raise HTTPException(status_code=401, detail="invalid api key")
 
 
-@app.post("/test_result", summary="Обновить результат теста темы", description=(
-    "Обновляет динамичный вес темы."
-    "\nЕсли передан user_id — обновляет пользовательскую связь User-[:PROGRESS_TOPIC]->Topic;"
-    " иначе — глобальный dynamic_weight темы."
-    "\nПосле обновления пересчитывает adaptive_weight на связях Skill-[:LINKED]->Method."
-))
-def submit_test_result(payload: TestResult) -> Dict:
-    """Обновление веса темы (глобально или для конкретного пользователя) и пересчёт связей методов."""
-    try:
-        if payload.user_id:
-            updated = update_user_topic_weight(payload.user_id, payload.topic_uid, payload.score)
-        else:
-            updated = update_dynamic_weight(payload.topic_uid, payload.score)
-        stats = recompute_relationship_weights()
-        return {"ok": True, "updated": updated, "recomputed": stats}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@app.post("/test_result")
+def test_result(payload: TopicTestInput) -> Dict:
+    return compute_topic_user_weight(
+        topic_uid=payload.topic_uid,
+        score=payload.score,
+        base_weight=payload.base_weight,
+    )
 
 
-@app.post("/skill_test_result", summary="Обновить результат теста навыка", description=(
-    "Обновляет динамичный вес навыка."
-    "\nЕсли передан user_id — обновляет пользовательскую связь User-[:PROGRESS_SKILL]->Skill;"
-    " иначе — глобальный dynamic_weight навыка."
-    "\nПосле обновления пересчитывает adaptive_weight на связях Skill-[:LINKED]->Method."
-))
-def submit_skill_test_result(payload: SkillTestResult) -> Dict:
-    """Обновление веса навыка и пересчёт адаптивных весов на связях Skill→Method."""
-    try:
-        if payload.user_id:
-            updated = update_user_skill_weight(payload.user_id, payload.skill_uid, payload.score)
-        else:
-            updated = update_skill_dynamic_weight(payload.skill_uid, payload.score)
-        stats = recompute_relationship_weights()
-        return {"ok": True, "updated": updated, "recomputed": stats}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@app.post("/skill_test_result")
+def skill_test_result(payload: SkillTestInput) -> Dict:
+    return compute_skill_user_weight(
+        skill_uid=payload.skill_uid,
+        score=payload.score,
+        base_weight=payload.base_weight,
+    )
 
 
 @app.get("/knowledge_level/{topic_uid}", summary="Уровень знаний по теме (глобально)", description=(
@@ -164,49 +140,46 @@ def get_roadmap(payload: RoadmapRequest) -> Dict:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.get("/user/knowledge_level/{user_id}/{topic_uid}", summary="Уровень пользователя по теме", description=(
-    "Возвращает статичный вес темы и персональный dynamic_weight пользователя по теме"
-    " (если нет пользовательской записи, используется глобальный dynamic_weight/статичный вес)."
-))
-def get_user_knowledge_level(user_id: str, topic_uid: str) -> Dict:
-    try:
-        lvl = get_user_topic_level(user_id, topic_uid)
-        return {"ok": True, "level": lvl}
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+class LevelRequest(BaseModel):
+    weight: float
+
+@app.post("/user/topic_level")
+def user_topic_level(payload: LevelRequest) -> Dict:
+    return {"level": knowledge_level_from_weight(payload.weight)}
 
 
-@app.get("/user/skill_level/{user_id}/{skill_uid}", summary="Уровень пользователя по навыку", description=(
-    "Возвращает статичный вес навыка и персональный dynamic_weight пользователя по навыку"
-    " (если нет пользовательской записи, используется глобальный dynamic_weight/статичный вес)."
-))
-def get_user_skill_level(user_id: str, skill_uid: str) -> Dict:
-    try:
-        lvl = get_user_skill_level(user_id, skill_uid)
-        return {"ok": True, "level": lvl}
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+@app.post("/user/skill_level")
+def user_skill_level(payload: LevelRequest) -> Dict:
+    return {"level": knowledge_level_from_weight(payload.weight)}
+
+
+class AdaptiveTestRequest(BaseModel):
+    subject_uid: str | None = None
+    topic_weights: Dict[str, float] = {}
+    skill_weights: Dict[str, float] = {}
+    question_count: int = 10
+    difficulty_min: int = 1
+    difficulty_max: int = 5
+    exclude_question_uids: List[str] = []
 
 
 class UserRoadmapRequest(BaseModel):
-    """Запрос персональной дорожной карты: пользователь, предмет, лимит, штраф за незакрытые пререквизиты."""
-    user_id: str
     subject_uid: str | None = None
+    topic_weights: Dict[str, float] = {}
+    skill_weights: Dict[str, float] = {}
     limit: int = 50
-    penalty_factor: float | None = 0.15
+    penalty_factor: float = 0.15
 
-
-@app.post("/user/roadmap", summary="Персональная дорожная карта обучения", description=(
-    "Строит дорожную карту для пользователя: темы сортируются по персональному dynamic_weight."
-    "\nВозвращает темы с приоритетами, связанные навыки/методы с учетом пользовательских весов."
-))
-def get_user_roadmap(payload: UserRoadmapRequest) -> Dict:
-    """Построить персональную дорожную карту: темы + их skills/methods только по связям выбранной темы."""
-    try:
-        items = build_user_roadmap(payload.user_id, payload.subject_uid, payload.limit, payload.penalty_factor or 0.15)
-        return {"ok": True, "roadmap": items}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@app.post("/user/roadmap")
+def user_roadmap(payload: UserRoadmapRequest) -> Dict:
+    items = build_user_roadmap_stateless(
+        subject_uid=payload.subject_uid,
+        user_topic_weights=payload.topic_weights,
+        user_skill_weights=payload.skill_weights,
+        limit=payload.limit,
+        penalty_factor=payload.penalty_factor,
+    )
+    return {"roadmap": items}
 
 
 class CompleteTopicRequest(BaseModel):
@@ -217,15 +190,9 @@ class CompleteTopicRequest(BaseModel):
     errors: int = 0
 
 
-@app.post("/user/complete_topic", summary="Зафиксировать завершение темы", description=(
-    "Создаёт связь User-[:COMPLETED]->Topic с метриками времени и ошибок."
-))
+@app.post("/user/complete_topic")
 def api_complete_topic(payload: CompleteTopicRequest) -> Dict:
-    """Создать связь User-[:COMPLETED]->Topic с метриками."""
-    try:
-        return complete_user_topic(payload.user_id, payload.topic_uid, payload.time_spent_sec, payload.errors)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return {"ok": True, "stored": False}
 
 
 class CompleteSkillRequest(BaseModel):
@@ -236,15 +203,35 @@ class CompleteSkillRequest(BaseModel):
     errors: int = 0
 
 
-@app.post("/user/complete_skill", summary="Зафиксировать завершение навыка", description=(
-    "Создаёт связь User-[:COMPLETED]->Skill с метриками времени и ошибок."
-))
+@app.post("/user/complete_skill")
 def api_complete_skill(payload: CompleteSkillRequest) -> Dict:
-    """Создать связь User-[:COMPLETED]->Skill с метриками."""
-    try:
-        return complete_user_skill(payload.user_id, payload.skill_uid, payload.time_spent_sec, payload.errors)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return {"ok": True, "stored": False}
+
+@app.post("/adaptive/questions")
+def get_adaptive_questions(payload: AdaptiveTestRequest) -> Dict:
+    roadmap = build_user_roadmap_stateless(
+        subject_uid=payload.subject_uid,
+        user_topic_weights=payload.topic_weights,
+        user_skill_weights=payload.skill_weights,
+        limit=payload.question_count * 3,
+    )
+    topic_uids = [t["topic_uid"] for t in roadmap]
+    examples = select_examples_for_topics(
+        topic_uids=topic_uids,
+        limit=payload.question_count,
+        difficulty_min=payload.difficulty_min,
+        difficulty_max=payload.difficulty_max,
+        exclude_uids=set(payload.exclude_question_uids),
+    )
+    return {"questions": examples}
+
+@app.post("/kb/rebuild_async")
+def kb_rebuild_async() -> Dict:
+    return start_rebuild_async()
+
+@app.get("/kb/rebuild_status")
+def kb_rebuild_status(job_id: str) -> Dict:
+    return get_job_status(job_id)
 
 
 @app.post("/recompute_links", summary="Пересчитать adaptive_weight на связях LINKED", description=(
