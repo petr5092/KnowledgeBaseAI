@@ -47,7 +47,7 @@ flowchart TD
     Ext_LMS[Other LMS]
 
     SN_Front -->|HTTPS 443| Ingress
-    Admin -->|HTTPS 8443| Ingress
+    Admin -->|HTTPS 443| Ingress
 
     Ingress -->|/api| API
     Ingress -->|/construct| KB_App

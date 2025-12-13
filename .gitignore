@@ -1,8 +1,14 @@
+# node_modules
+frontend/node_modules/
+
 # Env files
 .env
+.env.*
 
 # Python
 __pycache__/
+*.py[cod]
+.pytest_cache/
 *.pyc
 *.pyo
 

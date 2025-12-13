@@ -1,60 +1,83 @@
+name: knowledgebase
+
 services:
   traefik:
+    env_file:
+      - ${ENV_FILE:-.env.dev}
     image: traefik:v3.0
     command:
       - --configFile=/etc/traefik/traefik.yml
     ports:
       - "80:80"
       - "443:443"
+      - "7687:7687"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./letsencrypt:/letsencrypt
+      - /var/lib/traefik:/acme
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-
-  flask:
-    build:
-      context: .
-      dockerfile: Dockerfile.flask
-    environment:
-      NEO4J_URI: ${NEO4J_URI}
-      NEO4J_USER: ${NEO4J_USER}
-      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-    volumes:
-      - ./:/app
-    command: flask --app web_app.py run --host 0.0.0.0 --port 5000 --reload
+      - /etc/traefik/users.htpasswd:/etc/traefik/users.htpasswd:ro
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.flask-svc.loadbalancer.server.port=5000"
-      - "traefik.http.routers.flask-stud.rule=Host(`${KB_DOMAIN}`)"
-      - "traefik.http.routers.flask-stud.entrypoints=web"
-      - "traefik.http.routers.flask-stud.service=flask-svc"
-      - "traefik.http.routers.flask-stud-sec.rule=Host(`${KB_DOMAIN}`)"
-      - "traefik.http.routers.flask-stud-sec.entrypoints=websecure"
-      - "traefik.http.routers.flask-stud-sec.service=flask-svc"
-      - "traefik.http.routers.flask-stud-sec.tls=true"
-      - "traefik.http.routers.flask-stud-sec.tls.certresolver=le"
-      - "traefik.http.routers.flask-xteam.rule=Host(`${KB_ALT_DOMAIN}`)"
-      - "traefik.http.routers.flask-xteam.entrypoints=web"
-      - "traefik.http.routers.flask-xteam.service=flask-svc"
-      - "traefik.http.routers.flask-xteam-sec.rule=Host(`${KB_ALT_DOMAIN}`)"
-      - "traefik.http.routers.flask-xteam-sec.entrypoints=websecure"
-      - "traefik.http.routers.flask-xteam-sec.service=flask-svc"
-      - "traefik.http.routers.flask-xteam-sec.tls=true"
-      - "traefik.http.routers.flask-xteam-sec.tls.certresolver=le"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${KB_ALT_DOMAIN}`) || Host(`traefik.${KB_DOMAIN}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=le"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/etc/traefik/users.htpasswd"
+      - "traefik.http.routers.traefik.middlewares=dashboard-auth"
+
+  frontend:
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.frontend-svc.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend-stud.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.frontend-stud.entrypoints=web"
+      - "traefik.http.routers.frontend-stud.service=frontend-svc"
+      - "traefik.http.routers.frontend-stud-sec.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.frontend-stud-sec.entrypoints=websecure"
+      - "traefik.http.routers.frontend-stud-sec.service=frontend-svc"
+      - "traefik.http.routers.frontend-stud-sec.tls=true"
+      - "traefik.http.routers.frontend-stud-sec.tls.certresolver=le"
+      - "traefik.http.routers.frontend-xteam.rule=Host(`${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.frontend-xteam.entrypoints=web"
+      - "traefik.http.routers.frontend-xteam.service=frontend-svc"
+      - "traefik.http.routers.frontend-xteam-sec.rule=Host(`${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.frontend-xteam-sec.entrypoints=websecure"
+      - "traefik.http.routers.frontend-xteam-sec.service=frontend-svc"
+      - "traefik.http.routers.frontend-xteam-sec.tls=true"
+      - "traefik.http.routers.frontend-xteam-sec.tls.certresolver=le"
+  frontend-dev:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.frontend-dev-svc.loadbalancer.server.port=5173"
+      - "traefik.http.routers.frontend-dev-stud.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.frontend-dev-stud.entrypoints=web"
+      - "traefik.http.routers.frontend-dev-stud.service=frontend-dev-svc"
+      - "traefik.http.routers.frontend-dev-stud-sec.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.frontend-dev-stud-sec.entrypoints=websecure"
+      - "traefik.http.routers.frontend-dev-stud-sec.service=frontend-dev-svc"
+      - "traefik.http.routers.frontend-dev-stud-sec.tls=true"
+      - "traefik.http.routers.frontend-dev-stud-sec.tls.certresolver=le"
 
   fastapi:
+    env_file:
+      - ${ENV_FILE:-.env.dev}
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile.fastapi
-    environment:
-      NEO4J_URI: ${NEO4J_URI}
-      NEO4J_USER: ${NEO4J_USER}
-      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
-      - ./:/app
-    command: uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload
+      - ./backend:/app
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.fastapi-svc.loadbalancer.server.port=8000"
@@ -74,3 +97,84 @@ services:
       - "traefik.http.routers.fastapi-xteam-sec.service=fastapi-svc"
       - "traefik.http.routers.fastapi-xteam-sec.tls=true"
       - "traefik.http.routers.fastapi-xteam-sec.tls.certresolver=le"
+
+  redis:
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    labels:
+      - "traefik.enable=false"
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+    command:
+      - --web.enable-remote-write-receiver
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    labels:
+      - "traefik.enable=false"
+
+  neo4j:
+    image: neo4j:5.21
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
+      NEO4J_server_memory_pagecache_size: 2G
+      NEO4J_server_memory_heap_initial__size: 1G
+      NEO4J_server_memory_heap_max__size: 2G
+    ports:
+      - "7474:7474"
+    volumes:
+      - /var/lib/neo4j/data:/data
+      - /var/lib/neo4j/logs:/logs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.neo4j-svc.loadbalancer.server.port=7474"
+      - "traefik.http.routers.neo4j-http.rule=Host(`graph.kb.xteam.pro`)"
+      - "traefik.http.routers.neo4j-http.entrypoints=web"
+      - "traefik.http.routers.neo4j-https.rule=Host(`graph.kb.xteam.pro`)"
+      - "traefik.http.routers.neo4j-https.entrypoints=websecure"
+      - "traefik.http.routers.neo4j-https.service=neo4j-svc"
+      - "traefik.http.routers.neo4j-https.tls=true"
+      - "traefik.http.routers.neo4j-https.tls.certresolver=le"
+      - "traefik.tcp.services.neo4j-bolt.loadbalancer.server.port=7687"
+      - "traefik.tcp.routers.neo4j-bolt.rule=HostSNI(`graph.kb.xteam.pro`)"
+      - "traefik.tcp.routers.neo4j-bolt.entrypoints=bolt"
+      - "traefik.tcp.routers.neo4j-bolt.service=neo4j-bolt"
+      - "traefik.tcp.routers.neo4j-bolt.tls=true"
+
+  postgres:
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - /var/lib/postgresql/data:/var/lib/postgresql/data
+    labels:
+      - "traefik.enable=false"
+
+  qdrant:
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    image: qdrant/qdrant:latest
+    restart: unless-stopped
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    volumes:
+      - /var/lib/qdrant:/qdrant/storage
+    labels:
+      - "traefik.enable=false"

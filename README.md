@@ -1,177 +1,111 @@
-# KnowledgeBaseAI — граф знаний с персонализацией (Neo4j + Flask + FastAPI)
+# KnowledgeBaseAI
 
-Единый граф базы знаний в Neo4j, веб‑интерфейс для визуализации, API для синхронизации данных, аналитики и построения персонализированных дорожных карт обучения. Глобальные статичные веса задают сложность материала, а динамичные веса обновляются по прогрессу учащихся (персонально на пользователя).
+[![CI](https://github.com/AndrewHakmi/KnowledgeBaseAI/actions/workflows/ci.yml/badge.svg)](https://github.com/AndrewHakmi/KnowledgeBaseAI/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-BUSL--1.1-blue)](#license)
+[![Backend](https://img.shields.io/badge/backend-FastAPI-009688)](./backend/README.md)
+[![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61DAFB)](./frontend/README.md)
+[![Graph](https://img.shields.io/badge/graph-Neo4j-4581C3)](https://neo4j.com/)
+[![Vector](https://img.shields.io/badge/vector-Qdrant-FF4D4D)](https://qdrant.tech/)
 
-## Структура проекта
+KnowledgeBaseAI is a **knowledge graph platform** that turns fragmented learning content into a structured, queryable, and explainable graph of concepts, skills, methods, and prerequisites.
 
-```
-web_app.py              # Flask UI и REST для графа/синхронизации/аналитики
-static/js/knowledge.js  # Визуализация графа (Cytoscape)
-neo4j_utils.py          # Клиент Neo4j, синхронизация, аналитика, веса, пререквизиты, персонализация
-fastapi_app.py          # FastAPI: тесты, обновление весов, дорожные карты, пользовательские API
-kb_builder.py           # Автогенерация целей/задач и автосвязи навыков-методов
-scripts/clear_neo4j.py  # Полная очистка Neo4j (узлы/связи/индексы/констрейнты)
-kb/*.jsonl              # Источники данных (JSONL сиды)
-requirements.txt        # Зависимости (Flask, FastAPI, Neo4j и др.)
-```
+It is designed to power:
 
-## Модель графа
+- adaptive learning paths
+- curriculum planning
+- knowledge analytics and quality control
+- AI-assisted knowledge construction
 
-- Узлы: `Subject`, `Section`, `Topic`, `Skill`, `Method`, `Goal`, `Objective`, `User`
-- Связи:
-  - `Subject-[:CONTAINS]->Section`
-  - `Section-[:CONTAINS]->Topic`
-  - `Subject-[:HAS_SKILL]->Skill`
-  - `Skill-[:LINKED]->Method` (свойства `weight`, `confidence`, `adaptive_weight`)
-  - `Topic-[:TARGETS]->(Goal|Objective)`
-  - `Topic-[:PREREQ]->Topic` (пререквизиты)
-  - `User-[:PROGRESS_TOPIC]->Topic` (персональные динамичные веса темы)
-  - `User-[:PROGRESS_SKILL]->Skill` (персональные динамичные веса навыка)
-- Веса:
-  - `static_weight` — базовая сложность (эвристика от текста/терминов)
-  - `dynamic_weight` — глобальная динамика (если пользователь не задан)
-  - пользовательские `dynamic_weight` — на связях `PROGRESS_*`
-  - `adaptive_weight` — на `LINKED` (пересчитывается из динамичного веса навыка)
+## Live
 
-## Быстрый старт (локально)
+- UI: https://kb.studyninja.ru, https://kb.xteam.pro
+- API: https://api.kb.studyninja.ru, https://api.kb.xteam.pro
 
-- Установка зависимостей:
+## Why it matters
 
-  ```
-  pip install -r requirements.txt
-  ```
+Most learning platforms store content as pages and videos. KnowledgeBaseAI stores it as a **graph**:
 
-- Переменные окружения (Neo4j):
+- prerequisites become explicit
+- gaps and inconsistencies become measurable
+- learning paths become computable
+- explanations become traceable ("why this topic next")
 
-  ```
-  export NEO4J_URI="REDACTED_NEO4J_URI"
-  export NEO4J_USER="neo4j"
-  export NEO4J_PASSWORD="<пароль>"
-  ```
+## What you can build on top
 
-- Запуск Flask UI:
+- LMS integrations (progress in, recommendations out)
+- adaptive roadmaps per learner
+- content QA dashboards (coverage, orphan nodes, missing links)
+- AI copilots for curriculum designers
 
-  ```
-  python web_app.py
-  ```
+## Product highlights
 
-  Откройте `http://localhost:5000/knowledge`.
+- **Stateless core**: user progress can live in an external LMS; the platform focuses on graph intelligence.
+- **Graph-first model**: subjects → sections → topics → skills → methods, with prerequisites and weighted links.
+- **Admin tooling**: generate/import knowledge bases, recompute weights, validate snapshots.
+- **Observability-ready**: Prometheus metrics, structured logging.
 
-- Запуск FastAPI:
+## Quickstart (Docker)
 
-  ```
-  uvicorn fastapi_app:app --host 0.0.0.0 --port 8000
-  ```
-
-  Документация: `http://localhost:8000/docs`.
-
-## Данные и синхронизация
-
-- Сиды JSONL: `kb/subjects.jsonl`, `kb/sections.jsonl`, `kb/topics.jsonl`, `kb/skills.jsonl`, `kb/methods.jsonl`, `kb/skill_methods.jsonl`, `kb/topic_goals.jsonl`, `kb/topic_objectives.jsonl`.
-- Синхронизация в Neo4j:
-  - REST: `POST /api/neo4j_sync` (Flask)
-  - Python: `from neo4j_utils import sync_from_jsonl`
-- Автогенерация:
-  - Цели/задачи: `from kb_builder import generate_goals_and_objectives`
-  - Автосвязи навыков-методов: `from kb_builder import autolink_skills_methods`
-
-## Аналитика (качество графа)
-
-- `GET /api/analysis` — возвращает агрегаты и проблемные списки:
-  - `topics_without_targets`, `skills_without_methods`, `methods_without_links`, `orphan_sections`
-  - покрытия: `topic_targets_coverage`, `skill_linkage_coverage`
-
-## Визуализация (Flask UI)
-
-- `GET /knowledge` — страница визуализации графа
-- `GET /api/graph?subject_uid=...` — данные для визуализации (из Neo4j при наличии ENV)
-- CRUD для ввода через UI‑формы:
-  - `POST /api/subjects`, `/api/sections`, `/api/topics`, `/api/skills`, `/api/methods`
-  - `POST /api/topic_goals`, `/api/topic_objectives`, `/api/skill_methods`
-
-## FastAPI (тесты, веса, дорожные карты)
-
-- Глобальные обновления (без пользователя):
-  - `POST /test_result` — обновляет `dynamic_weight` темы и пересчитывает `adaptive_weight`
-  - `POST /skill_test_result` — обновляет `dynamic_weight` навыка и пересчитывает `adaptive_weight`
-- Пользовательские обновления/просмотр:
-  - `POST /test_result` с `user_id` — обновляет `User-[:PROGRESS_TOPIC]->Topic`
-  - `POST /skill_test_result` с `user_id` — обновляет `User-[:PROGRESS_SKILL]->Skill`
-  - `GET /user/knowledge_level/{user_id}/{topic_uid}`
-  - `GET /user/skill_level/{user_id}/{skill_uid}`
-- Дорожные карты:
-  - Глобальная: `POST /roadmap {subject_uid?, limit}`
-  - Персональная: `POST /user/roadmap {user_id, subject_uid?, limit}`
-- Перерасчёт связей:
-  - `POST /recompute_links` — обновляет `adaptive_weight` на `LINKED`
-
-## Пререквизиты и статичные веса
-
-- `compute_static_weights()` — устанавливает `static_weight` для `Topic`/`Skill` по эвристике (длина текста, продвинутые термины), инициализирует `dynamic_weight` при необходимости.
-- `add_prereqs_heuristic()` — добавляет базовые `PREREQ` связи для ключевых тем.
-
-## Служебные утилиты
-
-- Очистка графа: `python scripts/clear_neo4j.py` (удаляет узлы/связи/индексы/констрейнты)
-
-## Переменные окружения
-
-- `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD` — доступ к Neo4j (обязательные)
-- `KB_DOMAIN`, `KB_ALT_DOMAIN` — домены для UI
-- `LETSENCRYPT_EMAIL` — email для Let’s Encrypt
-- `ADMIN_API_KEY` — ключ для небезопасных операций API
-
-### Настройка .env
-
-1. Скопируйте пример:
-
-```
-cp .env.example .env
+```bash
+cp .env.example .env.dev
+ENV_FILE=.env.dev docker compose --env-file .env.dev up -d --build
 ```
 
-2. Отредактируйте `.env`, указав свои значения для доменов, email и подключения к Neo4j.
+## Documentation (technical)
 
-3. Убедитесь, что DNS‑записи для доменов UI и API указывают на IP сервера.
+This README stays product-focused. Technical details live in dedicated docs:
 
-### Запуск в контейнерах
+- Backend overview: [`backend/README.md`](./backend/README.md)
+- Frontend overview: [`frontend/README.md`](./frontend/README.md)
+- Backend development: [`backend/development.md`](./backend/development.md)
+- Backend deployment: [`backend/deployment.md`](./backend/deployment.md)
+- Frontend development: [`frontend/development.md`](./frontend/development.md)
+- Frontend deployment: [`frontend/deployment.md`](./frontend/deployment.md)
 
-```
-docker compose build --no-cache
-docker compose up -d
-```
+## Technical summary (short)
 
-Traefik выпустит сертификаты автоматически (HTTP‑challenge). Для HSTS/HTTPS убедитесь, что у поддоменов `api.*` есть корректные DNS записи.
+- Backend: FastAPI (Python 3.12)
+- Frontend: React + TypeScript + Vite
+- Storage: Neo4j (graph), Postgres (users/auth), Qdrant (vectors)
+- Jobs: Redis + ARQ
+- Edge: Traefik (TLS + routing)
 
-## Развертывание
+## Security model (short)
 
-- Запуск в Docker/оркестрации возможен через любой стандартный образ Python. Пробросьте `NEO4J_*` ENV и поднимите два процесса:
-  - Flask (`python web_app.py`)
-  - FastAPI (`uvicorn fastapi_app:app --host 0.0.0.0 --port 8000`)
-- Traefik/Nginx — по желанию, для маршрутизации HTTP‑трафика на порты 5000/8000. Секреты передавайте только через переменные окружения. 
+- JWT authentication (`/v1/auth/*`)
+- Admin endpoints protected by role-based access (`/v1/admin/*`)
+- Bootstrap first admin via env on first deploy
 
-## Примеры
+## Roadmap (global)
 
-- Синхронизация:
+### Phase 1 — Platform hardening
+- production-grade auth hardening (rate limiting, password policy, audit logs)
+- migrations for Postgres schema
+- operational playbooks (backup/restore, incident response)
 
-  ```
-  curl -X POST http://localhost:5000/api/neo4j_sync
-  ```
+### Phase 2 — Integrations & ecosystem
+- LMS connectors (import progress, export recommendations)
+- OpenAPI client generation and SDKs
+- webhooks/events for downstream systems
 
-- Аналитика:
+### Phase 3 — Intelligence layer
+- improved graph quality scoring and anomaly detection
+- explainable recommendations (traceable paths)
+- hybrid retrieval (graph + vectors) for assistants
 
-  ```
-  curl http://localhost:5000/api/analysis
-  ```
+### Phase 4 — Productization
+- multi-tenant support
+- admin UI for curriculum designers
+- enterprise deployment options
 
-- Тест пользователя (персонализация):
+## Contributing
 
-  ```
-  curl -X POST http://localhost:8000/test_result \
-    -H 'Content-Type: application/json' \
-    -d '{"topic_uid":"TOP-ALG-QUAD-EQ","score":42,"user_id":"user-001"}'
-  ```
+- Please read the development guides (backend/frontend).
+- Use feature branches and open PRs.
+- Never commit secrets (production env files must be ignored).
 
-## Примечания безопасности
+## License
 
-- Не храните пароли/URI в коде и файлах репозитория. Используйте только переменные окружения.
-- Глобальные данные графа отделены от пользовательских весов: персональные динамичные веса хранятся на связях с `User` и не изменяют первичные сущности.
+This project is licensed under the **Business Source License 1.1 (BUSL-1.1)**.
+
+See: [`LICENSE`](./LICENSE)

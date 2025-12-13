@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    services:
+      neo4j:
+        image: neo4j:5.21
+        ports:
+          - 7474:7474
+          - 7687:7687
+        env:
+          NEO4J_AUTH: neo4j/test
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend deps
+        working-directory: backend
+        run: |
+          pip install --no-cache-dir -r requirements.txt
+
+      - name: Set backend env
+        run: |
+          echo "NEO4J_URI=bolt://localhost:7687" >> $GITHUB_ENV
+          echo "NEO4J_USER=neo4j" >> $GITHUB_ENV
+          echo "NEO4J_PASSWORD=test" >> $GITHUB_ENV
+          echo "PG_DSN=postgresql://test:test@localhost:5432/testdb" >> $GITHUB_ENV
+          echo "OPENAI_API_KEY=dummy" >> $GITHUB_ENV
+          echo "JWT_SECRET_KEY=test-secret" >> $GITHUB_ENV
+
+      - name: Run backend tests
+        working-directory: backend
+        run: |
+          pytest -q
+
+  frontend-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: |
+          npm ci --no-audit --no-fund
+
+      - name: Lint
+        working-directory: frontend
+        run: |
+          npm run lint
+
+      - name: Build
+        working-directory: frontend
+        run: |
+          npm run build
