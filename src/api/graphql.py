@@ -2,11 +2,11 @@ import strawberry
 from strawberry.fastapi import GraphQLRouter
 from typing import Optional, List
 from src.services.graph.neo4j_repo import get_driver
-from services.curriculum_repo import get_graph_view
+from src.services.curriculum.repo import get_graph_view
 import os
 import json
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-KB_DIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'kb')
+KB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(BASE_DIR))), 'kb')
 
 def _load_jsonl(filename: str):
     path = os.path.join(KB_DIR, filename)

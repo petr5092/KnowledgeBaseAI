@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Dict, List
-from kb_builder import generate_subject_openai_async
-from neo4j_utils import sync_from_jsonl, compute_static_weights, analyze_knowledge
+from src.services.kb.builder import generate_subject_openai_async
+from src.services.graph.utils import sync_from_jsonl, compute_static_weights, analyze_knowledge
 
 router = APIRouter(prefix="/v1/admin")
 

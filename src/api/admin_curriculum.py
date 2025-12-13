@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Dict, List
-from services.curriculum_repo import create_curriculum, add_curriculum_nodes, get_graph_view
+from src.services.curriculum.repo import create_curriculum, add_curriculum_nodes, get_graph_view
 
 router = APIRouter(prefix="/v1/admin")
 

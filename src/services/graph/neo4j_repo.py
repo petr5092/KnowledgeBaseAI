@@ -1,5 +1,6 @@
 import os
-from typing import List, Dict, Tuple
+import time
+from typing import List, Dict, Tuple, Callable, Any, Optional
 from neo4j import GraphDatabase
 
 def get_driver():
@@ -9,6 +10,57 @@ def get_driver():
     if not (uri and user and password):
         raise RuntimeError('Missing Neo4j env')
     return GraphDatabase.driver(uri, auth=(user, password))
+
+class Neo4jRepo:
+    def __init__(self, uri: Optional[str] = None, user: Optional[str] = None, password: Optional[str] = None, max_retries: int = 3, backoff_sec: float = 0.8):
+        self.uri = uri or os.getenv('NEO4J_URI')
+        self.user = user or os.getenv('NEO4J_USER')
+        self.password = password or os.getenv('NEO4J_PASSWORD')
+        if not self.uri or not self.user or not self.password:
+            raise RuntimeError('Missing Neo4j connection environment variables')
+        self.driver = GraphDatabase.driver(self.uri, auth=(self.user, self.password))
+        self.max_retries = max_retries
+        self.backoff_sec = backoff_sec
+
+    def close(self):
+        self.driver.close()
+
+    def _retry(self, fn: Callable[[Any], Any]) -> Any:
+        attempt = 0
+        last_exc = None
+        while attempt < self.max_retries:
+            try:
+                with self.driver.session() as session:
+                    return fn(session)
+            except Exception as e:
+                last_exc = e
+                attempt += 1
+                time.sleep(self.backoff_sec * attempt)
+        raise last_exc
+
+    def write(self, query: str, params: Dict | None = None) -> None:
+        def _fn(session):
+            session.execute_write(lambda tx: tx.run(query, **(params or {})))
+        return self._retry(_fn)
+
+    def read(self, query: str, params: Dict | None = None) -> List[Dict]:
+        def _fn(session):
+            def reader(tx):
+                res = tx.run(query, **(params or {}))
+                return [dict(r) for r in res]
+            return session.execute_read(reader)
+        return self._retry(_fn)
+
+    def _chunks(self, rows: List[Dict], size: int) -> List[List[Dict]]:
+        return [rows[i:i+size] for i in range(0, len(rows), size)]
+
+    def write_unwind(self, query: str, rows: List[Dict], chunk_size: int = 500) -> None:
+        if not rows:
+            return
+        for chunk in self._chunks(rows, chunk_size):
+            def _fn(session):
+                session.execute_write(lambda tx: tx.run(query, rows=chunk))
+            self._retry(_fn)
 
 def read_graph(subject_uid: str | None = None) -> Tuple[List[Dict], List[Dict]]:
     drv = get_driver()

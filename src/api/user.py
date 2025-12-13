@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Dict
-from neo4j_utils import compute_topic_user_weight, compute_skill_user_weight
+from src.services.graph.utils import compute_topic_user_weight, compute_skill_user_weight
 from src.services.roadmap_planner import plan_route
 
 router = APIRouter(prefix="/v1/user")

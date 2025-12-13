@@ -1,6 +1,5 @@
 from typing import List
 from pydantic import BaseModel, Field
-from openai import AsyncOpenAI
 import json
 from src.core.config import settings
 
@@ -17,9 +16,12 @@ class GeneratedBundle(BaseModel):
     concepts: List[GeneratedConcept]
     skills: List[GeneratedSkill]
 
-oai = AsyncOpenAI(api_key=settings.openai_api_key)
-
 async def generate_concepts_and_skills(topic: str, language: str) -> GeneratedBundle:
+    try:
+        from openai import AsyncOpenAI
+    except Exception:
+        return GeneratedBundle(concepts=[], skills=[])
+    oai = AsyncOpenAI(api_key=settings.openai_api_key)
     messages = [
         {"role": "system", "content": "Return structured JSON for concepts and skills in the target language."},
         {"role": "user", "content": f"topic={topic}; lang={language}"},

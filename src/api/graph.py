@@ -2,10 +2,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 from src.services.graph.neo4j_repo import relation_context, neighbors
-from openai import AsyncOpenAI
 from src.core.config import settings
 from src.services.roadmap_planner import plan_route
-from services.question_selector import select_examples_for_topics, all_topic_uids_from_examples
+from src.services.questions import select_examples_for_topics, all_topic_uids_from_examples
 
 router = APIRouter(prefix="/v1/graph")
 
@@ -25,6 +24,10 @@ class ChatInput(BaseModel):
 
 @router.post("/chat")
 async def chat(payload: ChatInput) -> Dict:
+    try:
+        from openai import AsyncOpenAI
+    except Exception:
+        return {"error": "openai package not installed"}
     ctx = relation_context(payload.from_uid, payload.to_uid)
     oai = AsyncOpenAI(api_key=settings.openai_api_key)
     messages = [

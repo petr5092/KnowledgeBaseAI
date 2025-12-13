@@ -12,8 +12,23 @@ from src.api.admin_curriculum import router as admin_curriculum_router
 from src.api.admin_generate import router as admin_generate_router
 from src.api.levels import router as levels_router
 from src.api.maintenance import router as maintenance_router
-from src.api.graphql import router as graphql_router
-from prometheus_client import Counter, Histogram
+try:
+    from src.api.graphql import router as graphql_router
+except Exception:
+    graphql_router = None
+from src.api.validation import router as validation_router
+try:
+    from prometheus_client import Counter, Histogram
+except Exception:
+    class Counter:
+        def __init__(self, *args, **kwargs): ...
+        def inc(self): ...
+    class Histogram:
+        def __init__(self, *args, **kwargs): ...
+        class _Ctx:
+            def __enter__(self): ...
+            def __exit__(self, a, b, c): ...
+        def time(self): return self._Ctx()
 
 app = FastAPI(title="Headless Knowledge Graph Platform")
 
@@ -46,4 +61,6 @@ app.include_router(admin_curriculum_router)
 app.include_router(admin_generate_router)
 app.include_router(levels_router)
 app.include_router(maintenance_router)
-app.include_router(graphql_router, prefix="/v1/graphql")
+if graphql_router:
+    app.include_router(graphql_router, prefix="/v1/graphql")
+app.include_router(validation_router)

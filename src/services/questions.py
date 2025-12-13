@@ -2,11 +2,10 @@ import os
 import json
 from functools import lru_cache
 from typing import Dict, List, Set
-from neo4j_repo import Neo4jRepo
+from src.services.graph.neo4j_repo import Neo4jRepo
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-KB_DIR = os.path.join(os.path.dirname(BASE_DIR), 'kb')
-
+KB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(BASE_DIR))), 'kb')
 
 def load_jsonl(filename: str) -> List[Dict]:
     path = os.path.join(KB_DIR, filename)
@@ -24,7 +23,6 @@ def load_jsonl(filename: str) -> List[Dict]:
                 continue
     return data
 
-
 @lru_cache(maxsize=1)
 def get_examples_indexed():
     ex = load_jsonl('examples.jsonl')
@@ -36,7 +34,6 @@ def get_examples_indexed():
         by_topic.setdefault(tuid, []).append(e)
     return {"all": ex, "by_topic": by_topic}
 
-
 def select_examples_for_topics(
     topic_uids: List[str],
     limit: int,
@@ -46,7 +43,6 @@ def select_examples_for_topics(
 ):
     exclude = exclude_uids or set()
     pool: List[Dict] = []
-    # Try Neo4j if configured
     if os.getenv('NEO4J_URI') and os.getenv('NEO4J_USER') and os.getenv('NEO4J_PASSWORD'):
         try:
             repo = Neo4jRepo()
@@ -65,17 +61,20 @@ def select_examples_for_topics(
                     return 0.6
                 return xf if xf <= 1.0 else max(0.0, min(1.0, xf / 5.0))
             for r in rows:
-                d_int = int(r.get('difficulty', 3) or 3)
+                d_raw = r.get('difficulty', 3)
+                try:
+                    d_int = int(float(d_raw))
+                except Exception:
+                    d_int = 3
                 if d_int < difficulty_min or d_int > difficulty_max:
                     continue
                 if r.get('uid') in exclude:
                     continue
-                r['difficulty'] = _norm(r.get('difficulty', d_int))
+                r['difficulty'] = _norm(d_raw)
                 pool.append(r)
             repo.close()
         except Exception:
             pool = []
-    # Fallback to JSONL
     if not pool:
         idx = get_examples_indexed()
         def _norm(x):
@@ -86,24 +85,26 @@ def select_examples_for_topics(
             return xf if xf <= 1.0 else max(0.0, min(1.0, xf / 5.0))
         for tu in topic_uids:
             for e in idx["by_topic"].get(tu, []):
-                d = int(e.get('difficulty', 3) or 3)
+                d_raw = e.get('difficulty', 3)
+                try:
+                    d = int(float(d_raw))
+                except Exception:
+                    d = 3
                 if d < difficulty_min or d > difficulty_max:
                     continue
                 if e.get('uid') in exclude:
                     continue
-                e['difficulty'] = _norm(e.get('difficulty', d))
+                e['difficulty'] = _norm(d_raw)
                 pool.append(e)
-    # simple diversity: round-robin by topic order
     selected: List[Dict] = []
     seen_by_topic: Dict[str, int] = {tu: 0 for tu in topic_uids}
     for e in pool:
         tu = e.get('topic_uid')
         if len(selected) >= limit:
             break
-        if seen_by_topic.get(tu, 0) <= 1:  # cap first pass to 2 per topic
+        if seen_by_topic.get(tu, 0) <= 1:
             selected.append(e)
             seen_by_topic[tu] = seen_by_topic.get(tu, 0) + 1
-    # fallback fill if not enough
     if len(selected) < limit:
         for e in pool:
             if e in selected:
@@ -116,3 +117,4 @@ def select_examples_for_topics(
 def all_topic_uids_from_examples() -> List[str]:
     idx = get_examples_indexed()
     return list(idx["by_topic"].keys())
+

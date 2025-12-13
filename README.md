@@ -7,9 +7,9 @@
 ```
 web_app.py              # Flask UI и REST для графа/синхронизации/аналитики
 static/js/knowledge.js  # Визуализация графа (Cytoscape)
-neo4j_utils.py          # Клиент Neo4j, синхронизация, аналитика, веса, пререквизиты, stateless вычисления
-fastapi_app.py          # FastAPI: stateless эндпоинты тестов/весов/дорожных карт/вопросов
-kb_builder.py           # Автогенерация целей/задач и автосвязи навыков-методов
+src/services/graph/utils.py    # Клиент Neo4j, синхронизация, аналитика, веса, пререквизиты, stateless вычисления
+src/main.py                    # FastAPI: эндпоинты графа/синхронизации/аналитики/роадмапов/вопросов
+src/services/kb/builder.py     # Автогенерация целей/задач и автосвязи навыков-методов
 scripts/clear_neo4j.py  # Полная очистка Neo4j (узлы/связи/индексы/констрейнты)
 kb/*.jsonl              # Источники данных (JSONL сиды)
 requirements.txt        # Зависимости (Flask, FastAPI, Neo4j и др.)
@@ -57,7 +57,7 @@ requirements.txt        # Зависимости (Flask, FastAPI, Neo4j и др.
 - Запуск FastAPI:
 
   ```
-  uvicorn fastapi_app:app --host 0.0.0.0 --port 8000
+  uvicorn src.main:app --host 0.0.0.0 --port 8000
   ```
 
   Документация: `http://localhost:8000/docs`.
@@ -67,10 +67,10 @@ requirements.txt        # Зависимости (Flask, FastAPI, Neo4j и др.
 - Сиды JSONL: `kb/subjects.jsonl`, `kb/sections.jsonl`, `kb/topics.jsonl`, `kb/skills.jsonl`, `kb/methods.jsonl`, `kb/skill_methods.jsonl`, `kb/topic_goals.jsonl`, `kb/topic_objectives.jsonl`.
 - Синхронизация в Neo4j:
   - REST: `POST /api/neo4j_sync` (Flask)
-  - Python: `from neo4j_utils import sync_from_jsonl`
+  - Python: `from src.services.graph.utils import sync_from_jsonl`
 - Автогенерация:
-  - Цели/задачи: `from kb_builder import generate_goals_and_objectives`
-  - Автосвязи навыков-методов: `from kb_builder import autolink_skills_methods`
+  - Цели/задачи: `from src.services.kb.builder import generate_goals_and_objectives`
+  - Автосвязи навыков-методов: `from src.services.kb.builder import autolink_skills_methods`
 
 ## Аналитика (качество графа)
 
@@ -88,15 +88,55 @@ requirements.txt        # Зависимости (Flask, FastAPI, Neo4j и др.
 
 ## FastAPI (stateless ядро)
 
-- Эндпоинты тестов/весов (stateless вычисления без записи):
-  - `POST /test_result {topic_uid, score, base_weight?}` → `{topic_uid, base_weight, user_weight}`
-  - `POST /skill_test_result {skill_uid, score, base_weight?}` → `{skill_uid, base_weight, user_weight}`
-- Дорожные карты (принимают веса из ЛМС):
-  - `POST /user/roadmap {subject_uid?, topic_weights{}, skill_weights{}, limit?, penalty_factor?}` → `[{topic_uid, effective_weight, ...}]`
-- Адаптивные вопросы по темам:
-  - `POST /adaptive/questions {subject_uid?, topic_weights{}, skill_weights{}, question_count, difficulty_min?, difficulty_max?, exclude_question_uids?}` → `[questions]`
-- Служебное:
-  - `POST /recompute_links` — обновляет `adaptive_weight` на `LINKED`
+- Основные маршруты:
+  - `POST /v1/admin/generate_subject` — генерация предмета (разделы/темы/навыки/методы/примеры)
+  - `POST /v1/admin/generate_subject_import` — генерация + импорт в Neo4j + аналитика
+  - `POST /v1/maintenance/kb/rebuild_async` — асинхронная пересборка KB (импорт, веса, пререквизиты, аналитика)
+  - `GET  /v1/maintenance/kb/rebuild_status?job_id=...` — статус джобы пересборки
+  - `POST /v1/maintenance/recompute_links` — пересчёт `adaptive_weight` на `LINKED`
+  - `GET  /v1/levels/topic/{uid}` — уровень темы (на основе глобальных весов)
+  - `GET  /v1/levels/skill/{uid}` — уровень навыка (на основе глобальных весов)
+  - `POST /v1/user/roadmap` — статическая персональная дорожная карта
+  - `POST /v1/graph/roadmap` — roadmap (алиас, проксирует в `src.api.user`)
+  - `GET  /v1/graph/viewport?center_uid=...&depth=1` — окрестность узла
+  - `POST /v1/graph/chat` — объяснение связи (требует OpenAI)
+  - `POST /v1/graph/adaptive_questions` — подбор вопросов/примеров по темам
+  - `POST /v1/validation/graph_snapshot` — проверка снапшота графа
+  - `POST /v1/construct/magic_fill` — дополнение концептов/навыков по теме (OpenAI+Qdrant)
+  - `POST /v1/construct/magic_fill/queue` — постановка задачи в очередь (Redis/Arq)
+  - `POST /v1/construct/propose` — предложить набор концептов/навыков
+  - `POST /v1/curriculum/pathfind` — поиск пути в учебном графе
+  - `GET  /v1/analytics/stats` — агрегаты/метрики по графу
+  - `POST /v1/admin/purge_users` — очистка пользовательских артефактов в Neo4j
+  - `POST /v1/admin/curriculum` — создать curriculum
+  - `POST /v1/admin/curriculum/nodes` — добавить узлы curriculum
+  - `GET  /v1/admin/curriculum/graph_view` — получить graph view curriculum
+  - `GET  /v1/graphql` — GraphQL (если установлен `strawberry`)
+
+- Примеры вызовов:
+  - Генерация и импорт:
+    ```
+    curl -X POST http://localhost:8000/v1/admin/generate_subject_import \
+      -H 'Content-Type: application/json' \
+      -d '{"subject_uid":"SUB-MATH","subject_title":"Математика","language":"ru"}'
+    ```
+  - Пересборка KB:
+    ```
+    curl -X POST http://localhost:8000/v1/maintenance/kb/rebuild_async
+    curl "http://localhost:8000/v1/maintenance/kb/rebuild_status?job_id=173..."
+    ```
+  - Дорожная карта:
+    ```
+    curl -X POST http://localhost:8000/v1/user/roadmap \
+      -H 'Content-Type: application/json' \
+      -d '{"subject_uid":null,"progress":{"TOP-A":0.2,"TOP-B":0.6},"limit":30}'
+    ```
+  - Вопросы по темам:
+    ```
+    curl -X POST http://localhost:8000/v1/graph/adaptive_questions \
+      -H 'Content-Type: application/json' \
+      -d '{"subject_uid":null,"progress":{},"count":10,"difficulty_min":1,"difficulty_max":5}'
+    ```
 
 ## Пререквизиты и статичные веса
 
@@ -143,7 +183,7 @@ Traefik выпустит сертификаты автоматически (HTTP
 
 - Запуск в Docker/оркестрации возможен через любой стандартный образ Python. Пробросьте `NEO4J_*` ENV и поднимите два процесса:
   - Flask (`python web_app.py`)
-  - FastAPI (`uvicorn fastapi_app:app --host 0.0.0.0 --port 8000`)
+  - FastAPI (`uvicorn src.main:app --host 0.0.0.0 --port 8000`)
 - Traefik/Nginx — по желанию, для маршрутизации HTTP‑трафика на порты 5000/8000. Секреты передавайте только через переменные окружения. 
 
 ## Формат вопросов
@@ -168,13 +208,6 @@ Traefik выпустит сертификаты автоматически (HTTP
   curl http://localhost:5000/api/analysis
   ```
 
-– Пример stateless расчёта веса темы:
-
-  ```
-  curl -X POST http://localhost:8000/test_result \
-    -H 'Content-Type: application/json' \
-    -d '{"topic_uid":"TOP-ALG-QUAD-EQ","score":42}'
-  ```
 
 ## Примечания безопасности
 

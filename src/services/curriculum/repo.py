@@ -57,3 +57,4 @@ def get_graph_view(code: str) -> Dict:
             nodes = [{"kind": r[0], "canonical_uid": r[1], "order_index": r[2]} for r in cur.fetchall()]
     conn.close()
     return {"ok": True, "nodes": nodes}
+

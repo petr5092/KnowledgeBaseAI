@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from typing import Dict
-from neo4j_utils import get_user_topic_level, get_user_skill_level
+from src.services.graph.utils import get_user_topic_level, get_user_skill_level
 
 router = APIRouter(prefix="/v1/levels")
 
