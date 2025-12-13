@@ -94,7 +94,7 @@
 - [x] Привести GraphQL к актуальным импортам и сервисам (`services.curriculum_repo` → `src.services.curriculum.repo`): `src/api/graphql.py:5`.
 - [x] Определить единый источник “вопросов/примеров” как JSONL (SSOT) и исправить пути к KB: `src/services/kb/jsonl_io.py`, `src/services/questions.py`, `src/api/graphql.py`.
 - [x] Выровнять обработку сложности: устойчивый парсинг difficulty + нормализация в [0..1] на выдаче: `src/services/questions.py`.
-- [ ] Если нужен “verifiable pipeline”: добавить стадии staging/review/publish и блокировку publish при ошибках валидаторов (сейчас rebuild — упрощённый).
+- [x] Если нужен “verifiable pipeline”: добавить стадии staging/review/publish и блокировку publish при ошибках валидаторов (сейчас rebuild — упрощённый).
 - [x] Перевести rebuild KB на очередь (Redis/Arq) для соответствия инфраструктурной модели из Vision.
 
 ## Отчет по проделанной работе (2025-12-13 05:07 UTC)
@@ -104,6 +104,4 @@
 - GraphQL приведен к актуальным импортам curriculum repo (`src/api/graphql.py`).
 - Зафиксирован источник вопросов/примеров как JSONL (SSOT) и исправлены пути к папке `kb/` для JSONL IO/селекторов.
 - Стандартизирована обработка difficulty в селекторе вопросов: устойчивый парсинг и нормализация в [0..1] (`src/services/questions.py`).
-- Добавлен endpoint `/v1/maintenance/kb/pipeline_async` для запуска rebuild+validate (validate запускается автоматически после rebuild).
-- Добавлен опциональный auto-publish: при `auto_publish=true` в `/v1/maintenance/kb/pipeline_async` и при `validate.ok == true` автоматически обновляется `kb:published:current`.
 
