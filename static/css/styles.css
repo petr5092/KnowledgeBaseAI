@@ -7,4 +7,18 @@ body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubunt
 .panel-block input, .panel-block select, .panel-block textarea { width: 100%; margin: 6px 0; padding: 8px; border-radius: 6px; border: 1px solid #30363d; background: #0b0e12; color: #e6edf3; }
 .panel-block button { padding: 8px 12px; background: #238636; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
 .panel-block button:hover { background: #2ea043; }
-.graph { height: calc(100vh - 120px); border: 1px solid #1f2328; border-radius: 8px; }
+.graph { height: calc(100vh - 160px); border: 1px solid #1f2328; border-radius: 8px; }
+.hint { font-size: 12px; color: #9aa0a6; display: block; margin-top: 6px; }
+.badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; margin-right: 6px; }
+.badge.subject { background: #13233a; color: #6da7ff; }
+.badge.section { background: #1b2a1f; color: #7bd389; }
+.badge.topic { background: #2b2614; color: #f7c948; }
+.badge.skill { background: #2b1a16; color: #ff8c69; }
+.badge.method { background: #221a2b; color: #c792ea; }
+.badge.goal { background: #142630; color: #4fc3f7; }
+.badge.objective { background: #132a27; color: #26a69a; }
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; }
+  .left-panel { border-right: 0; padding-right: 0; }
+  .graph { height: 60vh; }
+}

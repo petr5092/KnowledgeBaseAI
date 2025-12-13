@@ -3,6 +3,8 @@ import json
 import re
 import uuid
 import requests
+import asyncio
+import httpx
 from typing import Dict, List, Tuple, Set, Optional
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -335,6 +337,42 @@ def openai_chat(messages: List[Dict], model: str = 'gpt-4o-mini', temperature: f
     return {'ok': True, 'content': content}
 
 
+async def openai_chat_async(messages: List[Dict], model: str = 'gpt-4o-mini', temperature: float = 0.2) -> Dict:
+    def _load_env_file() -> None:
+        env_path = os.path.join(BASE_DIR, '.env')
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith('#'):
+                            continue
+                        if '=' in line:
+                            k, v = line.split('=', 1)
+                            k = k.strip()
+                            v = v.strip().strip('"').strip("'")
+                            if k and v and k not in os.environ:
+                                os.environ[k] = v
+            except Exception:
+                pass
+    key = os.getenv('OPENAI_API_KEY')
+    if not key:
+        _load_env_file()
+        key = os.getenv('OPENAI_API_KEY')
+    if not key:
+        return {'ok': False, 'error': 'missing OPENAI_API_KEY'}
+    url = 'https://api.openai.com/v1/chat/completions'
+    headers = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+    payload = {'model': model, 'messages': messages, 'temperature': temperature}
+    async with httpx.AsyncClient(timeout=60) as client:
+        r = await client.post(url, headers=headers, json=payload)
+    if r.status_code != 200:
+        return {'ok': False, 'error': r.text}
+    data = r.json()
+    content = data.get('choices', [{}])[0].get('message', {}).get('content', '')
+    return {'ok': True, 'content': content}
+
+
 def generate_theory_for_topic_openai(topic_uid: str, max_tokens: int = 600) -> Dict:
     topics = load_jsonl(get_path('topics.jsonl'))
     topic = next((t for t in topics if t.get('uid') == topic_uid), None)
@@ -428,6 +466,141 @@ def generate_topic_bundle_openai(topic_uid: str, examples_count: int = 5) -> Dic
     skills = [r.get('skill_uid') for r in load_jsonl(get_path('topic_skills.jsonl')) if r.get('topic_uid') == topic_uid]
     out['methods'] = [generate_methods_for_skill_openai(su, count=3) for su in skills]
     return {'ok': True, 'bundle': out}
+
+
+async def generate_sections_openai_async(subject_title: str, language: str, count: int = 5) -> List[str]:
+    messages = [
+        {'role': 'system', 'content': 'Сгенерируй разделы предмета, верни JSONL с полем title.'},
+        {'role': 'user', 'content': json.dumps({'subject': subject_title, 'lang': language, 'count': count}, ensure_ascii=False)}
+    ]
+    res = await openai_chat_async(messages)
+    if not res.get('ok'):
+        return []
+    titles: List[str] = []
+    for l in [x for x in res.get('content', '').splitlines() if x.strip()]:
+        try:
+            obj = json.loads(l)
+            t = (obj.get('title') or '').strip()
+            if t:
+                titles.append(t)
+        except Exception:
+            continue
+    return titles[:count]
+
+
+async def generate_topics_for_section_openai_async(section_title: str, language: str, count: int = 10) -> List[Dict]:
+    messages = [
+        {'role': 'system', 'content': 'Сгенерируй темы раздела, верни JSONL с полями title и description.'},
+        {'role': 'user', 'content': json.dumps({'section': section_title, 'lang': language, 'count': count}, ensure_ascii=False)}
+    ]
+    res = await openai_chat_async(messages)
+    if not res.get('ok'):
+        return []
+    items: List[Dict] = []
+    for l in [x for x in res.get('content', '').splitlines() if x.strip()]:
+        try:
+            obj = json.loads(l)
+            items.append({'title': obj.get('title',''), 'description': obj.get('description','')})
+            if len(items) >= count:
+                break
+        except Exception:
+            continue
+    return items
+
+
+async def generate_skills_for_topic_openai_async(topic_title: str, language: str, count: int = 3) -> List[Dict]:
+    messages = [
+        {'role': 'system', 'content': 'Сгенерируй навыки темы, верни JSONL с полями title и definition.'},
+        {'role': 'user', 'content': json.dumps({'topic': topic_title, 'lang': language, 'count': count}, ensure_ascii=False)}
+    ]
+    res = await openai_chat_async(messages)
+    if not res.get('ok'):
+        return []
+    items: List[Dict] = []
+    for l in [x for x in res.get('content', '').splitlines() if x.strip()]:
+        try:
+            obj = json.loads(l)
+            items.append({'title': obj.get('title',''), 'definition': obj.get('definition','')})
+            if len(items) >= count:
+                break
+        except Exception:
+            continue
+    return items
+
+
+async def generate_methods_for_skill_openai_async(skill_title: str, count: int = 2) -> List[Dict]:
+    messages = [
+        {'role': 'system', 'content': 'Предложи методы, верни JSONL с полями title и method_text.'},
+        {'role': 'user', 'content': json.dumps({'skill': skill_title}, ensure_ascii=False)}
+    ]
+    res = await openai_chat_async(messages)
+    if not res.get('ok'):
+        return []
+    items: List[Dict] = []
+    for l in [x for x in res.get('content', '').splitlines() if x.strip()]:
+        try:
+            obj = json.loads(l)
+            items.append({'title': obj.get('title',''), 'method_text': obj.get('method_text','')})
+            if len(items) >= count:
+                break
+        except Exception:
+            continue
+    return items
+
+
+async def generate_examples_for_topic_openai_async(topic_title: str, count: int = 3, difficulty: int = 3) -> List[Dict]:
+    messages = [
+        {'role': 'system', 'content': 'Сгенерируй учебные задачи, верни JSONL с полями title и statement.'},
+        {'role': 'user', 'content': json.dumps({'topic': topic_title, 'count': count}, ensure_ascii=False)}
+    ]
+    res = await openai_chat_async(messages)
+    if not res.get('ok'):
+        return []
+    items: List[Dict] = []
+    for l in [x for x in res.get('content', '').splitlines() if x.strip()]:
+        try:
+            obj = json.loads(l)
+            items.append({'title': obj.get('title',''), 'statement': obj.get('statement',''), 'difficulty': difficulty})
+            if len(items) >= count:
+                break
+        except Exception:
+            continue
+    return items
+
+
+async def generate_subject_openai_async(subject_uid: str, subject_title: str, language: str, sections_seed: Optional[List[str]] = None, topics_per_section: int = 6, skills_per_topic: int = 3, methods_per_skill: int = 2, examples_per_topic: int = 3, concurrency: int = 4) -> Dict:
+    add_subject(subject_title, uid=subject_uid)
+    sec_titles = sections_seed or await generate_sections_openai_async(subject_title, language, count=5)
+    sec_uids: List[str] = []
+    for st in sec_titles:
+        sec = add_section(subject_uid, st)
+        sec_uids.append(sec['uid'])
+    topic_defs: List[Tuple[str, Dict]] = []
+    for st, suid in zip(sec_titles, sec_uids):
+        tdefs = await generate_topics_for_section_openai_async(st, language, count=topics_per_section)
+        for td in tdefs:
+            tuid = add_topic(suid, td['title'], td.get('description',''))['uid']
+            topic_defs.append((tuid, td))
+    sem = asyncio.Semaphore(concurrency)
+    async def process_topic(tuid: str, td: Dict):
+        async with sem:
+            skills = await generate_skills_for_topic_openai_async(td['title'], language, count=skills_per_topic)
+            for sk in skills:
+                suid = add_skill(subject_uid, sk['title'], sk.get('definition',''))['uid']
+                append_jsonl(get_path('topic_skills.jsonl'), {'topic_uid': tuid, 'skill_uid': suid, 'weight': 'core', 'confidence': 0.9})
+                methods = await generate_methods_for_skill_openai_async(sk['title'], count=methods_per_skill)
+                for m in methods:
+                    muid = make_uid('MET', m['title'])
+                    append_jsonl(get_path('methods.jsonl'), {'uid': muid, 'title': m['title'], 'method_text': m['method_text'], 'applicability_types': []})
+                    link_skill_method(suid, muid, weight='primary', confidence=0.9, is_auto_generated=True)
+            examples = await generate_examples_for_topic_openai_async(td['title'], count=examples_per_topic, difficulty=3)
+            for ex in examples:
+                ex_uid = make_uid('EX', ex['title'])
+                append_jsonl(get_path('examples.jsonl'), {'uid': ex_uid, 'title': ex['title'], 'statement': ex['statement'], 'topic_uid': tuid, 'difficulty': ex['difficulty']})
+    await asyncio.gather(*[process_topic(tu, td) for tu, td in topic_defs])
+    generate_goals_and_objectives()
+    normalize_kb()
+    return {'ok': True, 'subjects': 1, 'sections': len(sec_uids), 'topics': len(topic_defs)}
 
 
 def rebuild_subject_math_with_openai(section_title: str = 'Generated Section') -> Dict:

@@ -58,12 +58,21 @@ async function renderGraph() {
     ],
     layout: { name: 'cose', padding: 48, nodeRepulsion: 90000 }
   });
+  $('graph')._cy = cy;
 
   cy.on('tap', 'node', (evt) => {
     const d = evt.target.data();
     axios.get('/api/node_details', { params: { uid: d.id } }).then(({ data }) => {
       $('analysisOut').textContent = JSON.stringify(data.details, null, 2);
     });
+  });
+
+  cy.on('mouseover', 'node', (evt) => {
+    const n = evt.target;
+    n.style('label', n.data('label'));
+  });
+  cy.on('mouseout', 'node', () => {
+    updateLabels();
   });
 
   function updateLabels() {
@@ -129,6 +138,20 @@ async function renderGraph() {
 
 async function bindActions() {
   $('refreshGraph').addEventListener('click', renderGraph);
+  $('fitGraphBtn').addEventListener('click', () => {
+    const container = $('graph');
+    if (container && container._cy) {
+      container._cy.fit();
+    }
+  });
+  $('zoomInBtn').addEventListener('click', () => {
+    const cy = $('graph')._cy;
+    if (cy) cy.zoom(cy.zoom() * 1.2);
+  });
+  $('zoomOutBtn').addEventListener('click', () => {
+    const cy = $('graph')._cy;
+    if (cy) cy.zoom(cy.zoom() / 1.2);
+  });
 
   $('addSubjectBtn').addEventListener('click', async () => {
     const payload = { title: $('subjTitle').value, description: $('subjDesc').value };
@@ -199,6 +222,20 @@ async function bindActions() {
   $('analyzeBtn').addEventListener('click', async () => {
     const { data } = await axios.get('/api/analysis');
     $('analysisOut').textContent = JSON.stringify(data, null, 2);
+  });
+  $('rerunLayoutBtn').addEventListener('click', () => {
+    const cy = $('graph')._cy;
+    const name = $('layoutSelect').value;
+    if (cy) cy.layout({ name }).run();
+  });
+  $('exportJsonBtn').addEventListener('click', async () => {
+    const subjectUid = $('subjectFilter').value || '';
+    const { data } = await axios.get('/api/graph', { params: { subject_uid: subjectUid } });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'graph.json';
+    a.click();
   });
   // Populate selects via list endpoints
   const subjSel = $('sectionSubject');

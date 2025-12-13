@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>KB Constructor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .card { background: #0f1318; border: 1px solid #1f2328; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    label { display: block; font-size: 12px; color: #9aa0a6; margin: 10px 0 6px; }
+    input, textarea, select { width: 100%; padding: 10px; border: 1px solid #30363d; border-radius: 10px; background: #0b0e12; color: #e6edf3; }
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .btn { padding: 10px 14px; border-radius: 10px; border: 0; cursor: pointer; background: #238636; color: #fff; }
+    .btn.secondary { background: #2c2f36; }
+    pre { background: #0b0e12; border: 1px solid #1f2328; border-radius: 10px; padding: 12px; overflow: auto; }
+    .hint { font-size: 12px; color: #9aa0a6; display: block; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <header class="app-header" style="display:flex; align-items:center; justify-content:space-between;">
+    <h1>KB Constructor</h1>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <input id="apiKey" placeholder="X-API-Key" style="width:280px" />
+      <button class="btn secondary" onclick="copyCurl()">cURL</button>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="grid grid-2">
+      <div class="card">
+        <h2>Параметры генерации</h2>
+        <label>subject_uid</label>
+        <input id="subjectUid" value="SUB-MATH" />
+        <label>subject_title</label>
+        <input id="subjectTitle" value="Математика" />
+        <label>language</label>
+        <input id="lang" value="ru" />
+        <label>sections_seed (по строкам)</label>
+        <textarea id="sectionsSeed" rows="5">Алгебра
+Арифметика
+Геометрия</textarea>
+        <div class="grid grid-2">
+          <div>
+            <label>topics_per_section</label>
+            <input id="topicsPer" type="number" value="6" />
+          </div>
+          <div>
+            <label>skills_per_topic</label>
+            <input id="skillsPer" type="number" value="3" />
+          </div>
+          <div>
+            <label>methods_per_skill</label>
+            <input id="methodsPer" type="number" value="2" />
+          </div>
+          <div>
+            <label>examples_per_topic</label>
+            <input id="examplesPer" type="number" value="3" />
+          </div>
+        </div>
+        <label>concurrency</label>
+        <input id="concurrency" type="number" value="4" />
+        <span class="hint">Асинхронные функции запрашивают OpenAI параллельно. Выберите разумную степень.</span>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn" onclick="generateSubject()">Генерация JSONL</button>
+          <button class="btn" onclick="generateImport()">Генерация + Импорт + Аналитика</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Вывод</h2>
+        <pre id="out"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function generateSubject() {
+      const payload = collectPayload();
+      const key = document.getElementById('apiKey').value.trim();
+      const r = await fetch('/api/constructor/generate_subject', { method:'POST', headers:{'Content-Type':'application/json','X-API-Key': key}, body: JSON.stringify(payload) });
+      document.getElementById('out').textContent = await r.text();
+    }
+    async function generateImport() {
+      const payload = collectPayload();
+      const key = document.getElementById('apiKey').value.trim();
+      const r = await fetch('/api/constructor/generate_subject_import', { method:'POST', headers:{'Content-Type':'application/json','X-API-Key': key}, body: JSON.stringify(payload) });
+      document.getElementById('out').textContent = await r.text();
+    }
+    function collectPayload() {
+      const sections = document.getElementById('sectionsSeed').value.split('\n').map(s => s.trim()).filter(Boolean);
+      return {
+        subject_uid: document.getElementById('subjectUid').value.trim(),
+        subject_title: document.getElementById('subjectTitle').value.trim(),
+        language: document.getElementById('lang').value.trim(),
+        sections_seed: sections,
+        topics_per_section: parseInt(document.getElementById('topicsPer').value || '6', 10),
+        skills_per_topic: parseInt(document.getElementById('skillsPer').value || '3', 10),
+        methods_per_skill: parseInt(document.getElementById('methodsPer').value || '2', 10),
+        examples_per_topic: parseInt(document.getElementById('examplesPer').value || '3', 10),
+        concurrency: parseInt(document.getElementById('concurrency').value || '4', 10)
+      };
+    }
+    function copyCurl() {
+      const p = collectPayload();
+      const key = document.getElementById('apiKey').value.trim() || 'kb-admin-key';
+      const cmd = `curl -X POST http://localhost:5000/api/constructor/generate_subject -H "Content-Type: application/json" -H "X-API-Key: ${key}" -d '${JSON.stringify(p)}'`;
+      navigator.clipboard.writeText(cmd);
+      alert('cURL скопирован');
+    }
+  </script>
+</body>
+</html>

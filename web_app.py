@@ -13,7 +13,9 @@ from typing import List, Dict
 
 from flask import Flask, jsonify, request, render_template, redirect, url_for
 from neo4j_utils import build_graph_from_neo4j, analyze_knowledge, sync_from_jsonl
+from services.curriculum_repo import create_curriculum, add_curriculum_nodes, get_graph_view
 from neo4j_utils import list_items, get_node_details, search_titles, health
+import requests
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -355,6 +357,16 @@ def knowledge():
     return render_template('knowledge.html', subjects=subjects)
 
 
+@app.route('/curriculum')
+def curriculum():
+    return render_template('curriculum.html')
+
+
+@app.route('/constructor')
+def constructor():
+    return render_template('constructor.html')
+
+
 @app.get('/api/graph')
 def api_graph():
     """Вернуть граф (из Neo4j при наличии конфигурации, иначе — локально)."""
@@ -663,6 +675,41 @@ def api_openapi_spec():
             },
             "/api/topic_objectives": {
                 "post": {"summary": "Добавить задачу темы", "requestBody": {"required": True, "content": {"application/json": {}}}, "responses": {"200": {"description": "OK"}}}
+            },
+            "/api/admin/curriculum": {
+                "post": {
+                    "summary": "Создать curriculum",
+                    "security": [{"ApiKeyAuth": []}],
+                    "responses": {"200": {"description": "OK"}}
+                }
+            },
+            "/api/admin/curriculum/nodes": {
+                "post": {
+                    "summary": "Добавить узлы в curriculum",
+                    "security": [{"ApiKeyAuth": []}],
+                    "responses": {"200": {"description": "OK"}}
+                }
+            },
+            "/api/curriculum/graph_view": {
+                "get": {
+                    "summary": "Получить представление curriculum",
+                    "parameters": [{"name": "code", "in": "query", "schema": {"type": "string"}, "required": true}],
+                    "responses": {"200": {"description": "OK"}}
+                }
+            },
+            "/api/constructor/generate_subject": {
+                "post": {
+                    "summary": "Генерация канона (через FastAPI)",
+                    "security": [{"ApiKeyAuth": []}],
+                    "responses": {"200": {"description": "OK"}}
+                }
+            },
+            "/api/constructor/generate_subject_import": {
+                "post": {
+                    "summary": "Генерация+импорт+аналитика (через FastAPI)",
+                    "security": [{"ApiKeyAuth": []}],
+                    "responses": {"200": {"description": "OK"}}
+                }
             }
         }
     }
@@ -732,6 +779,63 @@ def api_analysis():
     subject_uid = request.args.get('subject_uid')
     metrics = analyze_knowledge(subject_uid)
     return jsonify({'ok': True, 'metrics': metrics})
+
+
+@app.post('/api/constructor/generate_subject')
+def api_constructor_generate_subject():
+    expected = os.getenv('ADMIN_API_KEY')
+    provided = request.headers.get('X-API-Key')
+    if expected and provided != expected:
+        return jsonify({'ok': False, 'error': 'invalid api key'}), 401
+    payload = request.get_json(force=True)
+    r = requests.post('http://fastapi:8000/admin/generate_subject', headers={'X-API-Key': provided or '', 'Content-Type': 'application/json'}, json=payload, timeout=300)
+    return (r.text, r.status_code, {'Content-Type': 'application/json'})
+
+
+@app.post('/api/constructor/generate_subject_import')
+def api_constructor_generate_subject_import():
+    expected = os.getenv('ADMIN_API_KEY')
+    provided = request.headers.get('X-API-Key')
+    if expected and provided != expected:
+        return jsonify({'ok': False, 'error': 'invalid api key'}), 401
+    payload = request.get_json(force=True)
+    r = requests.post('http://fastapi:8000/admin/generate_subject_import', headers={'X-API-Key': provided or '', 'Content-Type': 'application/json'}, json=payload, timeout=600)
+    return (r.text, r.status_code, {'Content-Type': 'application/json'})
+
+
+@app.post('/api/admin/curriculum')
+def api_admin_create_curriculum():
+    expected = os.getenv('ADMIN_API_KEY')
+    provided = request.headers.get('X-API-Key')
+    if expected and provided != expected:
+        return jsonify({'ok': False, 'error': 'invalid api key'}), 401
+    payload = request.get_json(force=True)
+    code = payload.get('code')
+    title = payload.get('title')
+    standard = payload.get('standard')
+    language = payload.get('language')
+    res = create_curriculum(code, title, standard, language)
+    return jsonify(res)
+
+
+@app.post('/api/admin/curriculum/nodes')
+def api_admin_add_curriculum_nodes():
+    expected = os.getenv('ADMIN_API_KEY')
+    provided = request.headers.get('X-API-Key')
+    if expected and provided != expected:
+        return jsonify({'ok': False, 'error': 'invalid api key'}), 401
+    payload = request.get_json(force=True)
+    code = payload.get('code')
+    nodes = payload.get('nodes') or []
+    res = add_curriculum_nodes(code, nodes)
+    return jsonify(res)
+
+
+@app.get('/api/curriculum/graph_view')
+def api_curriculum_graph_view():
+    code = request.args.get('code')
+    res = get_graph_view(code)
+    return jsonify(res)
 
 
 if __name__ == '__main__':

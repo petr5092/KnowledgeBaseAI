@@ -34,6 +34,10 @@ from neo4j_utils import (
 )
 from services.question_selector import select_examples_for_topics, all_topic_uids_from_examples
 from kb_jobs import start_rebuild_async, get_job_status
+from kb_builder import generate_subject_openai_async
+from neo4j_utils import sync_from_jsonl
+from neo4j_utils import compute_static_weights
+from neo4j_utils import analyze_knowledge
 from services.curriculum_repo import create_curriculum, add_curriculum_nodes, get_graph_view
 
 app = FastAPI(
@@ -286,3 +290,51 @@ def get_curriculum_graph_view(code: str) -> Dict:
     if not res.get("ok"):
         raise HTTPException(status_code=404, detail=res.get("error", "not found"))
     return res
+
+class GenerateSubjectInput(BaseModel):
+    subject_uid: str
+    subject_title: str
+    language: str = "ru"
+    sections_seed: List[str] | None = None
+    topics_per_section: int = 6
+    skills_per_topic: int = 3
+    methods_per_skill: int = 2
+    examples_per_topic: int = 3
+    concurrency: int = 4
+
+@app.post("/admin/generate_subject")
+async def admin_generate_subject(payload: GenerateSubjectInput, x_api_key: str | None = Header(default=None)) -> Dict:
+    if not _require_admin({"X-API-Key": x_api_key}):
+        raise HTTPException(status_code=401, detail="invalid api key")
+    res = await generate_subject_openai_async(
+        payload.subject_uid,
+        payload.subject_title,
+        payload.language,
+        sections_seed=payload.sections_seed,
+        topics_per_section=payload.topics_per_section,
+        skills_per_topic=payload.skills_per_topic,
+        methods_per_skill=payload.methods_per_skill,
+        examples_per_topic=payload.examples_per_topic,
+        concurrency=payload.concurrency,
+    )
+    return res
+
+@app.post("/admin/generate_subject_import")
+async def admin_generate_subject_import(payload: GenerateSubjectInput, x_api_key: str | None = Header(default=None)) -> Dict:
+    if not _require_admin({"X-API-Key": x_api_key}):
+        raise HTTPException(status_code=401, detail="invalid api key")
+    gen = await generate_subject_openai_async(
+        payload.subject_uid,
+        payload.subject_title,
+        payload.language,
+        sections_seed=payload.sections_seed,
+        topics_per_section=payload.topics_per_section,
+        skills_per_topic=payload.skills_per_topic,
+        methods_per_skill=payload.methods_per_skill,
+        examples_per_topic=payload.examples_per_topic,
+        concurrency=payload.concurrency,
+    )
+    stats = sync_from_jsonl()
+    weights = compute_static_weights()
+    metrics = analyze_knowledge()
+    return {"generated": gen, "sync": stats, "weights": weights, "metrics": metrics}

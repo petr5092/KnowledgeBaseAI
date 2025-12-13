@@ -9,22 +9,70 @@
     <script src="https://unpkg.com/cytoscape@3.28.0/dist/cytoscape.min.js"></script>
   </head>
   <body>
-    <header class="app-header">
+    <header class="app-header" style="display:flex; align-items:center; justify-content:space-between;">
       <h1>Конструктор и визуализатор знаний</h1>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <label>Предмет</label>
+        <select id="subjectFilter">
+          <option value="">Все</option>
+          {% for s in subjects %}
+            <option value="{{ s.uid }}">{{ s.title }}</option>
+          {% endfor %}
+        </select>
+        <button id="refreshGraph">Обновить граф</button>
+        <button id="fitGraphBtn" title="Автоматически вместить граф в область">Вместить</button>
+        <button id="zoomInBtn" title="Увеличить">+</button>
+        <button id="zoomOutBtn" title="Уменьшить">−</button>
+      </div>
     </header>
 
     <main class="layout">
       <section class="left-panel">
         <div class="panel-block">
-          <h2>Фильтр</h2>
-          <label>Предмет</label>
-          <select id="subjectFilter">
-            <option value="">Все</option>
-            {% for s in subjects %}
-              <option value="{{ s.uid }}">{{ s.title }}</option>
-            {% endfor %}
-          </select>
-          <button id="refreshGraph">Обновить граф</button>
+          <h2>Визуализатор</h2>
+          <span class="hint">Клик по узлу показывает детали справа. Используйте фильтры и поиск, чтобы сфокусироваться.</span>
+          <div class="controls" style="display:grid; grid-template-columns:1fr; gap:8px;">
+            <div>
+              <label>Поиск по названию</label>
+              <div style="display:flex; gap:6px;">
+                <input id="searchBox" placeholder="Введите часть названия">
+                <button id="searchBtn">Найти</button>
+              </div>
+              <span class="hint">Подсветка найденных узлов и вывод их метаданных возможен по клику.</span>
+            </div>
+            <div>
+              <label>Порог степени узла</label>
+              <input id="degreeSlider" type="range" min="0" max="6" value="0">
+              <span id="degreeValue">0</span>
+              <span class="hint">Скрывает узлы с меньшим количеством связей, помогает убрать шум.</span>
+            </div>
+            <div>
+              <label>Фильтр типов</label>
+              <div class="type-filters" style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                <label><input type="checkbox" id="cbSubject" checked> subject</label>
+                <label><input type="checkbox" id="cbSection" checked> section</label>
+                <label><input type="checkbox" id="cbTopic" checked> topic</label>
+                <label><input type="checkbox" id="cbSkill" checked> skill</label>
+                <label><input type="checkbox" id="cbMethod" checked> method</label>
+                <label><input type="checkbox" id="cbGoal" checked> goal</label>
+                <label><input type="checkbox" id="cbObjective" checked> objective</label>
+              </div>
+              <span class="hint">Отключите лишние типы, чтобы упростить картину.</span>
+            </div>
+            <div>
+              <label>Раскладка</label>
+              <div style="display:flex; gap:6px;">
+                <select id="layoutSelect">
+                  <option value="cose">cose</option>
+                  <option value="concentric">concentric</option>
+                  <option value="grid">grid</option>
+                  <option value="circle">circle</option>
+                </select>
+                <button id="rerunLayoutBtn">Применить</button>
+              </div>
+              <span class="hint">Смените алгоритм раскладки для разных типов графов.</span>
+            </div>
+          </div>
         </div>
 
         <div class="panel-block">
@@ -115,32 +163,21 @@
           <button id="syncNeo4jBtn">Синхронизировать в Neo4j</button>
           <button id="normalizeKbBtn">Нормализовать KB</button>
           <button id="analyzeBtn">Аналитика</button>
+          <button id="exportJsonBtn">Экспорт JSON</button>
         </div>
-        <div class="controls" style="margin-top:12px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div>
-            <label>Поиск по названию</label>
-            <div style="display:flex; gap:6px;">
-              <input id="searchBox" placeholder="Введите часть названия">
-              <button id="searchBtn">Найти</button>
-            </div>
-            <label style="display:block; margin-top:8px;">Порог степени узла</label>
-            <input id="degreeSlider" type="range" min="0" max="6" value="0">
-            <span id="degreeValue">0</span>
-          </div>
-          <div>
-            <label>Фильтр типов</label>
-            <div class="type-filters">
-              <label><input type="checkbox" id="cbSubject" checked> subject</label>
-              <label><input type="checkbox" id="cbSection" checked> section</label>
-              <label><input type="checkbox" id="cbTopic" checked> topic</label>
-              <label><input type="checkbox" id="cbSkill" checked> skill</label>
-              <label><input type="checkbox" id="cbMethod" checked> method</label>
-              <label><input type="checkbox" id="cbGoal" checked> goal</label>
-              <label><input type="checkbox" id="cbObjective" checked> objective</label>
-            </div>
-          </div>
+        <div style="margin-top:8px;">
+          <span class="badge subject">Subject</span>
+          <span class="badge section">Section</span>
+          <span class="badge topic">Topic</span>
+          <span class="badge skill">Skill</span>
+          <span class="badge method">Method</span>
+          <span class="badge goal">Goal</span>
+          <span class="badge objective">Objective</span>
         </div>
-        <pre id="analysisOut" style="margin-top:8px; padding:8px; border:1px solid #1f2328; border-radius:6px; background:#0f1318; max-height:200px; overflow:auto;"></pre>
+        <div id="drawer" style="margin-top:12px; padding:12px; border:1px solid #1f2328; border-radius:8px; background:#0f1318;">
+          <h3 style="margin:0 0 8px;">Детали узла</h3>
+          <pre id="analysisOut" style="max-height:220px; overflow:auto;"></pre>
+        </div>
       </section>
     </main>
 
