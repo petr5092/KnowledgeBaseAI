@@ -45,3 +45,46 @@ def relation_context(from_uid: str, to_uid: str) -> Dict:
             ctx = {"rel": res["rel"], "props": res["props"], "from_title": res["a_title"], "to_title": res["b_title"]}
     drv.close()
     return ctx
+
+def neighbors(center_uid: str, depth: int = 1) -> Tuple[List[Dict], List[Dict]]:
+    drv = get_driver()
+    nodes: List[Dict] = []
+    edges: List[Dict] = []
+    with drv.session() as s:
+        res = s.run(
+            (
+                "MATCH p=(c {uid:$uid})-[:CONTAINS|PREREQ|HAS_SKILL|LINKED|TARGETS*0..$depth]-(n) "
+                "RETURN collect(DISTINCT n) AS ns, collect(DISTINCT relationships(p)) AS rs"
+            ), {"uid": center_uid, "depth": int(depth)}
+        ).single()
+        ns = res["ns"] if res else []
+        rs = res["rs"] if res else []
+        seen = set()
+        for n in ns:
+            nid = n.id
+            if nid in seen:
+                continue
+            seen.add(nid)
+            nodes.append({"id": nid, "uid": n.get("uid"), "label": n.get("title"), "labels": list(n.labels)})
+        added = set()
+        for rels in rs:
+            for r in rels:
+                key = (r.start_node.id, r.end_node.id, type(r).__name__)
+                if key in added:
+                    continue
+                added.add(key)
+                edges.append({"from": r.start_node.id, "to": r.end_node.id, "type": type(r).__name__})
+    drv.close()
+    return nodes, edges
+
+def purge_user_artifacts() -> Dict:
+    drv = get_driver()
+    deleted_users = 0
+    deleted_rels = 0
+    with drv.session() as s:
+        res = s.run("MATCH (u:User) DETACH DELETE u RETURN COUNT(u) AS c").single()
+        deleted_users = res["c"] if res else 0
+        res2 = s.run("MATCH ()-[r:COMPLETED]-() DELETE r RETURN COUNT(r) AS c").single()
+        deleted_rels = res2["c"] if res2 else 0
+    drv.close()
+    return {"deleted_users": deleted_users, "deleted_completed_rels": deleted_rels}

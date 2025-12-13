@@ -6,6 +6,7 @@ import requests
 import asyncio
 import httpx
 from typing import Dict, List, Tuple, Set, Optional
+from src.utils.atomic_write import write_jsonl_atomic
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 KB_DIR = os.path.join(BASE_DIR, 'kb')
@@ -28,16 +29,19 @@ def load_jsonl(filepath: str) -> List[Dict]:
 
 
 def append_jsonl(filepath: str, record: Dict) -> None:
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, 'a', encoding='utf-8') as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    items = load_jsonl(filepath)
+    items.append(record)
+    def _validate(rec: Dict) -> None:
+        if not isinstance(rec, dict):
+            raise ValueError("record must be dict")
+    write_jsonl_atomic(filepath, items, _validate)
 
 
 def rewrite_jsonl(filepath: str, records: List[Dict]) -> None:
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, 'w', encoding='utf-8') as f:
-        for r in records:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    def _validate(rec: Dict) -> None:
+        if not isinstance(rec, dict):
+            raise ValueError("record must be dict")
+    write_jsonl_atomic(filepath, records, _validate)
 
 
 def get_path(name: str) -> str:

@@ -6,6 +6,13 @@ from src.api.graph import router as graph_router
 from src.api.construct import router as construct_router
 from src.api.analytics import router as analytics_router
 from src.api.ws import router as ws_router
+from src.api.curriculum import router as curriculum_router
+from src.api.admin import router as admin_router
+from src.api.admin_curriculum import router as admin_curriculum_router
+from src.api.admin_generate import router as admin_generate_router
+from src.api.levels import router as levels_router
+from src.api.maintenance import router as maintenance_router
+from src.api.graphql import router as graphql_router
 from prometheus_client import Counter, Histogram
 
 app = FastAPI(title="Headless Knowledge Graph Platform")
@@ -33,3 +40,10 @@ app.include_router(graph_router)
 app.include_router(construct_router)
 app.include_router(analytics_router)
 app.include_router(ws_router)
+app.include_router(curriculum_router)
+app.include_router(admin_router)
+app.include_router(admin_curriculum_router)
+app.include_router(admin_generate_router)
+app.include_router(levels_router)
+app.include_router(maintenance_router)
+app.include_router(graphql_router, prefix="/v1/graphql")

@@ -73,10 +73,10 @@ def knowledge_level_from_weight(weight: float) -> str:
     """Определить уровень знания по весу."""
     w = float(weight)
     if w < 0.3:
-        return "high"
+        return "low"
     if w < 0.7:
         return "medium"
-    return "low"
+    return "high"
 
 
 def _load_jsonl(filepath: str) -> List[Dict]:
@@ -123,16 +123,11 @@ def ensure_constraints(session):
     session.run("CREATE INDEX topic_title_idx IF NOT EXISTS FOR (n:Topic) ON (n.title)")
     session.run("CREATE INDEX skill_title_idx IF NOT EXISTS FOR (n:Skill) ON (n.title)")
     session.run("CREATE INDEX method_title_idx IF NOT EXISTS FOR (n:Method) ON (n.title)")
-    session.run("CREATE INDEX example_title_idx IF NOT EXISTS FOR (n:Example) ON (n.title)")
-    session.run("CREATE INDEX example_difficulty_idx IF NOT EXISTS FOR (n:Example) ON (n.difficulty)")
     session.run("CREATE CONSTRAINT section_title_scope_unique IF NOT EXISTS FOR (n:Section) REQUIRE (n.subject_uid, n.title) IS UNIQUE")
     session.run("CREATE CONSTRAINT topic_title_scope_unique IF NOT EXISTS FOR (n:Topic) REQUIRE (n.section_uid, n.title) IS UNIQUE")
     session.run("CREATE CONSTRAINT skill_title_scope_unique IF NOT EXISTS FOR (n:Skill) REQUIRE (n.subject_uid, n.title) IS UNIQUE")
-    session.run("CREATE INDEX subject_title_idx IF NOT EXISTS FOR (n:Subject) ON (n.title)")
-    session.run("CREATE INDEX section_title_idx IF NOT EXISTS FOR (n:Section) ON (n.title)")
-    session.run("CREATE INDEX topic_title_idx IF NOT EXISTS FOR (n:Topic) ON (n.title)")
-    session.run("CREATE INDEX skill_title_idx IF NOT EXISTS FOR (n:Skill) ON (n.title)")
-    session.run("CREATE INDEX method_title_idx IF NOT EXISTS FOR (n:Method) ON (n.title)")
+    session.run("CREATE INDEX example_title_idx IF NOT EXISTS FOR (n:Example) ON (n.title)")
+    session.run("CREATE INDEX example_difficulty_idx IF NOT EXISTS FOR (n:Example) ON (n.difficulty)")
 
 
 def ensure_weight_defaults(session):
@@ -771,6 +766,14 @@ def get_node_details(uid: str) -> Dict:
         details["targets"] = [{"uid": r['uid'], "title": r['title'], "type": ('objective' if r['label'] == 'Objective' else 'goal')} for r in g]
         pr = repo.read("MATCH (t:Topic {uid:$uid})-[:PREREQ]->(p:Topic) RETURN p.uid AS uid, p.title AS title", {"uid": uid})
         details["prereqs"] = pr
+        m = repo.read("MATCH (t:Topic {uid:$uid})-[:USES_SKILL]->(sk:Skill)-[:LINKED]->(m:Method) RETURN DISTINCT m.uid AS uid, m.title AS title", {"uid": uid})
+        details["methods"] = [{"uid": r['uid'], "title": r['title']} for r in m]
+        details["summary"] = {
+            "title": details["title"],
+            "prereqs_count": len(details.get("prereqs", [])),
+            "targets_count": len(details.get("targets", [])),
+            "methods_count": len(details.get("methods", [])),
+        }
     elif typ == 'Skill':
         wrows = repo.read("MATCH (s:Skill {uid:$uid}) RETURN s.static_weight AS sw, s.dynamic_weight AS dw", {"uid": uid})
         if wrows:

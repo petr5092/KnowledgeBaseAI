@@ -23,6 +23,7 @@
         <button id="fitGraphBtn" title="Автоматически вместить граф в область">Вместить</button>
         <button id="zoomInBtn" title="Увеличить">+</button>
         <button id="zoomOutBtn" title="Уменьшить">−</button>
+        <button id="loadNeighborhoodBtn" title="Загрузить окрестность выбранного узла">Окрестность</button>
       </div>
     </header>
 
@@ -47,18 +48,29 @@
               <span class="hint">Скрывает узлы с меньшим количеством связей, помогает убрать шум.</span>
             </div>
             <div>
-              <label>Фильтр типов</label>
-              <div class="type-filters" style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-                <label><input type="checkbox" id="cbSubject" checked> subject</label>
-                <label><input type="checkbox" id="cbSection" checked> section</label>
-                <label><input type="checkbox" id="cbTopic" checked> topic</label>
-                <label><input type="checkbox" id="cbSkill" checked> skill</label>
-                <label><input type="checkbox" id="cbMethod" checked> method</label>
-                <label><input type="checkbox" id="cbGoal" checked> goal</label>
-                <label><input type="checkbox" id="cbObjective" checked> objective</label>
-              </div>
-              <span class="hint">Отключите лишние типы, чтобы упростить картину.</span>
+          <label>Фильтр типов</label>
+          <div class="type-filters" style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <label><input type="checkbox" id="cbSubject" checked> subject</label>
+            <label><input type="checkbox" id="cbSection" checked> section</label>
+            <label><input type="checkbox" id="cbTopic" checked> topic</label>
+            <label><input type="checkbox" id="cbSkill" checked> skill</label>
+            <label><input type="checkbox" id="cbMethod" checked> method</label>
+            <label><input type="checkbox" id="cbGoal" checked> goal</label>
+            <label><input type="checkbox" id="cbObjective" checked> objective</label>
+          </div>
+          <span class="hint">Отключите лишние типы, чтобы упростить картину.</span>
+          <div style="margin-top:8px;">
+            <label>Связи</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+              <label><input type="checkbox" id="relContains" checked> contains</label>
+              <label><input type="checkbox" id="relHasSkill" checked> has_skill</label>
+              <label><input type="checkbox" id="relPrereq" checked> PREREQ</label>
+              <label><input type="checkbox" id="relTargets" checked> targets</label>
+              <label><input type="checkbox" id="relLinked" checked> linked</label>
             </div>
+            <span class="hint">Переключайте типы связей для сфокусированного анализа.</span>
+          </div>
+        </div>
             <div>
               <label>Раскладка</label>
               <div style="display:flex; gap:6px;">

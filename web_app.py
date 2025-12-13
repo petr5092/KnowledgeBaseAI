@@ -10,6 +10,7 @@
 import os
 import json
 from typing import List, Dict
+from src.utils.atomic_write import write_jsonl_atomic
 
 from flask import Flask, jsonify, request, render_template, redirect, url_for
 from neo4j_utils import build_graph_from_neo4j, analyze_knowledge, sync_from_jsonl
@@ -41,18 +42,21 @@ def load_jsonl(filepath: str) -> List[Dict]:
 
 
 def append_jsonl(filepath: str, record: Dict) -> None:
-    """Добавить запись в конец JSONL с созданием директорий при необходимости."""
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, 'a', encoding='utf-8') as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    """Добавить запись в конец JSONL атомарно."""
+    items = load_jsonl(filepath)
+    items.append(record)
+    def _validate(rec: Dict) -> None:
+        if not isinstance(rec, dict):
+            raise ValueError("record must be dict")
+    write_jsonl_atomic(filepath, items, _validate)
 
 
 def rewrite_jsonl(filepath: str, records: List[Dict]) -> None:
-    """Полностью перезаписать JSONL указанным набором записей."""
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, 'w', encoding='utf-8') as f:
-        for r in records:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    """Полностью перезаписать JSONL атомарно."""
+    def _validate(rec: Dict) -> None:
+        if not isinstance(rec, dict):
+            raise ValueError("record must be dict")
+    write_jsonl_atomic(filepath, records, _validate)
 
 
 VALID_UID_PREFIXES = {
@@ -788,7 +792,7 @@ def api_constructor_generate_subject():
     if expected and provided != expected:
         return jsonify({'ok': False, 'error': 'invalid api key'}), 401
     payload = request.get_json(force=True)
-    r = requests.post('http://fastapi:8000/admin/generate_subject', headers={'X-API-Key': provided or '', 'Content-Type': 'application/json'}, json=payload, timeout=300)
+    r = requests.post('http://fastapi:8000/v1/admin/generate_subject', headers={'X-API-Key': provided or '', 'Content-Type': 'application/json'}, json=payload, timeout=300)
     return (r.text, r.status_code, {'Content-Type': 'application/json'})
 
 
@@ -799,7 +803,7 @@ def api_constructor_generate_subject_import():
     if expected and provided != expected:
         return jsonify({'ok': False, 'error': 'invalid api key'}), 401
     payload = request.get_json(force=True)
-    r = requests.post('http://fastapi:8000/admin/generate_subject_import', headers={'X-API-Key': provided or '', 'Content-Type': 'application/json'}, json=payload, timeout=600)
+    r = requests.post('http://fastapi:8000/v1/admin/generate_subject_import', headers={'X-API-Key': provided or '', 'Content-Type': 'application/json'}, json=payload, timeout=600)
     return (r.text, r.status_code, {'Content-Type': 'application/json'})
 
 

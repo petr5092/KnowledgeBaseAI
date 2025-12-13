@@ -232,7 +232,7 @@
 
 #### Topic prerequisites (DAG)
 
-* `(Topic)-[:PREREQ {reason: string, strength: float}]->(Topic)`
+* `(Topic)-[:PREREQ {reason: string, strength: float}]->(Topic)`reboot
   **Инвариант:** граф prerequisites внутри предмета **ацикличен**.
 
 #### Topic targets

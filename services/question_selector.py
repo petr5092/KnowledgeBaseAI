@@ -66,7 +66,7 @@ def select_examples_for_topics(
                 return xf if xf <= 1.0 else max(0.0, min(1.0, xf / 5.0))
             for r in rows:
                 d_int = int(r.get('difficulty', 3) or 3)
-                if d < difficulty_min or d > difficulty_max:
+                if d_int < difficulty_min or d_int > difficulty_max:
                     continue
                 if r.get('uid') in exclude:
                     continue

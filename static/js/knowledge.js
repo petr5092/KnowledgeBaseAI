@@ -26,6 +26,8 @@ function relStyle(rel) {
     case 'primary': return 'solid';
     case 'secondary': return 'dashed';
     case 'auxiliary': return 'dotted';
+    case 'PREREQ': return 'solid';
+    case 'targets': return 'solid';
     default: return 'solid';
   }
 }
@@ -65,6 +67,7 @@ async function renderGraph() {
     axios.get('/api/node_details', { params: { uid: d.id } }).then(({ data }) => {
       $('analysisOut').textContent = JSON.stringify(data.details, null, 2);
     });
+    $('graph')._selected = d.id;
   });
 
   cy.on('mouseover', 'node', (evt) => {
@@ -91,6 +94,12 @@ async function renderGraph() {
     if ($('cbMethod').checked) allowed.add('method');
     if ($('cbGoal').checked) allowed.add('goal');
     if ($('cbObjective').checked) allowed.add('objective');
+    const relAllowed = new Set();
+    if ($('relContains').checked) relAllowed.add('contains');
+    if ($('relHasSkill').checked) relAllowed.add('has_skill');
+    if ($('relPrereq').checked) relAllowed.add('PREREQ');
+    if ($('relTargets').checked) relAllowed.add('targets');
+    if ($('relLinked').checked) relAllowed.add('linked');
     cy.nodes().forEach(n => {
       const show = allowed.has(n.data('type'));
       n.style('display', show ? 'element' : 'none');
@@ -98,12 +107,15 @@ async function renderGraph() {
     cy.edges().forEach(e => {
       const s = cy.getElementById(e.data('source'));
       const t = cy.getElementById(e.data('target'));
-      const show = s.style('display') !== 'none' && t.style('display') !== 'none';
+      const show = s.style('display') !== 'none' && t.style('display') !== 'none' && relAllowed.has(e.data('rel'));
       e.style('display', show ? 'element' : 'none');
     });
   }
 
   ['cbSubject','cbSection','cbTopic','cbSkill','cbMethod','cbGoal','cbObjective'].forEach(id => {
+    $(id).addEventListener('change', applyFilters);
+  });
+  ['relContains','relHasSkill','relPrereq','relTargets','relLinked'].forEach(id => {
     $(id).addEventListener('change', applyFilters);
   });
 
@@ -236,6 +248,29 @@ async function bindActions() {
     a.href = URL.createObjectURL(blob);
     a.download = 'graph.json';
     a.click();
+  });
+  $('loadNeighborhoodBtn').addEventListener('click', async () => {
+    const cy = $('graph')._cy;
+    const center = $('graph')._selected;
+    if (!center || !cy) return;
+    const { data } = await axios.get('/v1/graph/viewport', { params: { center_uid: center, depth: 1 } });
+    const existingIds = new Set(cy.nodes().map(n => n.id()));
+    const existingEdges = new Set(cy.edges().map(e => e.id()));
+    const newElements = [];
+    (data.nodes || []).forEach(n => {
+      const id = n.uid || String(n.id);
+      if (!existingIds.has(id)) {
+        newElements.push({ data: { id, label: n.label || '', type: (n.labels || [])[0] || 'topic' } });
+      }
+    });
+    (data.edges || []).forEach(e => {
+      const id = `${e.from}->${e.to}`;
+      if (!existingEdges.has(id)) {
+        newElements.push({ data: { id, source: String(e.from), target: String(e.to), rel: e.type || 'linked' } });
+      }
+    });
+    cy.add(newElements);
+    cy.layout({ name: 'cose' }).run();
   });
   // Populate selects via list endpoints
   const subjSel = $('sectionSubject');
