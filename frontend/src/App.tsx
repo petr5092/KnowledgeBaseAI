@@ -1,25 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-
-type RouteKey = 'map' | 'roadmap' | 'construct' | 'practice' | 'settings'
+import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import ExplorePage from './pages/ExplorePage'
+import EditPage from './pages/EditPage'
+import PracticePage from './pages/PracticePage'
+import RoadmapPage from './pages/RoadmapPage'
+import SettingsPage from './pages/SettingsPage'
+import { postChat } from './api'
 
 type ChatMessage = {
   id: string
   role: 'user' | 'assistant'
   text: string
   createdAt: number
-}
-
-function getInitialRoute(): RouteKey {
-  const hash = window.location.hash.replace('#', '')
-  if (hash === 'roadmap') return 'roadmap'
-  if (hash === 'construct') return 'construct'
-  if (hash === 'practice') return 'practice'
-  if (hash === 'settings') return 'settings'
-  return 'map'
-}
-
-function setRoute(route: RouteKey) {
-  window.location.hash = route === 'map' ? '' : route
 }
 
 function uid() {
@@ -31,8 +23,21 @@ function formatTime(ts: number) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-function App() {
-  const [route, setRouteState] = useState<RouteKey>(() => getInitialRoute())
+function useActiveRouteTitle() {
+  const location = useLocation()
+  const path = location.pathname
+
+  if (path.startsWith('/edit')) return 'Edit'
+  if (path.startsWith('/roadmap')) return 'Дорожная карта'
+  if (path.startsWith('/practice')) return 'Практика'
+  if (path.startsWith('/settings')) return 'Настройки'
+  return 'Explore'
+}
+
+export default function App() {
+  const navigate = useNavigate()
+  const title = useActiveRouteTitle()
+
   const [selectedUid, setSelectedUid] = useState<string>('TOP-DEMO')
   const [chatOpen, setChatOpen] = useState(false)
   const [chatInput, setChatInput] = useState('')
@@ -40,28 +45,30 @@ function App() {
     {
       id: uid(),
       role: 'assistant',
-      text: 'Привет! Я ассистент KnowledgeBase. Выбери узел на карте и спроси меня про связи, роадмап или генерацию контента.',
+      text: 'Привет! Я ассистент KnowledgeBase. Выбери узел и спроси меня про связи, роадмап или генерацию контента.',
       createdAt: Date.now(),
     },
   ])
 
-  useEffect(() => {
-    const onHashChange = () => setRouteState(getInitialRoute())
-    window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
-  }, [])
-
   const navItems = useMemo(
     () =>
       [
-        { key: 'map' as const, title: 'Карта знаний' },
-        { key: 'roadmap' as const, title: 'Дорожная карта' },
-        { key: 'construct' as const, title: 'Конструктор' },
-        { key: 'practice' as const, title: 'Практика' },
-        { key: 'settings' as const, title: 'Настройки' },
+        { to: '/', title: 'Explore (vis-network)' },
+        { to: '/edit', title: 'Edit (React Flow)' },
+        { to: '/roadmap', title: 'Дорожная карта' },
+        { to: '/practice', title: 'Практика' },
+        { to: '/settings', title: 'Настройки' },
       ] as const,
     [],
   )
+
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '')
+    if (hash === 'roadmap') navigate('/roadmap', { replace: true })
+    if (hash === 'construct') navigate('/edit', { replace: true })
+    if (hash === 'practice') navigate('/practice', { replace: true })
+    if (hash === 'settings') navigate('/settings', { replace: true })
+  }, [navigate])
 
   async function sendChat() {
     const text = chatInput.trim()
@@ -72,18 +79,7 @@ function App() {
     setChatInput('')
 
     try {
-      const res = await fetch('/v1/graph/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: text, from_uid: selectedUid, to_uid: selectedUid }),
-      })
-
-      if (!res.ok) {
-        const errText = await res.text()
-        throw new Error(errText || `HTTP ${res.status}`)
-      }
-
-      const data = (await res.json()) as unknown
+      const data = await postChat({ question: text, from_uid: selectedUid, to_uid: selectedUid })
       const assistantText = typeof data === 'string' ? data : JSON.stringify(data)
 
       setMessages((prev) => [
@@ -96,7 +92,7 @@ function App() {
         {
           id: uid(),
           role: 'assistant',
-          text: 'Не удалось связаться с API. Проверь, что backend доступен и что Traefik/Vite проксирует /api и /ws.',
+          text: 'Не удалось связаться с API. Проверь, что backend доступен и что Vite проксирует /v1 и /ws.',
           createdAt: Date.now(),
         },
       ])
@@ -108,7 +104,7 @@ function App() {
       <aside
         className="kb-panel"
         style={{
-          width: 280,
+          width: 300,
           margin: 16,
           padding: 14,
           display: 'flex',
@@ -118,7 +114,7 @@ function App() {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ fontSize: 14, color: 'var(--muted)' }}>KnowledgeBaseAI</div>
-          <div style={{ fontSize: 18, fontWeight: 650, letterSpacing: 0.2 }}>Конструктор знаний</div>
+          <div style={{ fontSize: 18, fontWeight: 650, letterSpacing: 0.2 }}>Граф знаний</div>
         </div>
 
         <div className="kb-panel" style={{ padding: 12, borderRadius: 14 }}>
@@ -139,38 +135,21 @@ function App() {
             <button className="kb-btn kb-btn-primary" onClick={() => setChatOpen(true)} style={{ flex: 1 }}>
               Спросить
             </button>
-            <button
-              className="kb-btn"
-              onClick={() => setSelectedUid((prev) => (prev === 'TOP-DEMO' ? 'SKL-DEMO' : 'TOP-DEMO'))}
-            >
+            <button className="kb-btn" onClick={() => setSelectedUid((prev) => (prev === 'TOP-DEMO' ? 'SKL-DEMO' : 'TOP-DEMO'))}>
               Переключить
             </button>
           </div>
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {navItems.map((item) => {
-            const active = route === item.key
-            return (
-              <button
-                key={item.key}
-                className="kb-btn"
-                onClick={() => setRoute(item.key)}
-                style={{
-                  textAlign: 'left',
-                  background: active ? 'rgba(124, 92, 255, 0.18)' : undefined,
-                  borderColor: active ? 'rgba(124, 92, 255, 0.5)' : undefined,
-                }}
-              >
-                {item.title}
-              </button>
-            )
-          })}
+          {navItems.map((item) => (
+            <Link key={item.to} to={item.to} className="kb-btn" style={{ textAlign: 'left' }}>
+              {item.title}
+            </Link>
+          ))}
         </nav>
 
-        <div style={{ marginTop: 'auto', fontSize: 12, color: 'var(--muted)' }}>
-          API: /api u007f WS: /ws
-        </div>
+        <div style={{ marginTop: 'auto', fontSize: 12, color: 'var(--muted)' }}>API: /v1 • WS: /ws</div>
       </aside>
 
       <main style={{ flex: 1, padding: 16, paddingLeft: 0 }}>
@@ -187,191 +166,29 @@ function App() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>Рабочая область</div>
-              <div style={{ fontSize: 18, fontWeight: 650 }}>
-                {route === 'map' && 'Карта знаний'}
-                {route === 'roadmap' && 'Дорожная карта'}
-                {route === 'construct' && 'Конструктор'}
-                {route === 'practice' && 'Практика'}
-                {route === 'settings' && 'Настройки'}
-              </div>
+              <div style={{ fontSize: 18, fontWeight: 650 }}>{title}</div>
             </div>
 
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="kb-btn" onClick={() => setChatOpen(true)}>
                 Ассистент
               </button>
-              <button className="kb-btn" onClick={() => setRoute('map')}>
+              <button className="kb-btn" onClick={() => navigate('/')}
+              >
                 Домой
               </button>
             </div>
           </div>
 
-          {route === 'map' && (
-            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', gap: 12 }}>
-              <div
-                className="kb-panel"
-                style={{
-                  borderRadius: 18,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  minHeight: 520,
-                }}
-              >
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background:
-                      'radial-gradient(800px 500px at 50% 40%, rgba(124, 92, 255, 0.18), transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
-                  }}
-                />
-
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: 18,
-                    top: 18,
-                    display: 'flex',
-                    gap: 8,
-                    alignItems: 'center',
-                  }}
-                >
-                  <button className="kb-btn">Pan</button>
-                  <button className="kb-btn">Zoom</button>
-                  <button className="kb-btn">Легенда</button>
-                </div>
-
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: 18,
-                    bottom: 18,
-                    width: 180,
-                    height: 120,
-                    borderRadius: 14,
-                    border: '1px solid var(--border)',
-                    background: 'rgba(0,0,0,0.25)',
-                    backdropFilter: 'blur(10px)',
-                  }}
-                />
-
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: 14,
-                    padding: 18,
-                  }}
-                >
-                  {[
-                    { uid: 'TOP-DEMO', title: 'Тема', state: 'available' },
-                    { uid: 'SKL-DEMO', title: 'Навык', state: 'progress' },
-                    { uid: 'MTH-DEMO', title: 'Метод', state: 'locked' },
-                  ].map((n) => {
-                    const active = selectedUid === n.uid
-                    const borderColor =
-                      n.state === 'locked'
-                        ? 'rgba(255,255,255,0.12)'
-                        : n.state === 'progress'
-                          ? 'rgba(46, 233, 166, 0.45)'
-                          : 'rgba(124, 92, 255, 0.55)'
-
-                    const bg =
-                      n.state === 'locked'
-                        ? 'rgba(255,255,255,0.04)'
-                        : n.state === 'progress'
-                          ? 'rgba(46, 233, 166, 0.10)'
-                          : 'rgba(124, 92, 255, 0.12)'
-
-                    return (
-                      <button
-                        key={n.uid}
-                        className="kb-panel"
-                        onClick={() => setSelectedUid(n.uid)}
-                        style={{
-                          width: 180,
-                          height: 110,
-                          borderRadius: 18,
-                          borderColor: active ? 'rgba(255,255,255,0.22)' : borderColor,
-                          background: bg,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'flex-start',
-                          justifyContent: 'space-between',
-                          padding: 12,
-                          textAlign: 'left',
-                        }}
-                      >
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <div style={{ fontSize: 12, color: 'var(--muted)' }}>{n.title}</div>
-                          <div style={{ fontSize: 14, fontWeight: 650 }}>{n.uid}</div>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <div
-                            style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: 999,
-                              background:
-                                n.state === 'locked'
-                                  ? 'rgba(255,255,255,0.25)'
-                                  : n.state === 'progress'
-                                    ? 'var(--accent-2)'
-                                    : 'var(--accent)',
-                            }}
-                          />
-                          <div style={{ fontSize: 12, color: 'var(--muted)' }}>{n.state}</div>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="kb-panel" style={{ borderRadius: 18, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ fontSize: 14, fontWeight: 650 }}>Свойства узла</div>
-                <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-                  Здесь будет no-code панель: тип, название, описание, связи, кнопки генерации.
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>Название</div>
-                  <input className="kb-input" value={selectedUid} readOnly />
-                </div>
-
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="kb-btn kb-btn-primary" onClick={() => setRoute('roadmap')} style={{ flex: 1 }}>
-                    Построить роадмап
-                  </button>
-                  <button className="kb-btn" onClick={() => setRoute('construct')}>
-                    Magic Fill
-                  </button>
-                </div>
-
-                <div style={{ marginTop: 'auto', display: 'flex', gap: 8 }}>
-                  <button className="kb-btn" onClick={() => setChatOpen(true)} style={{ flex: 1 }}>
-                    Обсудить с ассистентом
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {route !== 'map' && (
-            <div style={{ flex: 1, display: 'grid', placeItems: 'center' }}>
-              <div className="kb-panel" style={{ padding: 18, borderRadius: 18, width: 'min(720px, 100%)' }}>
-                <div style={{ fontSize: 14, fontWeight: 650 }}>Экран в разработке</div>
-                <div style={{ marginTop: 8, fontSize: 13, color: 'var(--muted)' }}>
-                  Следующим шагом подключу реальные данные из backend API и добавлю полноценный редактор карты.
-                </div>
-              </div>
-            </div>
-          )}
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <Routes>
+              <Route path="/" element={<ExplorePage selectedUid={selectedUid} onSelectUid={setSelectedUid} />} />
+              <Route path="/edit" element={<EditPage selectedUid={selectedUid} onSelectUid={setSelectedUid} />} />
+              <Route path="/roadmap" element={<RoadmapPage selectedUid={selectedUid} />} />
+              <Route path="/practice" element={<PracticePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </div>
         </div>
       </main>
 
@@ -447,8 +264,7 @@ function App() {
                     padding: '10px 12px',
                     borderRadius: 14,
                     border: '1px solid var(--border)',
-                    background:
-                      m.role === 'user' ? 'rgba(124, 92, 255, 0.18)' : 'rgba(255, 255, 255, 0.06)',
+                    background: m.role === 'user' ? 'rgba(124, 92, 255, 0.18)' : 'rgba(255, 255, 255, 0.06)',
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-word',
                     fontSize: 13,
@@ -480,5 +296,3 @@ function App() {
     </div>
   )
 }
-
-export default App
