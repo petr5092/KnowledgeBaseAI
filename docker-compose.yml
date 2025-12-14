@@ -3,7 +3,7 @@ name: knowledgebase
 services:
   traefik:
     env_file:
-      - ${ENV_FILE:-.env.dev}
+      - ${ENV_FILE:-.env.prod}
     image: traefik:v3.0
     command:
       - --configFile=/etc/traefik/traefik.yml
@@ -28,7 +28,7 @@ services:
 
   frontend:
     env_file:
-      - ${ENV_FILE:-.env.dev}
+      - ${ENV_FILE:-.env.prod}
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -69,9 +69,37 @@ services:
       - "traefik.http.routers.frontend-dev-stud-sec.tls=true"
       - "traefik.http.routers.frontend-dev-stud-sec.tls.certresolver=le"
 
+  frontend-prod-hot:
+    env_file:
+      - ${ENV_FILE:-.env.prod}
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm ci --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5174"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.frontend-prod-hot-svc.loadbalancer.server.port=5174"
+      - "traefik.http.routers.frontend-prod-hot-stud.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.frontend-prod-hot-stud.entrypoints=web"
+      - "traefik.http.routers.frontend-prod-hot-stud.service=frontend-prod-hot-svc"
+      - "traefik.http.routers.frontend-prod-hot-stud-sec.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.frontend-prod-hot-stud-sec.entrypoints=websecure"
+      - "traefik.http.routers.frontend-prod-hot-stud-sec.service=frontend-prod-hot-svc"
+      - "traefik.http.routers.frontend-prod-hot-stud-sec.tls=true"
+      - "traefik.http.routers.frontend-prod-hot-stud-sec.tls.certresolver=le"
+      - "traefik.http.routers.frontend-prod-hot-xteam.rule=Host(`${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.frontend-prod-hot-xteam.entrypoints=web"
+      - "traefik.http.routers.frontend-prod-hot-xteam.service=frontend-prod-hot-svc"
+      - "traefik.http.routers.frontend-prod-hot-xteam-sec.rule=Host(`${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.frontend-prod-hot-xteam-sec.entrypoints=websecure"
+      - "traefik.http.routers.frontend-prod-hot-xteam-sec.service=frontend-prod-hot-svc"
+      - "traefik.http.routers.frontend-prod-hot-xteam-sec.tls=true"
+      - "traefik.http.routers.frontend-prod-hot-xteam-sec.tls.certresolver=le"
+
   fastapi:
     env_file:
-      - ${ENV_FILE:-.env.dev}
+      - ${ENV_FILE:-.env.prod}
     build:
       context: ./backend
       dockerfile: Dockerfile.fastapi
@@ -100,7 +128,7 @@ services:
 
   redis:
     env_file:
-      - ${ENV_FILE:-.env.dev}
+      - ${ENV_FILE:-.env.prod}
     image: redis:7
     restart: unless-stopped
     ports:
@@ -125,6 +153,8 @@ services:
       - "traefik.enable=false"
 
   neo4j:
+    env_file:
+      - ${ENV_FILE:-.env.prod}
     image: neo4j:5.21
     restart: unless-stopped
     environment:
@@ -155,7 +185,7 @@ services:
 
   postgres:
     env_file:
-      - ${ENV_FILE:-.env.dev}
+      - ${ENV_FILE:-.env.prod}
     image: postgres:15
     restart: unless-stopped
     environment:
@@ -169,7 +199,7 @@ services:
 
   qdrant:
     env_file:
-      - ${ENV_FILE:-.env.dev}
+      - ${ENV_FILE:-.env.prod}
     image: qdrant/qdrant:latest
     restart: unless-stopped
     environment:
