@@ -103,13 +103,13 @@ def neighbors(center_uid: str, depth: int = 1) -> Tuple[List[Dict], List[Dict]]:
     drv = get_driver()
     nodes: List[Dict] = []
     edges: List[Dict] = []
+    depth = max(0, min(int(depth), 6))
     with drv.session() as s:
-        res = s.run(
-            (
-                "MATCH p=(c {uid:$uid})-[:CONTAINS|PREREQ|HAS_SKILL|LINKED|TARGETS*0..$depth]-(n) "
-                "RETURN collect(DISTINCT n) AS ns, collect(DISTINCT relationships(p)) AS rs"
-            ), {"uid": center_uid, "depth": int(depth)}
-        ).single()
+        query = (
+            "MATCH p=(c {uid:$uid})-[:CONTAINS|PREREQ|HAS_SKILL|LINKED|TARGETS*0.." + str(depth) + "]-(n) "
+            "RETURN collect(DISTINCT n) AS ns, collect(DISTINCT relationships(p)) AS rs"
+        )
+        res = s.run(query, {"uid": center_uid}).single()
         ns = res["ns"] if res else []
         rs = res["rs"] if res else []
         seen = set()

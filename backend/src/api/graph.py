@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 from src.services.graph.neo4j_repo import relation_context, neighbors
@@ -26,15 +26,33 @@ class ChatInput(BaseModel):
 async def chat(payload: ChatInput) -> Dict:
     try:
         from openai import AsyncOpenAI
+        from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
     except Exception:
-        return {"error": "openai package not installed"}
+        raise HTTPException(status_code=503, detail="OpenAI client is not available")
+
     ctx = relation_context(payload.from_uid, payload.to_uid)
     oai = AsyncOpenAI(api_key=settings.openai_api_key.get_secret_value())
     messages = [
         {"role": "system", "content": "You are a graph expert. Explain why the relationship exists using provided metadata."},
-        {"role": "user", "content": f"Q: {payload.question}\nFrom: {ctx.get('from_title','')} ({payload.from_uid})\nTo: {ctx.get('to_title','')} ({payload.to_uid})\nRelation: {ctx.get('rel','')}\nProps: {ctx.get('props',{})}"}
+        {"role": "user", "content": f"Q: {payload.question}\nFrom: {ctx.get('from_title','')} ({payload.from_uid})\nTo: {ctx.get('to_title','')} ({payload.to_uid})\nRelation: {ctx.get('rel','')}\nProps: {ctx.get('props',{})}"},
     ]
-    resp = await oai.chat.completions.create(model="gpt-4o-mini", messages=messages)
+
+    try:
+        resp = await oai.chat.completions.create(model="gpt-4o-mini", messages=messages)
+    except AuthenticationError:
+        raise HTTPException(status_code=503, detail="OpenAI authentication failed (invalid API key)")
+    except RateLimitError:
+        raise HTTPException(status_code=503, detail="OpenAI rate limit exceeded")
+    except APIConnectionError:
+        raise HTTPException(status_code=503, detail="OpenAI is unreachable")
+    except APIStatusError as e:
+        status = getattr(e, "status_code", None)
+        if status and 500 <= int(status) < 600:
+            raise HTTPException(status_code=503, detail="OpenAI service error")
+        raise HTTPException(status_code=502, detail="OpenAI request failed")
+    except Exception:
+        raise HTTPException(status_code=502, detail="OpenAI request failed")
+
     usage = resp.usage or None
     answer = resp.choices[0].message.content if resp.choices else ""
     return {"answer": answer, "usage": (usage.model_dump() if hasattr(usage, 'model_dump') else None), "context": ctx}

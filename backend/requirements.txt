@@ -19,3 +19,4 @@ strawberry-graphql==0.211.0
 pytest==8.3.2
 PyJWT==2.10.1
 passlib[bcrypt]==1.7.4
+bcrypt==4.1.3
