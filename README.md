@@ -42,7 +42,9 @@ Most learning platforms store content as pages and videos. KnowledgeBaseAI store
 - **Stateless core**: user progress can live in an external LMS; the platform focuses on graph intelligence.
 - **Graph-first model**: subjects → sections → topics → skills → methods, with prerequisites and weighted links.
 - **Admin tooling**: generate/import knowledge bases, recompute weights, validate snapshots.
-- **Observability-ready**: Prometheus metrics, structured logging.
+- **Observability-ready**: Prometheus metrics, structured logging, correlation IDs.
+- **Safety-first graph mutations**: Proposals pipeline with validation, rebase, integrity gate and atomic commit.
+- **Explainability**: Evidence attached to changes and diff views for HITL review.
 
 ## Quickstart (Docker)
 
@@ -50,6 +52,32 @@ Most learning platforms store content as pages and videos. KnowledgeBaseAI store
 cp .env.example .env.dev
 ENV_FILE=.env.dev docker compose --env-file .env.dev up -d --build
 ```
+
+## What's new (backend)
+
+- Proposals pipeline:
+  - `POST /v1/proposals` creates DRAFT with deterministic checksum
+  - `POST /v1/proposals/{id}/commit` applies ops atomically (Neo4j), audits to Postgres
+  - `GET /v1/proposals/{id}` fetches proposal
+  - `POST /v1/proposals/{id}/approve` triggers commit, `POST /v1/proposals/{id}/reject` sets status
+  - `GET /v1/proposals` lists proposals with filters
+- Integrity gate:
+  - ID-only rebase detection
+  - PREREQ cycle check
+  - Dangling Skill rejection (requires BASED_ON)
+  - ASYNC fallback when checks exceed threshold
+- Evidence & Diff:
+  - `GET /v1/proposals/{id}/diff` returns before/after and evidence chunk text
+  - Nodes with evidence create `SourceChunk` and `EVIDENCED_BY` relation
+- Vector layer:
+  - Ingestion: normalize, chunk, deterministic embed to Qdrant (`kb_chunks`)
+  - Sync/rescore: Graph.Committed consumer upserts entity vectors (`kb_entities`)
+- Observability:
+  - `/metrics` endpoint, counters for integrity violations and ingestion success
+  - `X-Correlation-ID` middleware and audit propagation
+- Migrations & safety:
+  - Schema version gatekeeper on startup
+  - No direct Neo4j writes outside CommitWorker (guarded by tests)
 
 ## Documentation (technical)
 
@@ -70,11 +98,22 @@ This README stays product-focused. Technical details live in dedicated docs:
 - Jobs: Redis + ARQ
 - Edge: Traefik (TLS + routing)
 
+## API highlights
+
+- Graph & assistant: `/v1/*` routes as before
+- Proposals: `/v1/proposals`, review & diff endpoints
+- Metrics: `/metrics`
+- Health: `/health`
+
 ## Security model (short)
 
 - JWT authentication (`/v1/auth/*`)
 - Admin endpoints protected by role-based access (`/v1/admin/*`)
 - Bootstrap first admin via env on first deploy
+
+## Changelog
+
+- See `Changelog.md` for recent changes and checkpoints.
 
 ## Roadmap (global)
 
