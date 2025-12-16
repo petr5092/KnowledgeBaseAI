@@ -278,3 +278,4 @@
 *   **[2025-12-16]**: Completed Task 1.2.1.2 (HITL Review API). Implemented GET/approve/reject endpoints; unit test passed.
 *   **[2025-12-16]**: Completed Task (Evidence Text in Diff). Implemented evidence_chunk text resolution via Qdrant; unit test passed.
 *   **[2025-12-16]**: Checkpoint: Backend aligns with MDD invariants (Proposals flow, ID-only rebase, tenant isolation, commit worker, Redis events, Qdrant sync). Gaps addressed: lifecycle fields on commit, Integrity Gate rejects dangling Skill, initial Prometheus counters added, test guard against direct Neo4j writes. Remaining: finer-grained metrics and full canonicalization enforcement across proposal hashing inputs.
+*   **[2025-12-16]**: TODO: Add detailed Prometheus metrics (rates/latency), enforce canonicalization across all proposal inputs, implement EVIDENCED_BY for relations, and create ASYNC queue worker for Integrity re-checks.
