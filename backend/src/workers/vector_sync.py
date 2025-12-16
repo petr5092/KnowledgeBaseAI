@@ -31,22 +31,23 @@ def consume_graph_committed() -> Dict:
         n = 0
         client = QdrantClient(url=str(settings.qdrant_url))
         cols = [c.name for c in client.get_collections().collections]
-        dim = 8
-        if "kb_entities" not in cols:
-            client.create_collection("kb_entities", vectors_config=VectorParams(size=dim, distance=Distance.COSINE))
+        name = str(settings.qdrant_collection_name)
+        dim = int(settings.qdrant_default_vector_dim)
+        if name not in cols:
+            client.create_collection(name, vectors_config=VectorParams(size=dim, distance=Distance.COSINE))
         else:
             try:
-                info = client.get_collection("kb_entities")
+                info = client.get_collection(name)
                 dim = int(info.result.config.params.vectors.size)  # type: ignore
             except Exception:
-                dim = 8
+                dim = int(settings.qdrant_default_vector_dim)
         for uid in targets:
             props = node_by_uid(uid, tenant_id)
             name = props.get("name") or props.get("title") or uid
             import uuid
             vec = get_provider(dim_default=dim).embed_text(name)
             pid = uuid.uuid4().int % (10**12)
-            client.upsert(collection_name="kb_entities", points=[{"id": pid, "vector": vec, "payload": {"tenant_id": tenant_id, "uid": uid, "name": name}}])
+            client.upsert(collection_name=name, points=[{"id": pid, "vector": vec, "payload": {"tenant_id": tenant_id, "uid": uid, "name": name}}])
             n += 1
         return {"processed": n}
     return {"processed": 0}

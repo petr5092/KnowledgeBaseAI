@@ -34,6 +34,8 @@ class Settings(BaseSettings):
 
     qdrant_url: AnyUrl = Field(default="http://qdrant:6333", alias="QDRANT_URL")
     redis_url: AnyUrl = Field(default="redis://redis:6379/0", alias="REDIS_URL")
+    qdrant_collection_name: str = Field(default="kb_entities", alias="QDRANT_COLLECTION")
+    qdrant_default_vector_dim: int = Field(default=16, alias="QDRANT_DEFAULT_VECTOR_DIM")
 
     prometheus_enabled: bool = Field(default=False, alias="PROMETHEUS_ENABLED")
 
