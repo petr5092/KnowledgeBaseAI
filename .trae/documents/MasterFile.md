@@ -388,9 +388,9 @@
   - [x] Расширить `/v1/proposals/{id}/diff` для evidence связей и from/to контекста (`backend/src/services/diff.py`)
 
 - Frontend HITL & Optimistic UI
-  - [ ] Ввести `tx_log` стор (Zustand/Redux) и генерацию `tx_id` (`frontend/src/store/txLog.ts`)
-  - [ ] Реализовать inverse patch на ошибках (`frontend/src/utils/inversePatch.ts`)
-  - [ ] Добавить дифф-интерфейс и визуализацию impact subgraph (`frontend/src/pages/ReviewDiff.tsx`)
+  - [x] Ввести `tx_log` стор и генерацию `tx_id` (`frontend/src/store/txLog.ts`)
+  - [x] Реализовать inverse patch на ошибках (`frontend/src/utils/inversePatch.ts`)
+  - [x] Добавить дифф-интерфейс (базовый) (`frontend/src/pages/ReviewDiff.tsx`)
 
 - Metrics & Observability
   - [x] Добавить детальные метрики: success rate ingestion, latency распределения, типы integrity нарушений (`backend/src/main.py` + метрики по сервисам)
