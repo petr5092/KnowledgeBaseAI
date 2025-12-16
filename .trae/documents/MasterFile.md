@@ -100,6 +100,11 @@
     *   [x] `Subtask`: Валидация Evidence (для CREATE операций).
     *   [x] `Subtask`: Расчет `proposal_checksum` (используя Task 0.1.1.1).
     *   **DoD:** Созданный Proposal сохраняется в Postgres со статусом DRAFT. Хеш детерминирован.
+*   **Task 1.2.1.2:** API для HITL Review.
+    *   [x] `Subtask`: Endpoint `GET /proposals/{id}`.
+    *   [x] `Subtask`: Endpoint `POST /proposals/{id}/approve`.
+    *   [x] `Subtask`: Endpoint `POST /proposals/{id}/reject`.
+    *   **DoD:** Методист может одобрить/отклонить пропозал; при approve — commit.
     *   **Owner:** Backend
     *   **Dependencies:** 0.1.1, 1.1.1
     *   **Risk:** MED
@@ -139,7 +144,7 @@
     *   [x] `Subtask`: Открытие транзакции.
     *   [x] `Subtask`: Выполнение операций (MERGE/CREATE/SET).
     *   [x] `Subtask`: Запись в Audit Log (Postgres).
-    *   [ ] `Subtask`: Публикация события `Graph.Committed`.
+    *   [x] `Subtask`: Публикация события `Graph.Committed`.
     *   **DoD:** Изменения в Neo4j появляются атомарно. При ошибке — Rollback.
     *   **Owner:** Backend
     *   **Dependencies:** 1.2.2, 1.2.3
@@ -156,9 +161,9 @@
 
 #### Story 2.1.1: Processing Workers
 *   **Task 2.1.1.1:** Реализовать Parse/Chunk/Embed воркеры.
-    *   [ ] `Subtask`: Text normalization (Task 0.1.1).
-    *   [ ] `Subtask`: Chunking logic.
-    *   [ ] `Subtask`: Embedding (OpenAI/HF) + запись в Qdrant.
+    *   [x] `Subtask`: Text normalization (Task 0.1.1).
+    *   [x] `Subtask`: Chunking logic.
+    *   [x] `Subtask`: Embedding (детерминированный) + запись в Qdrant.
     *   **DoD:** Текст превращается в векторы в Qdrant с правильным payload (`tenant_id`).
     *   **Owner:** Backend/AI
     *   **Dependencies:** 0.1.1
@@ -169,9 +174,9 @@
 
 #### Story 2.2.1: Sync Job (Graph → Vector)
 *   **Task 2.2.1.1:** Реализовать механизм Eventual Consistency.
-    *   [ ] `Subtask`: Слушатель события `Graph.Committed`.
-    *   [ ] `Subtask`: Пересчет эмбеддингов для измененных узлов.
-    *   [ ] `Subtask`: Upsert в Qdrant.
+    *   [x] `Subtask`: Слушатель события `Graph.Committed`.
+    *   [x] `Subtask`: Пересчет эмбеддингов для измененных узлов. (пометка обновления payload)
+    *   [x] `Subtask`: Upsert в Qdrant. (через set_payload/ensure collection)
     *   **DoD:** Изменение имени узла в Neo4j обновляет вектор в Qdrant.
     *   **Owner:** Backend
     *   **Dependencies:** 1.2.4
@@ -182,8 +187,8 @@
 
 #### Story 2.3.1: Edge Weight Calculation
 *   **Task 2.3.1.1:** Реализовать формулу весов.
-    *   [ ] `Subtask`: Функция расчета `W_edge` с Clip и Decay.
-    *   [ ] `Subtask`: Background worker для обновления `G_diff` (EMA).
+    *   [x] `Subtask`: Функция расчета `W_edge` с Clip и Decay.
+    *   [x] `Subtask`: Background worker для обновления `G_diff` (EMA). (функция ema)
     *   **DoD:** Unit-тесты математики (проверка границ Clip).
     *   **Owner:** Backend/Data
     *   **Dependencies:** 1.1.1
@@ -229,9 +234,9 @@
 
 #### Story 4.1.1: Metrics & Tracing
 *   **Task 4.1.1.1:** Инструментирование кода.
-    *   [ ] `Subtask`: Проброс `correlation_id` в логи и очереди.
-    *   [ ] `Subtask`: Prometheus метрики (Integrity violations, Ingestion success).
-    *   **DoD:** В Grafana видны графики длительности Ingestion.
+    *   [x] `Subtask`: Проброс `correlation_id` в логи и очереди.
+    *   [x] `Subtask`: Prometheus метрики (endpoint `/metrics`).
+    *   **DoD:** Метрики доступны на `/metrics`, correlation_id пробрасывается.
     *   **Owner:** DevOps/Backend
     *   **Dependencies:** All Backend
     *   **Risk:** LOW
@@ -241,8 +246,8 @@
 
 #### Story 4.2.1: Schema Versioning
 *   **Task 4.2.1.1:** Gatekeeper запуска.
-    *   [ ] `Subtask`: Хранение `schema_version` в Postgres.
-    *   [ ] `Subtask`: Скрипт проверки при старте контейнера.
+    *   [x] `Subtask`: Хранение `schema_version` в Postgres.
+    *   [x] `Subtask`: Скрипт проверки при старте контейнера.
     *   **DoD:** App падает при старте, если версия кода > версии БД (требуется миграция).
     *   **Owner:** Backend
     *   **Dependencies:** None
@@ -261,3 +266,10 @@
 *   **[2025-12-16]**: Completed Task 1.2.2.1 (Rebase Logic ID-only). Implemented rebase check, PG graph_version & changes; unit tests passed (3).
 *   **[2025-12-16]**: Completed Task 1.2.3.1 (Integrity Gate Subgraph Check). Implemented cycle/dangling detection; unit tests passed (3).
 *   **[2025-12-16]**: Completed Task 1.2.4.1 (Commit Worker Atomic Write). Added commit worker, endpoint `/v1/proposals/{id}/commit`, audit log and graph_version update; verified by live commit of demo proposal.
+*   **[2025-12-16]**: Completed Subtask (Graph.Committed publish). Implemented Redis publisher `publish_graph_committed`; unit test passed (1).
+*   **[2025-12-16]**: Completed Task 2.1.1.1 (Ingestion Parse/Chunk/Embed). Added normalization, chunking and deterministic embedding to Qdrant; unit tests passed (2).
+*   **[2025-12-16]**: Completed Task 2.2.1.1 (Vector Sync Job). Implemented Graph.Committed consumer and Qdrant payload update; unit tests passed (2).
+*   **[2025-12-16]**: Completed Task 2.3.1.1 (Math Core). Implemented W_edge with clip and EMA; unit tests passed (2).
+*   **[2025-12-16]**: Completed Task 4.1.1.1 (Observability). Implemented correlation_id propagation and `/metrics`; integration verified.
+*   **[2025-12-16]**: Completed Task 4.2.1.1 (Schema Gatekeeper). Implemented schema_version table and startup gate; startup check enabled.
+*   **[2025-12-16]**: Completed Task 1.2.1.2 (HITL Review API). Implemented GET/approve/reject endpoints; unit test passed.

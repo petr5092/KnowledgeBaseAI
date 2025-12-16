@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from src.core.logging import setup_logging, logger
 from src.config.settings import settings
 from src.core.context import extract_tenant_id_from_request, set_tenant_id
+from src.core.correlation import new_correlation_id, set_correlation_id, get_correlation_id
 from src.api.graph import router as graph_router
 from src.api.assistant import router as assistant_router
 from src.api.construct import router as construct_router
@@ -23,6 +24,7 @@ except Exception:
 from src.api.validation import router as validation_router
 from src.api.auth import router as auth_router
 from src.services.auth.users_repo import ensure_bootstrap_admin
+from src.core.migrations import check_and_gatekeep
 try:
     from prometheus_client import Counter, Histogram
 except Exception:
@@ -45,13 +47,22 @@ LATENCY = Histogram("http_request_latency_ms", "Request latency ms")
 async def on_startup():
     setup_logging()
     logger.info("startup", neo4j_uri=settings.neo4j_uri)
+    ok = check_and_gatekeep()
+    if not ok:
+        raise SystemExit("Schema version gate failed")
     ensure_bootstrap_admin()
 
 @app.middleware("http")
 async def tenant_middleware(request, call_next):
     tid = extract_tenant_id_from_request(request)
     set_tenant_id(tid)
+    cid = request.headers.get("X-Correlation-ID") or new_correlation_id()
+    set_correlation_id(cid)
     resp = await call_next(request)
+    try:
+        resp.headers["X-Correlation-ID"] = cid
+    except Exception:
+        ...
     return resp
 
 @app.middleware("http")
@@ -64,6 +75,11 @@ async def metrics_middleware(request, call_next):
 @app.get("/health")
 async def health():
     return {"openai": bool(settings.openai_api_key.get_secret_value()), "neo4j": bool(settings.neo4j_uri)}
+
+@app.get("/metrics")
+async def metrics():
+    from prometheus_client import generate_latest
+    return generate_latest()
 
 app.include_router(graph_router)
 app.include_router(assistant_router)

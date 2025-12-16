@@ -5,6 +5,7 @@ from src.db.pg import get_conn, ensure_tables
 from src.services.proposal_service import create_draft_proposal
 from src.core.context import get_tenant_id
 from src.workers.commit import commit_proposal
+from src.db.pg import get_proposal, set_proposal_status
 
 router = APIRouter(prefix="/v1/proposals")
 
@@ -51,3 +52,31 @@ async def commit(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> 
         code = 409 if status == "CONFLICT" else 400
         raise HTTPException(status_code=code, detail=res)
     return res
+
+@router.get("/{proposal_id}")
+async def get(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Dict:
+    p = get_proposal(proposal_id)
+    if not p or p["tenant_id"] != tenant_id:
+        raise HTTPException(status_code=404, detail="proposal not found")
+    return p
+
+@router.post("/{proposal_id}/approve")
+async def approve(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Dict:
+    p = get_proposal(proposal_id)
+    if not p or p["tenant_id"] != tenant_id:
+        raise HTTPException(status_code=404, detail="proposal not found")
+    set_proposal_status(proposal_id, ProposalStatus.APPROVED.value)
+    res = commit_proposal(proposal_id)
+    if not res.get("ok"):
+        status = res.get("status") or "FAILED"
+        code = 409 if status == "CONFLICT" else 400
+        raise HTTPException(status_code=code, detail=res)
+    return res
+
+@router.post("/{proposal_id}/reject")
+async def reject(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Dict:
+    p = get_proposal(proposal_id)
+    if not p or p["tenant_id"] != tenant_id:
+        raise HTTPException(status_code=404, detail="proposal not found")
+    set_proposal_status(proposal_id, ProposalStatus.REJECTED.value)
+    return {"ok": True, "status": ProposalStatus.REJECTED.value}

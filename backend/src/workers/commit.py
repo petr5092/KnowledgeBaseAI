@@ -9,6 +9,8 @@ from src.db.pg import (
 from src.services.rebase import rebase_check, RebaseResult
 from src.services.integrity import integrity_check_subgraph, check_prereq_cycles
 from src.services.graph.neo4j_repo import get_driver
+from src.events.publisher import publish_graph_committed
+from src.core.correlation import get_correlation_id
 
 def _load_proposal(proposal_id: str) -> Dict | None:
     ensure_tables()
@@ -153,9 +155,10 @@ def commit_proposal(proposal_id: str) -> Dict:
         import uuid, json
         tx_id = "TX-" + uuid.uuid4().hex[:16]
         cur.execute(
-            "INSERT INTO audit_log (tx_id, tenant_id, proposal_id, operations_applied, revert_operations) VALUES (%s,%s,%s,%s,%s)",
-            (tx_id, tenant_id, proposal_id, json.dumps(ops), json.dumps([])),
+            "INSERT INTO audit_log (tx_id, tenant_id, proposal_id, operations_applied, revert_operations, correlation_id) VALUES (%s,%s,%s,%s,%s,%s)",
+            (tx_id, tenant_id, proposal_id, json.dumps(ops), json.dumps([]), get_correlation_id() or ""),
         )
     conn.close()
     _update_proposal_status(proposal_id, "DONE")
+    publish_graph_committed({"tenant_id": tenant_id, "proposal_id": proposal_id, "graph_version": new_ver, "targets": target_ids, "correlation_id": get_correlation_id() or ""})
     return {"ok": True, "status": "DONE", "graph_version": new_ver}

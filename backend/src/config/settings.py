@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     neo4j_password: SecretStr = Field(default=SecretStr(""), alias="NEO4J_PASSWORD")
 
     qdrant_url: AnyUrl = Field(default="http://qdrant:6333", alias="QDRANT_URL")
+    redis_url: AnyUrl = Field(default="redis://redis:6379/0", alias="REDIS_URL")
 
     prometheus_enabled: bool = Field(default=False, alias="PROMETHEUS_ENABLED")
 
