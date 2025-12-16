@@ -392,10 +392,12 @@
   - [x] Ввести `tx_log` стор и генерацию `tx_id` (`frontend/src/store/txLog.ts`)
   - [x] Реализовать inverse patch на ошибках (`frontend/src/utils/inversePatch.ts`)
   - [x] Добавить дифф-интерфейс (базовый) (`frontend/src/pages/ReviewDiff.tsx`)
+  - [x] Добавить ImpactGraph (базовый) (`frontend/src/pages/ImpactGraph.tsx`)
 
 - Metrics & Observability
   - [x] Добавить детальные метрики: success rate ingestion, latency распределения, типы integrity нарушений (`backend/src/main.py` + метрики по сервисам)
   - [x] Протокольный трейс от edge до Neo4j (correlation_id propagation & logs)
+  - [x] Метрики outbox публикаций (успех/ошибки/unsupported)
 
 - Tests & CI
   - [x] Покрыть outbox, компенсации и недоставку события интеграционными тестами (`backend/tests/integration/test_outbox_delivery.py`)
