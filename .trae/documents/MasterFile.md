@@ -257,6 +257,12 @@
 ---
 
 ### 📝 Changelog & Status Report
+*   **[2025-12-16]**: Completed Task (Postgres Outbox & Publisher). Added `events_outbox`, transactional commit write, `outbox_publisher`; unit test passed.
+*   **[2025-12-16]**: Completed Task (EmbeddingProvider & kb_entities dimension). Added HashEmbeddingProvider; vector_sync adapts to existing collection size; tests passed.
+*   **[2025-12-16]**: Completed Task (Relation Evidence in Commit). Added SourceChunk and EVIDENCED_BY from `from_uid` on relation ops; unit test passed.
+*   **[2025-12-16]**: Completed Task (AST Guard). Added AST‑guard test to detect Cypher writes outside whitelist; passed.
+*   **[2025-12-16]**: Completed Task (Tenant Schema Gatekeeper). Added `schema_version_tenant`, updated gatekeeper and tenant test; passed.
+*   **[2025-12-16]**: Completed Task (Diff REL Context). Added from/to node context to relation items in Diff; test passed.
 
 *Агент должен вести лог здесь после каждого выполненного Task.*
 
@@ -279,3 +285,114 @@
 *   **[2025-12-16]**: Completed Task (Evidence Text in Diff). Implemented evidence_chunk text resolution via Qdrant; unit test passed.
 *   **[2025-12-16]**: Checkpoint: Backend aligns with MDD invariants (Proposals flow, ID-only rebase, tenant isolation, commit worker, Redis events, Qdrant sync). Gaps addressed: lifecycle fields on commit, Integrity Gate rejects dangling Skill, initial Prometheus counters added, test guard against direct Neo4j writes. Remaining: finer-grained metrics and full canonicalization enforcement across proposal hashing inputs.
 *   **[2025-12-16]**: TODO: Add detailed Prometheus metrics (rates/latency), enforce canonicalization across all proposal inputs, implement EVIDENCED_BY for relations, and create ASYNC queue worker for Integrity re-checks.
+
+---   
+          
+**Архитектурный Отчёт по Модулям**
+
+- API
+  - `backend/src/api/proposals.py:18–60`
+    - Проблема: commit/approve/reject работают, но нет гарантии атомарности между Neo4j/PG/событиями.
+    - Исправление: добавить Postgres outbox (`events_outbox`) и воркер публикации. Вставку в outbox делать в одной транзакции с `audit_log` и `graph_version`, затем отдельный воркер публикует в Redis.
+  - `backend/src/api/proposals.py:61–68`
+    - Проблема: листинг пропозалов без сортировки по времени/статусу по умолчанию.
+    - Исправление: добавить дефолт `ORDER BY created_at DESC` и фильтры по статусам.
+  - `backend/src/api/proposals.py:69–76`
+    - Проблема: Diff не отображает evidence для связей (только для узлов).
+    - Исправление: расширить `build_diff` для `REL` в `backend/src/services/diff.py:1–43`, добавив `evidence_chunk` аналогично узлам и поддержку `EVIDENCED_BY` для ребра.
+
+- Services
+  - `backend/src/services/proposal_service.py:14–28`
+    - Проблема: каноникализация применена к JSON, но тексты не нормализуются глубоко и неизбирательно.
+    - Исправление: использовать глубокую нормализацию строк (`normalize_text`) для всех строковых полей в `ops` (сделано), расширить на входы из UI/скриптов (evidence.quote и др.) перед генерацией checksum.
+  - `backend/src/services/integrity.py:4–49`
+    - Проблема: Integrity Gate проверяет PREREQ циклы и dangling skills, но нет строгого enforcement для всех случаев BASED_ON (например, множество BASED_ON).
+    - Исправление: ввести правила количества/обязательности BASED_ON для `Skill` и вернуть `FAILED` при нарушении; добавить типизированные метрики нарушений.
+
+- Workers
+  - `backend/src/workers/commit.py:135–223`
+    - Проблема: атомарность в стиле “полу-коммита”: Neo4j → PG → событие без единой транзакции/оркестрации.
+    - Исправление: реализовать outbox-паттерн; писать `audit_log`, `graph_version`, `graph_changes`, `outbox` в одной транзакции, публикацию вынести в отдельный воркер; добавить компенсации на случай недоставки.
+  - `backend/src/workers/commit.py:78–99`
+    - Проблема: отсутствовала связь `EVIDENCED_BY` для узлов (исправлено), но для отношений (REL) не создаётся evidence-связка.
+    - Исправление: при `CREATE_REL/MERGE_REL` с evidence создавать `SourceChunk` и `(:REL)-[:EVIDENCED_BY]->(:SourceChunk)` или хранить evidence в properties и обеспечивать отдельную валидацию.
+  - `backend/src/workers/commit.py:153–189`
+    - Проблема: возврат `ASYNC_CHECK_REQUIRED` без дальнейшей очереди обработки.
+    - Исправление: добавить Redis‑очередь для отложенных Integrity‑проверок и воркер `integrity_async_worker`; метрики и ретраи.
+  - `backend/src/workers/vector_sync.py:8–18` и `backend/src/workers/vector_sync.py:31–44`
+    - Проблема: несоответствие размерности коллекции `kb_entities` (16 в `mark_entities_updated` vs 8 в rescore). Это приводит к 400 при upsert.
+    - Исправление: унифицировать размер (например, 16D) в обоих местах и адаптировать тесты; затем перейти на реальный `EmbeddingProvider`.
+  - `backend/src/workers/ingestion.py:56–67`
+    - Проблема: хеш‑вектора как заглушка — детерминизм есть, семантики нет.
+    - Исправление: ввести интерфейс `EmbeddingProvider` с режимами `hash(dev)/model(prod)`; добавить конфиг для выбора модели (OpenAI/локальная), в Qdrant — versioned collections.
+
+- DB
+  - `backend/src/db/pg.py:107–135`
+    - Проблема: `schema_version` глобальная (`id=1`), нет per‑tenant контроля.
+    - Исправление: сделать `schema_version (tenant_id, version)` и gatekeeper проверять по текущему `tenant_id`; добавить миграции.
+  - `backend/src/db/pg.py:137–152`
+    - Проблема: `get_proposal`/`set_proposal_status` без индексов по `tenant_id/status`.
+    - Исправление: добавить индексы `proposal(tenant_id, status)` и `audit_log(proposal_id)`; добавить `created_at`.
+  - `backend/src/db/pg.py:96–105`
+    - Проблема: выборка `graph_changes` не ограничивает тип изменений.
+    - Исправление: при необходимости добавить поле `change_type` и фильтр по нему (например, NODE/REL/PROPERTY).
+
+- Frontend
+  - `frontend/src/pages/*`
+    - Проблема: оптимистический tx‑log, inverse patch и HITL‑дифф не реализованы.
+    - Исправление: ввести стор `tx_log` (Zustand/Redux), генерацию `tx_id`, обработку ошибок через inverse patch, дифф-интерфейс (side-by-side) и “impact subgraph”.
+
+- Тесты/инварианты
+  - `backend/tests/unit/test_no_direct_writes.py:1–21`
+    - Проблема: жестко задан путь `/root/...`, эвристика regexp может давать false positives; не покрывает `SET/DELETE`.
+    - Исправление: перейти на AST‑анализ и whitelist: разрешить write‑операции только через commit worker/Neo4j writer; использовать анализ импортов/вызовов `session.execute_write` вне белого списка.
+
+**Исполнимый TODO‑Checklist**
+
+- Commit & Consistency
+  - [ ] Добавить `events_outbox` в PG и запись в одну транзакцию с `audit_log`/`graph_version` (`backend/src/db/pg.py`)
+  - [ ] Реализовать `outbox_publisher` воркер и ретраи при доставке (Redis) (`backend/src/workers/outbox_publisher.py`)
+  - [ ] Добавить компенсации для частичной недоставки (перепубликация/флаги)
+
+- Tenant Guard & Write Whitelist
+  - [ ] Ввести `Neo4jWriteHelper` с принудительным inject `tenant_id` (`backend/src/services/graph/neo4j_writer.py`)
+  - [ ] Переписать тест guard на AST‑анализ белого списка (`backend/tests/unit/test_no_direct_writes_ast.py`)
+
+- Embeddings Layer
+  - [ ] Определить `EmbeddingProvider` интерфейс и DI (`backend/src/services/embeddings/provider.py`)
+  - [ ] Реализовать режимы `hash(dev)` и `model(prod)` (OpenAI/локальная)
+  - [ ] Версионировать Qdrant коллекции и добавить миграции (`backend/scripts/apply_vector_schema.py`)
+
+- Integrity Gate
+  - [ ] Расширить правила BASED_ON: обязательность/кратность для `Skill` и метрики по типам нарушений (`backend/src/services/integrity.py`)
+  - [ ] Реализовать ASYNC‑очередь и воркер для `ASYNC_CHECK_REQUIRED` (`backend/src/workers/integrity_async.py`)
+
+- Evidence Model
+  - [ ] Добавить evidence для отношений: `(:REL)-[:EVIDENCED_BY]->(:SourceChunk)` или properties + валидация (`backend/src/workers/commit.py`)
+  - [ ] Расширить Diff для evidence у REL (`backend/src/services/diff.py`)
+
+- Vector Sync
+  - [ ] Унифицировать размерность `kb_entities` (16D) в `mark_entities_updated` и рескоре (`backend/src/workers/vector_sync.py:12` и `:34`)
+  - [ ] Добавить тест на несоответствие размерности и автокоррекцию (`backend/tests/unit/test_vector_dimension_consistency.py`)
+
+- Schema Gatekeeper
+  - [ ] Перейти на `schema_version` per‑tenant (`backend/src/db/pg.py`)
+  - [ ] Общий миграционный скрипт и строгая проверка на старте (`backend/src/core/migrations.py`)
+
+- API & Diff
+  - [ ] Улучшить `/v1/proposals` сортировку и фильтры (по `created_at`, статусам) (`backend/src/api/proposals.py`)
+  - [ ] Расширить `/v1/proposals/{id}/diff` для evidence связей (`backend/src/services/diff.py`)
+
+- Frontend HITL & Optimistic UI
+  - [ ] Ввести `tx_log` стор (Zustand/Redux) и генерацию `tx_id` (`frontend/src/store/txLog.ts`)
+  - [ ] Реализовать inverse patch на ошибках (`frontend/src/utils/inversePatch.ts`)
+  - [ ] Добавить дифф-интерфейс и визуализацию impact subgraph (`frontend/src/pages/ReviewDiff.tsx`)
+
+- Metrics & Observability
+  - [ ] Добавить детальные метрики: success rate ingestion, latency распределения, типы integrity нарушений (`backend/src/main.py` + метрики по сервисам)
+  - [ ] Протокольный трейс от edge до Neo4j (trace_id) и кореляция с `X-Correlation-ID`
+
+- Tests & CI
+  - [ ] Покрыть outbox, компенсации и недоставку события интеграционными тестами (`backend/tests/integration/test_outbox_delivery.py`)
+  - [ ] Обновить CI для запуска новых тестов и метрик (`.github/workflows/ci.yml`)
+

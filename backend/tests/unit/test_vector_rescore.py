@@ -2,6 +2,7 @@ from src.events.publisher import publish_graph_committed
 from src.workers.vector_sync import consume_graph_committed
 from src.services.graph.neo4j_repo import get_driver
 from qdrant_client import QdrantClient
+from qdrant_client.models import VectorParams, Distance
 from src.config.settings import settings
 import uuid
 
@@ -16,5 +17,6 @@ def test_rescore_entities_on_event():
     res = consume_graph_committed()
     assert res["processed"] >= 1
     client = QdrantClient(url=str(settings.qdrant_url))
-    scroll = client.scroll(collection_name="kb_entities", with_payload=True, limit=10)[0]
-    assert isinstance(scroll, list)
+    info = client.get_collections()
+    names = [c.name for c in info.collections]
+    assert "kb_entities" in names

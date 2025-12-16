@@ -55,6 +55,18 @@ def ensure_tables():
             )
             """
         )
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS events_outbox (
+              event_id TEXT PRIMARY KEY,
+              tenant_id TEXT NOT NULL,
+              event_type TEXT NOT NULL,
+              payload JSONB NOT NULL,
+              published BOOLEAN NOT NULL DEFAULT FALSE,
+              created_at TIMESTAMP DEFAULT NOW()
+            )
+            """
+        )
     conn.close()
     try:
         conn = get_conn()
@@ -117,6 +129,15 @@ def ensure_schema_version():
             """
         )
         cur.execute("INSERT INTO schema_version (id, version) VALUES (1, 1) ON CONFLICT (id) DO NOTHING")
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS schema_version_tenant (
+              tenant_id TEXT PRIMARY KEY,
+              version INTEGER NOT NULL
+            )
+            """
+        )
+        cur.execute("INSERT INTO schema_version_tenant (tenant_id, version) VALUES (%s, %s) ON CONFLICT (tenant_id) DO NOTHING", ("system", 1))
     conn.close()
 
 def get_schema_version() -> int:
@@ -132,6 +153,21 @@ def set_schema_version(version: int) -> None:
     conn.autocommit = True
     with conn.cursor() as cur:
         cur.execute("INSERT INTO schema_version (id, version) VALUES (1, %s) ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version", (version,))
+    conn.close()
+
+def get_tenant_schema_version(tenant_id: str) -> int:
+    conn = get_conn()
+    with conn.cursor() as cur:
+        cur.execute("SELECT version FROM schema_version_tenant WHERE tenant_id=%s", (tenant_id,))
+        row = cur.fetchone()
+    conn.close()
+    return int(row[0]) if row else 0
+
+def set_tenant_schema_version(tenant_id: str, version: int) -> None:
+    conn = get_conn()
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute("INSERT INTO schema_version_tenant (tenant_id, version) VALUES (%s, %s) ON CONFLICT (tenant_id) DO UPDATE SET version=EXCLUDED.version", (tenant_id, version))
     conn.close()
 
 def get_proposal(proposal_id: str) -> dict | None:
@@ -167,3 +203,28 @@ def list_proposals(tenant_id: str, status: str | None = None, limit: int = 20, o
         rows = cur.fetchall()
     conn.close()
     return [{"proposal_id": r[0], "tenant_id": r[1], "base_graph_version": int(r[2]), "proposal_checksum": r[3], "status": r[4]} for r in rows]
+
+def outbox_add(tenant_id: str, event_type: str, payload: Dict) -> str:
+    conn = get_conn()
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        import uuid, json
+        eid = "EV-" + uuid.uuid4().hex[:16]
+        cur.execute("INSERT INTO events_outbox (event_id, tenant_id, event_type, payload, published) VALUES (%s,%s,%s,%s,FALSE)", (eid, tenant_id, event_type, json.dumps(payload)))
+    conn.close()
+    return eid
+
+def outbox_fetch_unpublished(limit: int = 100) -> list[dict]:
+    conn = get_conn()
+    with conn.cursor() as cur:
+        cur.execute("SELECT event_id, tenant_id, event_type, payload FROM events_outbox WHERE published=FALSE ORDER BY created_at ASC LIMIT %s", (limit,))
+        rows = cur.fetchall()
+    conn.close()
+    return [{"event_id": r[0], "tenant_id": r[1], "event_type": r[2], "payload": r[3]} for r in rows]
+
+def outbox_mark_published(event_id: str) -> None:
+    conn = get_conn()
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute("UPDATE events_outbox SET published=TRUE WHERE event_id=%s", (event_id,))
+    conn.close()

@@ -4,12 +4,13 @@ from qdrant_client.models import FieldCondition, Filter, MatchValue, Distance, V
 from src.config.settings import settings
 from src.events.publisher import get_redis
 from src.services.graph.neo4j_repo import node_by_uid
+from src.services.embeddings.provider import HashEmbeddingProvider
 
 def mark_entities_updated(tenant_id: str, targets: List[str], collection: str = "kb_entities") -> int:
     client = QdrantClient(url=str(settings.qdrant_url))
     cols = [c.name for c in client.get_collections().collections]
     if collection not in cols:
-        client.create_collection(collection, vectors_config=VectorParams(size=16, distance=Distance.COSINE))
+        client.create_collection(collection, vectors_config=VectorParams(size=8, distance=Distance.COSINE))
     count = 0
     for t in targets:
         cond = Filter(must=[FieldCondition(key="tenant_id", match=MatchValue(value=tenant_id)), FieldCondition(key="uid", match=MatchValue(value=t))])
@@ -30,14 +31,20 @@ def consume_graph_committed() -> Dict:
         n = 0
         client = QdrantClient(url=str(settings.qdrant_url))
         cols = [c.name for c in client.get_collections().collections]
+        dim = 8
         if "kb_entities" not in cols:
-            client.create_collection("kb_entities", vectors_config=VectorParams(size=8, distance=Distance.COSINE))
+            client.create_collection("kb_entities", vectors_config=VectorParams(size=dim, distance=Distance.COSINE))
+        else:
+            try:
+                info = client.get_collection("kb_entities")
+                dim = int(info.result.config.params.vectors.size)  # type: ignore
+            except Exception:
+                dim = 8
         for uid in targets:
             props = node_by_uid(uid, tenant_id)
             name = props.get("name") or props.get("title") or uid
-            import hashlib, uuid
-            h = hashlib.sha256(name.encode("utf-8")).digest()
-            vec = [int.from_bytes(h[i*2:(i+1)*2], "big")/65535.0 for i in range(8)]
+            import uuid
+            vec = HashEmbeddingProvider(dim=dim).embed_text(name)
             pid = uuid.uuid4().int % (10**12)
             client.upsert(collection_name="kb_entities", points=[{"id": pid, "vector": vec, "payload": {"tenant_id": tenant_id, "uid": uid, "name": name}}])
             n += 1

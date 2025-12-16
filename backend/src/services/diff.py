@@ -32,12 +32,16 @@ def build_diff(proposal_id: str) -> Dict:
             fu = str(pd.get("from_uid") or "")
             tu = str(pd.get("to_uid") or "")
             after = apply_delta({}, pd)
-            items.append({"kind": "REL", "type": typ, "key": {"from": fu, "to": tu}, "before": None, "after": after, "evidence": op.get("evidence"), "evidence_chunk": resolve_evidence(op.get("evidence"))})
+            from_ctx = node_by_uid(fu, tenant_id) if fu else {}
+            to_ctx = node_by_uid(tu, tenant_id) if tu else {}
+            items.append({"kind": "REL", "type": typ, "key": {"from": fu, "to": tu}, "from_node": {"uid": fu, "name": from_ctx.get("name")}, "to_node": {"uid": tu, "name": to_ctx.get("name")}, "before": None, "after": after, "evidence": op.get("evidence"), "evidence_chunk": resolve_evidence(op.get("evidence"))})
         elif t == "UPDATE_REL":
             typ = str(pd.get("type") or "")
             fu = str(pd.get("from_uid") or "")
             tu = str(pd.get("to_uid") or "")
             before = relation_by_pair(fu, tu, typ, tenant_id) if typ else {}
             after = apply_delta(before, pd)
-            items.append({"kind": "REL", "type": typ or before.get("type") or "", "key": {"from": fu, "to": tu}, "before": before or None, "after": after, "evidence": op.get("evidence"), "evidence_chunk": resolve_evidence(op.get("evidence"))})
+            from_ctx = node_by_uid(fu, tenant_id) if fu else {}
+            to_ctx = node_by_uid(tu, tenant_id) if tu else {}
+            items.append({"kind": "REL", "type": typ or before.get("type") or "", "key": {"from": fu, "to": tu}, "from_node": {"uid": fu, "name": from_ctx.get("name")}, "to_node": {"uid": tu, "name": to_ctx.get("name")}, "before": before or None, "after": after, "evidence": op.get("evidence"), "evidence_chunk": resolve_evidence(op.get("evidence"))})
     return {"items": items}

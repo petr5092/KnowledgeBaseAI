@@ -113,6 +113,12 @@ def _apply_ops_tx(tx, tenant_id: str, ops: List[Dict[str, Any]]) -> None:
                 f"SET r += $props",
                 fu=fu, tu=tu, rid=rid, props=props, tid=tenant_id
             )
+            ev = op.get("evidence") or {}
+            cid = ev.get("source_chunk_id")
+            quote = ev.get("quote")
+            if cid and quote and fu:
+                tx.run("MERGE (sc:SourceChunk {uid:$cid, tenant_id:$tid}) SET sc.quote=$quote", cid=cid, tid=tenant_id, quote=quote)
+                tx.run("MATCH (a {uid:$fu, tenant_id:$tid}), (sc:SourceChunk {uid:$cid, tenant_id:$tid}) MERGE (a)-[:EVIDENCED_BY]->(sc)", fu=fu, cid=cid, tid=tenant_id)
         elif t == "UPDATE_REL":
             typ = str(pd.get("type") or "")
             fu = str(pd.get("from_uid") or "")
@@ -131,6 +137,12 @@ def _apply_ops_tx(tx, tenant_id: str, ops: List[Dict[str, Any]]) -> None:
                     "SET r += $props",
                     fu=fu, tu=tu, rid=rid, props=props, tid=tenant_id
                 )
+            ev = op.get("evidence") or {}
+            cid = ev.get("source_chunk_id")
+            quote = ev.get("quote")
+            if cid and quote and fu:
+                tx.run("MERGE (sc:SourceChunk {uid:$cid, tenant_id:$tid}) SET sc.quote=$quote", cid=cid, tid=tenant_id, quote=quote)
+                tx.run("MATCH (a {uid:$fu, tenant_id:$tid}), (sc:SourceChunk {uid:$cid, tenant_id:$tid}) MERGE (a)-[:EVIDENCED_BY]->(sc)", fu=fu, cid=cid, tid=tenant_id)
 
 def commit_proposal(proposal_id: str) -> Dict:
     p = _load_proposal(proposal_id)
@@ -205,19 +217,28 @@ def commit_proposal(proposal_id: str) -> Dict:
 
     # Audit & graph_version update
     conn = get_conn()
-    conn.autocommit = True
+    conn.autocommit = False
     new_ver = max(get_graph_version(tenant_id), base_ver) + 1
-    set_graph_version(tenant_id, new_ver)
-    for tid in target_ids:
-        add_graph_change(tenant_id, new_ver, tid)
     with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO tenant_graph_version (tenant_id, graph_version) VALUES (%s,%s) ON CONFLICT (tenant_id) DO UPDATE SET graph_version=EXCLUDED.graph_version",
+            (tenant_id, new_ver),
+        )
+        for tid in target_ids:
+            cur.execute(
+                "INSERT INTO graph_changes (tenant_id, graph_version, target_id) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
+                (tenant_id, new_ver, tid),
+            )
         import uuid, json
         tx_id = "TX-" + uuid.uuid4().hex[:16]
         cur.execute(
             "INSERT INTO audit_log (tx_id, tenant_id, proposal_id, operations_applied, revert_operations, correlation_id) VALUES (%s,%s,%s,%s,%s,%s)",
             (tx_id, tenant_id, proposal_id, json.dumps(ops), json.dumps([]), get_correlation_id() or ""),
         )
+        ev_payload = {"tenant_id": tenant_id, "proposal_id": proposal_id, "graph_version": new_ver, "targets": target_ids, "correlation_id": get_correlation_id() or ""}
+        eid = "EV-" + uuid.uuid4().hex[:16]
+        cur.execute("INSERT INTO events_outbox (event_id, tenant_id, event_type, payload, published) VALUES (%s,%s,%s,%s,FALSE)", (eid, tenant_id, "graph_committed", json.dumps(ev_payload)))
+    conn.commit()
     conn.close()
     _update_proposal_status(proposal_id, "DONE")
-    publish_graph_committed({"tenant_id": tenant_id, "proposal_id": proposal_id, "graph_version": new_ver, "targets": target_ids, "correlation_id": get_correlation_id() or ""})
     return {"ok": True, "status": "DONE", "graph_version": new_ver}
