@@ -1,9 +1,3 @@
-Вот исчерпывающий **README.md**, составленный на основе утвержденного Master Design Document и технической спецификации.
-
-Он позиционирует проект не как простой пет-проект, а как **серьезную индустриальную платформу (Cognitive Infrastructure Platform)**.
-
----
-
 # KnowledgeBaseAI 2.0
 
 ![Status](https://img.shields.io/badge/Status-Active_Development-green)
