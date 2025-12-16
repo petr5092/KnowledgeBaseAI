@@ -10,6 +10,7 @@ from src.services.rebase import rebase_check, RebaseResult
 from src.services.integrity import integrity_check_subgraph, check_prereq_cycles, check_dangling_skills
 from src.services.graph.neo4j_repo import get_driver
 from src.events.publisher import publish_graph_committed
+from src.services.graph.neo4j_writer import merge_node, update_node, merge_rel, update_rel
 from src.core.correlation import get_correlation_id
 from datetime import datetime
 import os, time
@@ -85,64 +86,25 @@ def _apply_ops_tx(tx, tenant_id: str, ops: List[Dict[str, Any]]) -> None:
             if not uid:
                 uid = "N-" + __import__("uuid").uuid4().hex[:16]
             props = dict(pd)
-            props["uid"] = uid
-            props["tenant_id"] = tenant_id
-            props.setdefault("lifecycle_status", "ACTIVE")
-            props.setdefault("created_at", datetime.utcnow().isoformat())
-            tx.run(f"MERGE (n:{typ} {{uid:$uid, tenant_id:$tenant_id}}) SET n += $props", uid=uid, tenant_id=tenant_id, props=props)
-            ev = op.get("evidence") or {}
-            cid = ev.get("source_chunk_id")
-            quote = ev.get("quote")
-            if cid and quote:
-                tx.run("MERGE (sc:SourceChunk {uid:$cid, tenant_id:$tid}) SET sc.quote=$quote", cid=cid, tid=tenant_id, quote=quote)
-                tx.run("MATCH (n {uid:$uid, tenant_id:$tid}), (sc:SourceChunk {uid:$cid, tenant_id:$tid}) MERGE (n)-[:EVIDENCED_BY]->(sc)", uid=uid, cid=cid, tid=tenant_id)
+            merge_node(tx, tenant_id, typ, uid, props, op.get("evidence") or {})
         elif t == "UPDATE_NODE":
             uid = str(op.get("target_id") or "")
             props = dict(pd)
-            tx.run("MATCH (n {uid:$uid, tenant_id:$tenant_id}) SET n += $props", uid=uid, tenant_id=tenant_id, props=props)
+            update_node(tx, tenant_id, uid, props)
         elif t in ("CREATE_REL", "MERGE_REL"):
             typ = str(pd.get("type") or "LINKED")
             fu = str(pd.get("from_uid") or "")
             tu = str(pd.get("to_uid") or "")
             rid = pd.get("uid") or f"E-{__import__('uuid').uuid4().hex[:16]}"
             props = dict(pd)
-            props["uid"] = rid
-            tx.run(
-                f"MATCH (a {{uid:$fu, tenant_id:$tid}}), (b {{uid:$tu, tenant_id:$tid}}) "
-                f"MERGE (a)-[r:{typ} {{uid:$rid}}]->(b) "
-                f"SET r += $props",
-                fu=fu, tu=tu, rid=rid, props=props, tid=tenant_id
-            )
-            ev = op.get("evidence") or {}
-            cid = ev.get("source_chunk_id")
-            quote = ev.get("quote")
-            if cid and quote and fu:
-                tx.run("MERGE (sc:SourceChunk {uid:$cid, tenant_id:$tid}) SET sc.quote=$quote", cid=cid, tid=tenant_id, quote=quote)
-                tx.run("MATCH (a {uid:$fu, tenant_id:$tid}), (sc:SourceChunk {uid:$cid, tenant_id:$tid}) MERGE (a)-[:EVIDENCED_BY]->(sc)", fu=fu, cid=cid, tid=tenant_id)
+            merge_rel(tx, tenant_id, typ, fu, tu, rid, props, op.get("evidence") or {})
         elif t == "UPDATE_REL":
             typ = str(pd.get("type") or "")
             fu = str(pd.get("from_uid") or "")
             tu = str(pd.get("to_uid") or "")
             rid = str(pd.get("uid") or "")
             props = dict(pd)
-            if typ:
-                tx.run(
-                    f"MATCH (a {{uid:$fu, tenant_id:$tid}})-[r:{typ} {{uid:$rid}}]->(b {{uid:$tu, tenant_id:$tid}}) "
-                    f"SET r += $props",
-                    fu=fu, tu=tu, rid=rid, props=props, tid=tenant_id
-                )
-            else:
-                tx.run(
-                    "MATCH (a {uid:$fu, tenant_id:$tid})-[r {uid:$rid}]->(b {uid:$tu, tenant_id:$tid}) "
-                    "SET r += $props",
-                    fu=fu, tu=tu, rid=rid, props=props, tid=tenant_id
-                )
-            ev = op.get("evidence") or {}
-            cid = ev.get("source_chunk_id")
-            quote = ev.get("quote")
-            if cid and quote and fu:
-                tx.run("MERGE (sc:SourceChunk {uid:$cid, tenant_id:$tid}) SET sc.quote=$quote", cid=cid, tid=tenant_id, quote=quote)
-                tx.run("MATCH (a {uid:$fu, tenant_id:$tid}), (sc:SourceChunk {uid:$cid, tenant_id:$tid}) MERGE (a)-[:EVIDENCED_BY]->(sc)", fu=fu, cid=cid, tid=tenant_id)
+            update_rel(tx, tenant_id, typ or None, fu, tu, rid, props, op.get("evidence") or {})
 
 def commit_proposal(proposal_id: str) -> Dict:
     p = _load_proposal(proposal_id)
