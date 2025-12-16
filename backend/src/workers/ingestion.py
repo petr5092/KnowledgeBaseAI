@@ -6,12 +6,18 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from src.config.settings import settings
 try:
-    from prometheus_client import Counter
+    from prometheus_client import Counter, Histogram
     INGESTION_SUCCESS_TOTAL = Counter("ingestion_success_total", "Total successful ingested chunks")
+    INGESTION_LATENCY_MS = Histogram("ingestion_latency_ms", "Ingestion upsert latency ms")
 except Exception:
     class _Dummy:
         def inc(self, n=1): ...
+        class _Ctx:
+            def __enter__(self): ...
+            def __exit__(self, a, b, c): ...
+        def time(self): return self._Ctx()
     INGESTION_SUCCESS_TOTAL = _Dummy()
+    INGESTION_LATENCY_MS = _Dummy()
 
 _WS = re.compile(r"\s+")
 
@@ -62,6 +68,7 @@ def embed_chunks(tenant_id: str, doc_id: str, chunks: List[Dict], collection: st
         pid = uuid.uuid4().int % (10**12)
         points.append(PointStruct(id=pid, vector=vec, payload={"tenant_id": tenant_id, "chunk_id": ch["chunk_id"], "doc_id": doc_id, "text": ch["text"]}))
     if points:
-        client.upsert(collection_name=collection, points=points)
+        with INGESTION_LATENCY_MS.time():
+            client.upsert(collection_name=collection, points=points)
         INGESTION_SUCCESS_TOTAL.inc(len(points))
     return len(points)
