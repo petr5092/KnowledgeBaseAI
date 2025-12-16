@@ -386,6 +386,7 @@
 - API & Diff
   - [x] Улучшить `/v1/proposals` сортировку и фильтры (по `created_at`, статусам) (`backend/src/api/proposals.py` + `backend/src/db/pg.py`)
   - [x] Расширить `/v1/proposals/{id}/diff` для evidence связей и from/to контекста (`backend/src/services/diff.py`)
+  - [x] Добавить `/v1/proposals/{id}/impact` для impact subgraph на основе Diff (`backend/src/api/proposals.py` + `backend/src/services/impact.py`)
 
 - Frontend HITL & Optimistic UI
   - [x] Ввести `tx_log` стор и генерацию `tx_id` (`frontend/src/store/txLog.ts`)
