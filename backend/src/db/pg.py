@@ -205,28 +205,28 @@ def list_proposals(tenant_id: str, status: str | None = None, limit: int = 20, o
         rows = cur.fetchall()
     conn.close()
     return [{"proposal_id": r[0], "tenant_id": r[1], "base_graph_version": int(r[2]), "proposal_checksum": r[3], "status": r[4], "created_at": r[5]} for r in rows]
- 
- def outbox_add(tenant_id: str, event_type: str, payload: Dict) -> str:
-     conn = get_conn()
-     conn.autocommit = True
-     with conn.cursor() as cur:
-         import uuid, json
-         eid = "EV-" + uuid.uuid4().hex[:16]
-         cur.execute("INSERT INTO events_outbox (event_id, tenant_id, event_type, payload, published) VALUES (%s,%s,%s,%s,FALSE)", (eid, tenant_id, event_type, json.dumps(payload)))
-     conn.close()
-     return eid
- 
- def outbox_fetch_unpublished(limit: int = 100) -> list[dict]:
-     conn = get_conn()
-     with conn.cursor() as cur:
-         cur.execute("SELECT event_id, tenant_id, event_type, payload FROM events_outbox WHERE published=FALSE ORDER BY created_at ASC LIMIT %s", (limit,))
-         rows = cur.fetchall()
-     conn.close()
-     return [{"event_id": r[0], "tenant_id": r[1], "event_type": r[2], "payload": r[3]} for r in rows]
- 
- def outbox_mark_published(event_id: str) -> None:
-     conn = get_conn()
-     conn.autocommit = True
-     with conn.cursor() as cur:
-         cur.execute("UPDATE events_outbox SET published=TRUE WHERE event_id=%s", (event_id,))
-     conn.close()
+
+def outbox_add(tenant_id: str, event_type: str, payload: Dict) -> str:
+    conn = get_conn()
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        import uuid, json
+        eid = "EV-" + uuid.uuid4().hex[:16]
+        cur.execute("INSERT INTO events_outbox (event_id, tenant_id, event_type, payload, published) VALUES (%s,%s,%s,%s,FALSE)", (eid, tenant_id, event_type, json.dumps(payload)))
+    conn.close()
+    return eid
+
+def outbox_fetch_unpublished(limit: int = 100) -> list[dict]:
+    conn = get_conn()
+    with conn.cursor() as cur:
+        cur.execute("SELECT event_id, tenant_id, event_type, payload FROM events_outbox WHERE published=FALSE ORDER BY created_at ASC LIMIT %s", (limit,))
+        rows = cur.fetchall()
+    conn.close()
+    return [{"event_id": r[0], "tenant_id": r[1], "event_type": r[2], "payload": r[3]} for r in rows]
+
+def outbox_mark_published(event_id: str) -> None:
+    conn = get_conn()
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute("UPDATE events_outbox SET published=TRUE WHERE event_id=%s", (event_id,))
+    conn.close()
