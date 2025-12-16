@@ -3,6 +3,7 @@ from typing import Dict
 from src.services.jobs.rebuild import start_rebuild_async, get_job_status
 from src.services.graph.utils import recompute_relationship_weights
 from src.workers.integrity_async import process_once
+from src.workers.outbox_publisher import process_once as outbox_publish_once
 
 router = APIRouter(prefix="/v1/maintenance")
 
@@ -143,6 +144,14 @@ async def recompute_links() -> Dict:
 async def run_integrity_async(limit: int = 20) -> Dict:
     try:
         res = process_once(limit=limit)
+        return {"ok": True, "processed": res.get("processed", 0)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/events/publish_outbox")
+async def publish_outbox(limit: int = 100) -> Dict:
+    try:
+        res = outbox_publish_once(limit=limit)
         return {"ok": True, "processed": res.get("processed", 0)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
