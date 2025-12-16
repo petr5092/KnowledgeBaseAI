@@ -2,6 +2,8 @@ import time
 from typing import List, Dict, Tuple, Callable, Any, Optional
 from neo4j import GraphDatabase
 from src.config.settings import settings
+from src.core.correlation import get_correlation_id
+from src.core.logging import logger
 
 
 def get_driver():
@@ -41,12 +43,16 @@ class Neo4jRepo:
 
     def write(self, query: str, params: Dict | None = None) -> None:
         def _fn(session):
+            cid = get_correlation_id() or ""
+            logger.info("neo4j_write", correlation_id=cid)
             session.execute_write(lambda tx: tx.run(query, **(params or {})))
         return self._retry(_fn)
 
     def read(self, query: str, params: Dict | None = None) -> List[Dict]:
         def _fn(session):
             def reader(tx):
+                cid = get_correlation_id() or ""
+                logger.info("neo4j_read", correlation_id=cid)
                 res = tx.run(query, **(params or {}))
                 return [dict(r) for r in res]
             return session.execute_read(reader)
@@ -60,6 +66,8 @@ class Neo4jRepo:
             return
         for chunk in self._chunks(rows, chunk_size):
             def _fn(session):
+                cid = get_correlation_id() or ""
+                logger.info("neo4j_write_unwind", correlation_id=cid, rows=len(chunk))
                 session.execute_write(lambda tx: tx.run(query, rows=chunk))
             self._retry(_fn)
 
