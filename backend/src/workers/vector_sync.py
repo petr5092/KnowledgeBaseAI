@@ -4,7 +4,7 @@ from qdrant_client.models import FieldCondition, Filter, MatchValue, Distance, V
 from src.config.settings import settings
 from src.events.publisher import get_redis
 from src.services.graph.neo4j_repo import node_by_uid
-from src.services.embeddings.provider import HashEmbeddingProvider
+from src.services.embeddings.provider import get_provider
 
 def mark_entities_updated(tenant_id: str, targets: List[str], collection: str = "kb_entities") -> int:
     client = QdrantClient(url=str(settings.qdrant_url))
@@ -44,7 +44,7 @@ def consume_graph_committed() -> Dict:
             props = node_by_uid(uid, tenant_id)
             name = props.get("name") or props.get("title") or uid
             import uuid
-            vec = HashEmbeddingProvider(dim=dim).embed_text(name)
+            vec = get_provider(dim_default=dim).embed_text(name)
             pid = uuid.uuid4().int % (10**12)
             client.upsert(collection_name="kb_entities", points=[{"id": pid, "vector": vec, "payload": {"tenant_id": tenant_id, "uid": uid, "name": name}}])
             n += 1
