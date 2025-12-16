@@ -1,5 +1,6 @@
 import asyncio
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.core.logging import setup_logging, logger
 from src.config.settings import settings
 from src.core.context import extract_tenant_id_from_request, set_tenant_id
@@ -88,6 +89,15 @@ async def metrics():
     from prometheus_client import generate_latest
     return generate_latest()
 
+origins = [o.strip() for o in (settings.cors_allow_origins or "").split(",") if o.strip()]
+if origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 app.include_router(graph_router)
 app.include_router(assistant_router)
 app.include_router(construct_router)
