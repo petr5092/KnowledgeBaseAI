@@ -219,8 +219,8 @@
 #### Story 3.2.1: Diff Interface
 *   **Task 3.2.1.1:** Визуализация Proposal.
     *   [x] `Subtask`: Отображение Diff (Было -> Стало). (Backend endpoint `/v1/proposals/{id}/diff`)
-    *   [ ] `Subtask`: Кнопки Approve/Reject.
-    *   [ ] `Subtask`: Отображение Evidence (цитаты).
+    *   [x] `Subtask`: Кнопки Approve/Reject.
+    *   [x] `Subtask`: Отображение Evidence (цитаты).
     *   **DoD:** Методист видит, какой текст обосновывает создание связи.
     *   **Owner:** Frontend
     *   **Dependencies:** API 1.2.1
@@ -273,4 +273,6 @@
 *   **[2025-12-16]**: Completed Task 4.1.1.1 (Observability). Implemented correlation_id propagation and `/metrics`; integration verified.
 *   **[2025-12-16]**: Completed Task 4.2.1.1 (Schema Gatekeeper). Implemented schema_version table and startup gate; startup check enabled.
 *   **[2025-12-16]**: Completed Task 3.2.1.1 (Diff Interface Backend). Implemented `/v1/proposals/{id}/diff`; unit test passed.
+*   **[2025-12-16]**: Completed Subtasks (Approve/Reject + Evidence in Diff). Implemented endpoints and evidence rendering in Diff; unit test passed.
+*   **[2025-12-16]**: Completed Task (Vector Rescore). Implemented entity embedding upsert on Graph.Committed; unit test passed.
 *   **[2025-12-16]**: Completed Task 1.2.1.2 (HITL Review API). Implemented GET/approve/reject endpoints; unit test passed.
