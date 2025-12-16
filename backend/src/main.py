@@ -30,9 +30,11 @@ try:
 except Exception:
     class Counter:
         def __init__(self, *args, **kwargs): ...
-        def inc(self): ...
+        def labels(self, *args, **kwargs): return self
+        def inc(self, *args, **kwargs): ...
     class Histogram:
         def __init__(self, *args, **kwargs): ...
+        def labels(self, *args, **kwargs): return self
         class _Ctx:
             def __enter__(self): ...
             def __exit__(self, a, b, c): ...
@@ -40,8 +42,8 @@ except Exception:
 
 app = FastAPI(title="Headless Knowledge Graph Platform")
 
-REQ_COUNTER = Counter("http_requests_total", "Total HTTP requests")
-LATENCY = Histogram("http_request_latency_ms", "Request latency ms")
+REQ_COUNTER = Counter("http_requests_total", "Total HTTP requests", ["method", "path", "status"])
+LATENCY = Histogram("http_request_latency_ms", "Request latency ms", ["method", "path"])
 
 @app.on_event("startup")
 async def on_startup():
@@ -67,9 +69,14 @@ async def tenant_middleware(request, call_next):
 
 @app.middleware("http")
 async def metrics_middleware(request, call_next):
-    REQ_COUNTER.inc()
-    with LATENCY.time():
+    method = request.method
+    path = request.url.path
+    with LATENCY.labels(method=method, path=path).time():
         resp = await call_next(request)
+    try:
+        REQ_COUNTER.labels(method=method, path=path, status=str(resp.status_code)).inc()
+    except Exception:
+        ...
     return resp
 
 @app.get("/health")
