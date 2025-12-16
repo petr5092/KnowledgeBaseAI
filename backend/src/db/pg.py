@@ -32,6 +32,7 @@ def ensure_tables():
               proposal_id TEXT NOT NULL,
               operations_applied JSONB NOT NULL,
               revert_operations JSONB NOT NULL,
+              correlation_id TEXT DEFAULT '',
               created_at TIMESTAMP DEFAULT NOW()
             )
             """
@@ -55,6 +56,14 @@ def ensure_tables():
             """
         )
     conn.close()
+    try:
+        conn = get_conn()
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            cur.execute("ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS correlation_id TEXT DEFAULT ''")
+        conn.close()
+    except Exception:
+        ...
 
 def get_graph_version(tenant_id: str) -> int:
     conn = get_conn()
@@ -94,3 +103,50 @@ def get_changed_targets_since(tenant_id: str, from_version: int) -> list[str]:
         rows = cur.fetchall()
         conn.close()
         return [r[0] for r in rows]
+
+def ensure_schema_version():
+    conn = get_conn()
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS schema_version (
+              id INTEGER PRIMARY KEY,
+              version INTEGER NOT NULL
+            )
+            """
+        )
+        cur.execute("INSERT INTO schema_version (id, version) VALUES (1, 1) ON CONFLICT (id) DO NOTHING")
+    conn.close()
+
+def get_schema_version() -> int:
+    conn = get_conn()
+    with conn.cursor() as cur:
+        cur.execute("SELECT version FROM schema_version WHERE id=1")
+        row = cur.fetchone()
+    conn.close()
+    return int(row[0]) if row else 0
+
+def set_schema_version(version: int) -> None:
+    conn = get_conn()
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute("INSERT INTO schema_version (id, version) VALUES (1, %s) ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version", (version,))
+    conn.close()
+
+def get_proposal(proposal_id: str) -> dict | None:
+    conn = get_conn()
+    with conn.cursor() as cur:
+        cur.execute("SELECT proposal_id, tenant_id, base_graph_version, proposal_checksum, status, operations_json FROM proposals WHERE proposal_id=%s", (proposal_id,))
+        row = cur.fetchone()
+    conn.close()
+    if not row:
+        return None
+    return {"proposal_id": row[0], "tenant_id": row[1], "base_graph_version": int(row[2]), "proposal_checksum": row[3], "status": row[4], "operations": row[5]}
+
+def set_proposal_status(proposal_id: str, status: str) -> None:
+    conn = get_conn()
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute("UPDATE proposals SET status=%s WHERE proposal_id=%s", (status, proposal_id))
+    conn.close()
