@@ -332,11 +332,11 @@
 
 - DB
   - `backend/src/db/pg.py:107–135`
-    - Проблема: `schema_version` глобальная (`id=1`), нет per‑tenant контроля.
-    - Исправление: сделать `schema_version (tenant_id, version)` и gatekeeper проверять по текущему `tenant_id`; добавить миграции.
+  - [x] Проблема: `schema_version` глобальная (`id=1`), нет per‑tenant контроля.
+  - [x] Исправление: сделать `schema_version (tenant_id, version)` и gatekeeper проверять по текущему `tenant_id`; добавить миграции.
   - `backend/src/db/pg.py:137–152`
-    - Проблема: `get_proposal`/`set_proposal_status` без индексов по `tenant_id/status`.
-    - Исправление: добавить индексы `proposal(tenant_id, status)` и `audit_log(proposal_id)`; добавить `created_at`.
+  - [x] Проблема: `get_proposal`/`set_proposal_status` без индексов по `tenant_id/status`.
+  - [x] Исправление: добавить индексы `proposal(tenant_id, status, created_at)` и `audit_log(proposal_id)`; добавить `created_at`.
   - `backend/src/db/pg.py:96–105`
     - Проблема: выборка `graph_changes` не ограничивает тип изменений.
     - Исправление: при необходимости добавить поле `change_type` и фильтр по нему (например, NODE/REL/PROPERTY).
