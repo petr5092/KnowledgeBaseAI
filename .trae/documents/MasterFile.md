@@ -218,7 +218,7 @@
 
 #### Story 3.2.1: Diff Interface
 *   **Task 3.2.1.1:** Визуализация Proposal.
-    *   [ ] `Subtask`: Отображение Diff (Было -> Стало).
+    *   [x] `Subtask`: Отображение Diff (Было -> Стало). (Backend endpoint `/v1/proposals/{id}/diff`)
     *   [ ] `Subtask`: Кнопки Approve/Reject.
     *   [ ] `Subtask`: Отображение Evidence (цитаты).
     *   **DoD:** Методист видит, какой текст обосновывает создание связи.
@@ -272,4 +272,5 @@
 *   **[2025-12-16]**: Completed Task 2.3.1.1 (Math Core). Implemented W_edge with clip and EMA; unit tests passed (2).
 *   **[2025-12-16]**: Completed Task 4.1.1.1 (Observability). Implemented correlation_id propagation and `/metrics`; integration verified.
 *   **[2025-12-16]**: Completed Task 4.2.1.1 (Schema Gatekeeper). Implemented schema_version table and startup gate; startup check enabled.
+*   **[2025-12-16]**: Completed Task 3.2.1.1 (Diff Interface Backend). Implemented `/v1/proposals/{id}/diff`; unit test passed.
 *   **[2025-12-16]**: Completed Task 1.2.1.2 (HITL Review API). Implemented GET/approve/reject endpoints; unit test passed.

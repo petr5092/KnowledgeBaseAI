@@ -6,6 +6,7 @@ from src.services.proposal_service import create_draft_proposal
 from src.core.context import get_tenant_id
 from src.workers.commit import commit_proposal
 from src.db.pg import get_proposal, set_proposal_status
+from src.services.diff import build_diff
 
 router = APIRouter(prefix="/v1/proposals")
 
@@ -80,3 +81,10 @@ async def reject(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> 
         raise HTTPException(status_code=404, detail="proposal not found")
     set_proposal_status(proposal_id, ProposalStatus.REJECTED.value)
     return {"ok": True, "status": ProposalStatus.REJECTED.value}
+
+@router.get("/{proposal_id}/diff")
+async def diff(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Dict:
+    p = get_proposal(proposal_id)
+    if not p or p["tenant_id"] != tenant_id:
+        raise HTTPException(status_code=404, detail="proposal not found")
+    return build_diff(proposal_id)
