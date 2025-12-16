@@ -364,7 +364,7 @@
 
 - Embeddings Layer
   - [x] Определить `EmbeddingProvider` интерфейс и DI (`backend/src/services/embeddings/provider.py`)
-  - [ ] Реализовать режимы `hash(dev)` и `model(prod)` (OpenAI/локальная)
+  - [x] Реализовать режимы `hash(dev)` и `model(prod)` (ENV: `EMBEDDINGS_MODE=model|hash`)
   - [ ] Версионировать Qdrant коллекции и добавить миграции (`backend/scripts/apply_vector_schema.py`)
 
 - Integrity Gate
