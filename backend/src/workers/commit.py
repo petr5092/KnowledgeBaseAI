@@ -7,10 +7,28 @@ from src.db.pg import (
     add_graph_change,
 )
 from src.services.rebase import rebase_check, RebaseResult
-from src.services.integrity import integrity_check_subgraph, check_prereq_cycles
+from src.services.integrity import integrity_check_subgraph, check_prereq_cycles, check_dangling_skills
 from src.services.graph.neo4j_repo import get_driver
 from src.events.publisher import publish_graph_committed
 from src.core.correlation import get_correlation_id
+from datetime import datetime
+import os, time
+try:
+    from prometheus_client import Counter, Histogram
+    INTEGRITY_VIOLATION_TOTAL = Counter("integrity_violation_total", "Integrity gate violations total", ["type"])
+    PROPOSAL_AUTOREBASE_TOTAL = Counter("proposal_auto_rebase_total", "Auto rebase (fast) proposals total")
+    INTEGRITY_CHECK_LATENCY_MS = Histogram("integrity_check_latency_ms", "Integrity check latency ms")
+except Exception:
+    class _Dummy: 
+        def inc(self, *args, **kwargs): ...
+        def labels(self, *args, **kwargs): return self
+        class _Ctx:
+            def __enter__(self): ...
+            def __exit__(self, a, b, c): ...
+        def time(self): return self._Ctx()
+    INTEGRITY_VIOLATION_TOTAL = _Dummy()
+    PROPOSAL_AUTOREBASE_TOTAL = _Dummy()
+    INTEGRITY_CHECK_LATENCY_MS = _Dummy()
 
 def _load_proposal(proposal_id: str) -> Dict | None:
     ensure_tables()
@@ -69,7 +87,15 @@ def _apply_ops_tx(tx, tenant_id: str, ops: List[Dict[str, Any]]) -> None:
             props = dict(pd)
             props["uid"] = uid
             props["tenant_id"] = tenant_id
+            props.setdefault("lifecycle_status", "ACTIVE")
+            props.setdefault("created_at", datetime.utcnow().isoformat())
             tx.run(f"MERGE (n:{typ} {{uid:$uid, tenant_id:$tenant_id}}) SET n += $props", uid=uid, tenant_id=tenant_id, props=props)
+            ev = op.get("evidence") or {}
+            cid = ev.get("source_chunk_id")
+            quote = ev.get("quote")
+            if cid and quote:
+                tx.run("MERGE (sc:SourceChunk {uid:$cid, tenant_id:$tid}) SET sc.quote=$quote", cid=cid, tid=tenant_id, quote=quote)
+                tx.run("MATCH (n {uid:$uid, tenant_id:$tid}), (sc:SourceChunk {uid:$cid, tenant_id:$tid}) MERGE (n)-[:EVIDENCED_BY]->(sc)", uid=uid, cid=cid, tid=tenant_id)
         elif t == "UPDATE_NODE":
             uid = str(op.get("target_id") or "")
             props = dict(pd)
@@ -120,14 +146,47 @@ def commit_proposal(proposal_id: str) -> Dict:
     if rb == RebaseResult.CONFLICT:
         _update_proposal_status(proposal_id, "CONFLICT")
         return {"ok": False, "status": "CONFLICT"}
+    if rb == RebaseResult.FAST_REBASE:
+        PROPOSAL_AUTOREBASE_TOTAL.inc()
 
     # Integrity gate (PREREQ cycles on proposed subgraph)
-    proposed_prereq = _collect_prereq_edges(ops)
-    if proposed_prereq:
-        cyc = check_prereq_cycles(proposed_prereq)
-        if cyc:
-            _update_proposal_status(proposal_id, "FAILED")
-            return {"ok": False, "status": "FAILED", "violations": {"prereq_cycles": cyc}}
+    threshold_ms = int(os.environ.get("INTEGRITY_CHECK_THRESHOLD_MS", "500"))
+    with INTEGRITY_CHECK_LATENCY_MS.time():
+        t0 = time.time()
+        proposed_prereq = _collect_prereq_edges(ops)
+        if proposed_prereq:
+            cyc = check_prereq_cycles(proposed_prereq)
+            if cyc:
+                _update_proposal_status(proposal_id, "FAILED")
+                INTEGRITY_VIOLATION_TOTAL.labels(type="prereq_cycle").inc()
+                return {"ok": False, "status": "FAILED", "violations": {"prereq_cycles": cyc}}
+        nodes = []
+        for op in ops:
+            pd = op.get("properties_delta") or {}
+            if (op.get("op_type") in ("CREATE_NODE", "MERGE_NODE", "UPDATE_NODE")) and str(pd.get("type")) == "Skill":
+                uid = str(pd.get("uid") or op.get("target_id") or "")
+                nodes.append({"type": "Skill", "uid": uid})
+        based_on = []
+        for op in ops:
+            pd = op.get("properties_delta") or {}
+            if (op.get("op_type") in ("CREATE_REL", "MERGE_REL", "UPDATE_REL")) and str(pd.get("type")) == "BASED_ON":
+                fu = str(pd.get("from_uid") or "")
+                tu = str(pd.get("to_uid") or "")
+                if fu and tu:
+                    based_on.append({"type": "BASED_ON", "from_uid": fu, "to_uid": tu})
+        if nodes:
+            dangling = check_dangling_skills(nodes, based_on)
+            if dangling:
+                _update_proposal_status(proposal_id, "FAILED")
+                INTEGRITY_VIOLATION_TOTAL.labels(type="dangling_skill").inc()
+                return {"ok": False, "status": "FAILED", "violations": {"dangling_skills": dangling}}
+        sleep_ms = int(os.environ.get("INTEGRITY_TEST_SLEEP_MS", "0"))
+        if sleep_ms > 0:
+            time.sleep(sleep_ms / 1000.0)
+        elapsed_ms = int((time.time() - t0) * 1000)
+        if elapsed_ms > threshold_ms:
+            _update_proposal_status(proposal_id, "ASYNC_CHECK_REQUIRED")
+            return {"ok": False, "status": "ASYNC_CHECK_REQUIRED", "elapsed_ms": elapsed_ms}
 
     # Apply in single transaction
     drv = get_driver()

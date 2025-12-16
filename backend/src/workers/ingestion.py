@@ -5,6 +5,13 @@ from typing import List, Dict
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from src.config.settings import settings
+try:
+    from prometheus_client import Counter
+    INGESTION_SUCCESS_TOTAL = Counter("ingestion_success_total", "Total successful ingested chunks")
+except Exception:
+    class _Dummy:
+        def inc(self, n=1): ...
+    INGESTION_SUCCESS_TOTAL = _Dummy()
 
 _WS = re.compile(r"\s+")
 
@@ -56,4 +63,5 @@ def embed_chunks(tenant_id: str, doc_id: str, chunks: List[Dict], collection: st
         points.append(PointStruct(id=pid, vector=vec, payload={"tenant_id": tenant_id, "chunk_id": ch["chunk_id"], "doc_id": doc_id, "text": ch["text"]}))
     if points:
         client.upsert(collection_name=collection, points=points)
+        INGESTION_SUCCESS_TOTAL.inc(len(points))
     return len(points)
