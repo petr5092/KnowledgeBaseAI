@@ -356,7 +356,7 @@
 - Commit & Consistency
   - [x] Добавить `events_outbox` в PG и запись в одну транзакцию с `audit_log`/`graph_version` (`backend/src/db/pg.py`)
   - [x] Реализовать `outbox_publisher` воркер и ретраи при доставке (Redis) (`backend/src/workers/outbox_publisher.py`)
-  - [ ] Добавить компенсации для частичной недоставки (перепубликация/флаги)
+  - [x] Добавить компенсации для частичной недоставки (перепубликация/флаги): `attempts`, `last_error`, API для публикации и retry
 
 - Tenant Guard & Write Whitelist
   - [x] Ввести `Neo4jWriteHelper` с принудительным inject `tenant_id` (`backend/src/services/graph/neo4j_writer.py`), интегрирован в commit worker
