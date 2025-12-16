@@ -150,3 +150,20 @@ def set_proposal_status(proposal_id: str, status: str) -> None:
     with conn.cursor() as cur:
         cur.execute("UPDATE proposals SET status=%s WHERE proposal_id=%s", (status, proposal_id))
     conn.close()
+
+def list_proposals(tenant_id: str, status: str | None = None, limit: int = 20, offset: int = 0) -> list[dict]:
+    conn = get_conn()
+    with conn.cursor() as cur:
+        if status:
+            cur.execute(
+                "SELECT proposal_id, tenant_id, base_graph_version, proposal_checksum, status FROM proposals WHERE tenant_id=%s AND status=%s ORDER BY proposal_id DESC LIMIT %s OFFSET %s",
+                (tenant_id, status, limit, offset),
+            )
+        else:
+            cur.execute(
+                "SELECT proposal_id, tenant_id, base_graph_version, proposal_checksum, status FROM proposals WHERE tenant_id=%s ORDER BY proposal_id DESC LIMIT %s OFFSET %s",
+                (tenant_id, limit, offset),
+            )
+        rows = cur.fetchall()
+    conn.close()
+    return [{"proposal_id": r[0], "tenant_id": r[1], "base_graph_version": int(r[2]), "proposal_checksum": r[3], "status": r[4]} for r in rows]
