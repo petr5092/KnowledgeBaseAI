@@ -276,3 +276,4 @@
 *   **[2025-12-16]**: Completed Subtasks (Approve/Reject + Evidence in Diff). Implemented endpoints and evidence rendering in Diff; unit test passed.
 *   **[2025-12-16]**: Completed Task (Vector Rescore). Implemented entity embedding upsert on Graph.Committed; unit test passed.
 *   **[2025-12-16]**: Completed Task 1.2.1.2 (HITL Review API). Implemented GET/approve/reject endpoints; unit test passed.
+*   **[2025-12-16]**: Completed Task (Evidence Text in Diff). Implemented evidence_chunk text resolution via Qdrant; unit test passed.
