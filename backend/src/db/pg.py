@@ -64,6 +64,8 @@ def ensure_tables():
               event_type TEXT NOT NULL,
               payload JSONB NOT NULL,
               published BOOLEAN NOT NULL DEFAULT FALSE,
+              attempts INTEGER NOT NULL DEFAULT 0,
+              last_error TEXT DEFAULT '',
               created_at TIMESTAMP DEFAULT NOW()
             )
             """
@@ -75,6 +77,8 @@ def ensure_tables():
         with conn.cursor() as cur:
             cur.execute("ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS correlation_id TEXT DEFAULT ''")
             cur.execute("ALTER TABLE proposals ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()")
+            cur.execute("ALTER TABLE events_outbox ADD COLUMN IF NOT EXISTS attempts INTEGER DEFAULT 0")
+            cur.execute("ALTER TABLE events_outbox ADD COLUMN IF NOT EXISTS last_error TEXT DEFAULT ''")
         conn.close()
     except Exception:
         ...
@@ -229,4 +233,11 @@ def outbox_mark_published(event_id: str) -> None:
     conn.autocommit = True
     with conn.cursor() as cur:
         cur.execute("UPDATE events_outbox SET published=TRUE WHERE event_id=%s", (event_id,))
+    conn.close()
+
+def outbox_mark_failed(event_id: str, error: str | None = None) -> None:
+    conn = get_conn()
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute("UPDATE events_outbox SET attempts=attempts+1, last_error=%s WHERE event_id=%s", (error or "", event_id))
     conn.close()
