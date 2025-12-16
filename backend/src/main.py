@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from src.core.logging import setup_logging, logger
 from src.config.settings import settings
 from src.api.graph import router as graph_router
+from src.api.assistant import router as assistant_router
 from src.api.construct import router as construct_router
 from src.api.analytics import router as analytics_router
 from src.api.ws import router as ws_router
@@ -56,6 +57,7 @@ async def health():
     return {"openai": bool(settings.openai_api_key.get_secret_value()), "neo4j": bool(settings.neo4j_uri)}
 
 app.include_router(graph_router)
+app.include_router(assistant_router)
 app.include_router(construct_router)
 app.include_router(analytics_router)
 app.include_router(ws_router)

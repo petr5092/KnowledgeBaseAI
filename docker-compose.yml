@@ -27,6 +27,7 @@ services:
       - "traefik.http.routers.traefik.middlewares=dashboard-auth"
 
   frontend:
+    profiles: ["prod"]
     env_file:
       - ${ENV_FILE:-.env.prod}
     build:
@@ -51,7 +52,9 @@ services:
       - "traefik.http.routers.frontend-xteam-sec.service=frontend-svc"
       - "traefik.http.routers.frontend-xteam-sec.tls=true"
       - "traefik.http.routers.frontend-xteam-sec.tls.certresolver=le"
+
   frontend-dev:
+    profiles: ["dev"]
     image: node:20-alpine
     working_dir: /app
     volumes:
@@ -60,16 +63,17 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.frontend-dev-svc.loadbalancer.server.port=5173"
-      - "traefik.http.routers.frontend-dev-stud.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.frontend-dev-stud.rule=Host(`${KB_DEV_DOMAIN}`)"
       - "traefik.http.routers.frontend-dev-stud.entrypoints=web"
       - "traefik.http.routers.frontend-dev-stud.service=frontend-dev-svc"
-      - "traefik.http.routers.frontend-dev-stud-sec.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.frontend-dev-stud-sec.rule=Host(`${KB_DEV_DOMAIN}`)"
       - "traefik.http.routers.frontend-dev-stud-sec.entrypoints=websecure"
       - "traefik.http.routers.frontend-dev-stud-sec.service=frontend-dev-svc"
       - "traefik.http.routers.frontend-dev-stud-sec.tls=true"
       - "traefik.http.routers.frontend-dev-stud-sec.tls.certresolver=le"
 
   frontend-prod-hot:
+    profiles: ["dev"]
     env_file:
       - ${ENV_FILE:-.env.prod}
     image: node:20-alpine
@@ -80,24 +84,25 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.frontend-prod-hot-svc.loadbalancer.server.port=5174"
-      - "traefik.http.routers.frontend-prod-hot-stud.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.frontend-prod-hot-stud.rule=Host(`${KB_DEV_DOMAIN}`)"
       - "traefik.http.routers.frontend-prod-hot-stud.entrypoints=web"
       - "traefik.http.routers.frontend-prod-hot-stud.service=frontend-prod-hot-svc"
-      - "traefik.http.routers.frontend-prod-hot-stud-sec.rule=Host(`${KB_DOMAIN}`)"
+      - "traefik.http.routers.frontend-prod-hot-stud-sec.rule=Host(`${KB_DEV_DOMAIN}`)"
       - "traefik.http.routers.frontend-prod-hot-stud-sec.entrypoints=websecure"
       - "traefik.http.routers.frontend-prod-hot-stud-sec.service=frontend-prod-hot-svc"
       - "traefik.http.routers.frontend-prod-hot-stud-sec.tls=true"
       - "traefik.http.routers.frontend-prod-hot-stud-sec.tls.certresolver=le"
-      - "traefik.http.routers.frontend-prod-hot-xteam.rule=Host(`${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.frontend-prod-hot-xteam.rule=Host(`${KB_DEV_ALT_DOMAIN}`)"
       - "traefik.http.routers.frontend-prod-hot-xteam.entrypoints=web"
       - "traefik.http.routers.frontend-prod-hot-xteam.service=frontend-prod-hot-svc"
-      - "traefik.http.routers.frontend-prod-hot-xteam-sec.rule=Host(`${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.frontend-prod-hot-xteam-sec.rule=Host(`${KB_DEV_ALT_DOMAIN}`)"
       - "traefik.http.routers.frontend-prod-hot-xteam-sec.entrypoints=websecure"
       - "traefik.http.routers.frontend-prod-hot-xteam-sec.service=frontend-prod-hot-svc"
       - "traefik.http.routers.frontend-prod-hot-xteam-sec.tls=true"
       - "traefik.http.routers.frontend-prod-hot-xteam-sec.tls.certresolver=le"
 
   fastapi:
+    profiles: ["prod"]
     env_file:
       - ${ENV_FILE:-.env.prod}
     build:
@@ -105,7 +110,7 @@ services:
       dockerfile: Dockerfile.fastapi
     volumes:
       - ./backend:/app
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.fastapi-svc.loadbalancer.server.port=8000"
@@ -125,6 +130,36 @@ services:
       - "traefik.http.routers.fastapi-xteam-sec.service=fastapi-svc"
       - "traefik.http.routers.fastapi-xteam-sec.tls=true"
       - "traefik.http.routers.fastapi-xteam-sec.tls.certresolver=le"
+
+  fastapi-dev:
+    profiles: ["dev"]
+    env_file:
+      - ${ENV_FILE:-.env.dev}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.fastapi
+    volumes:
+      - ./backend:/app
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.fastapi-dev-svc.loadbalancer.server.port=8000"
+      - "traefik.http.routers.fastapi-dev-stud.rule=Host(`api.${KB_DEV_DOMAIN}`)"
+      - "traefik.http.routers.fastapi-dev-stud.entrypoints=web"
+      - "traefik.http.routers.fastapi-dev-stud.service=fastapi-dev-svc"
+      - "traefik.http.routers.fastapi-dev-stud-sec.rule=Host(`api.${KB_DEV_DOMAIN}`)"
+      - "traefik.http.routers.fastapi-dev-stud-sec.entrypoints=websecure"
+      - "traefik.http.routers.fastapi-dev-stud-sec.service=fastapi-dev-svc"
+      - "traefik.http.routers.fastapi-dev-stud-sec.tls=true"
+      - "traefik.http.routers.fastapi-dev-stud-sec.tls.certresolver=le"
+      - "traefik.http.routers.fastapi-dev-xteam.rule=Host(`api.${KB_DEV_ALT_DOMAIN}`)"
+      - "traefik.http.routers.fastapi-dev-xteam.entrypoints=web"
+      - "traefik.http.routers.fastapi-dev-xteam.service=fastapi-dev-svc"
+      - "traefik.http.routers.fastapi-dev-xteam-sec.rule=Host(`api.${KB_DEV_ALT_DOMAIN}`)"
+      - "traefik.http.routers.fastapi-dev-xteam-sec.entrypoints=websecure"
+      - "traefik.http.routers.fastapi-dev-xteam-sec.service=fastapi-dev-svc"
+      - "traefik.http.routers.fastapi-dev-xteam-sec.tls=true"
+      - "traefik.http.routers.fastapi-dev-xteam-sec.tls.certresolver=le"
 
   redis:
     env_file:

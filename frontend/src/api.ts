@@ -84,3 +84,31 @@ export type AnalyticsStats = {
 export async function getAnalyticsStats() {
   return apiFetch<AnalyticsStats>(`/v1/analytics/stats`)
 }
+
+export type AssistantAction = 'explain_relation' | 'viewport' | 'roadmap' | 'analytics' | 'questions'
+
+export async function assistantChat(body: {
+  action?: AssistantAction
+  message: string
+  from_uid?: string
+  to_uid?: string
+  center_uid?: string
+  depth?: number
+  subject_uid?: string
+  progress?: Record<string, number>
+  limit?: number
+  count?: number
+  difficulty_min?: number
+  difficulty_max?: number
+  exclude?: string[]
+}) {
+  return apiFetch<unknown>(`/v1/assistant/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+export async function getAssistantTools() {
+  return apiFetch<{ tools: Array<{ name: string; description: string }> }>(`/v1/assistant/tools`)
+}
