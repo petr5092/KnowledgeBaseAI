@@ -20,7 +20,8 @@ def ensure_tables():
               base_graph_version BIGINT NOT NULL,
               proposal_checksum TEXT NOT NULL,
               status TEXT NOT NULL,
-              operations_json JSONB NOT NULL
+              operations_json JSONB NOT NULL,
+              created_at TIMESTAMP DEFAULT NOW()
             )
             """
         )
@@ -61,6 +62,7 @@ def ensure_tables():
         conn.autocommit = True
         with conn.cursor() as cur:
             cur.execute("ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS correlation_id TEXT DEFAULT ''")
+            cur.execute("ALTER TABLE proposals ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()")
         conn.close()
     except Exception:
         ...
@@ -156,14 +158,14 @@ def list_proposals(tenant_id: str, status: str | None = None, limit: int = 20, o
     with conn.cursor() as cur:
         if status:
             cur.execute(
-                "SELECT proposal_id, tenant_id, base_graph_version, proposal_checksum, status FROM proposals WHERE tenant_id=%s AND status=%s ORDER BY proposal_id DESC LIMIT %s OFFSET %s",
+                "SELECT proposal_id, tenant_id, base_graph_version, proposal_checksum, status, created_at FROM proposals WHERE tenant_id=%s AND status=%s ORDER BY created_at DESC LIMIT %s OFFSET %s",
                 (tenant_id, status, limit, offset),
             )
         else:
             cur.execute(
-                "SELECT proposal_id, tenant_id, base_graph_version, proposal_checksum, status FROM proposals WHERE tenant_id=%s ORDER BY proposal_id DESC LIMIT %s OFFSET %s",
+                "SELECT proposal_id, tenant_id, base_graph_version, proposal_checksum, status, created_at FROM proposals WHERE tenant_id=%s ORDER BY created_at DESC LIMIT %s OFFSET %s",
                 (tenant_id, limit, offset),
             )
         rows = cur.fetchall()
     conn.close()
-    return [{"proposal_id": r[0], "tenant_id": r[1], "base_graph_version": int(r[2]), "proposal_checksum": r[3], "status": r[4]} for r in rows]
+    return [{"proposal_id": r[0], "tenant_id": r[1], "base_graph_version": int(r[2]), "proposal_checksum": r[3], "status": r[4], "created_at": r[5]} for r in rows]
