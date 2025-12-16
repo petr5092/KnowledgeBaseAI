@@ -359,7 +359,7 @@
   - [ ] Добавить компенсации для частичной недоставки (перепубликация/флаги)
 
 - Tenant Guard & Write Whitelist
-  - [ ] Ввести `Neo4jWriteHelper` с принудительным inject `tenant_id` (`backend/src/services/graph/neo4j_writer.py`)
+  - [x] Ввести `Neo4jWriteHelper` с принудительным inject `tenant_id` (`backend/src/services/graph/neo4j_writer.py`), интегрирован в commit worker
   - [x] Переписать тест guard на AST‑анализ белого списка (`backend/tests/unit/test_ast_write_guard.py`)
 
 - Embeddings Layer
