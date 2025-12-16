@@ -118,6 +118,17 @@ def commit_proposal(proposal_id: str) -> Dict:
 
     # Rebase check
     target_ids = _collect_target_ids(ops)
+    changes: List[Dict[str, str]] = []
+    for op in ops:
+        t = str(op.get("op_type") or "")
+        pd = op.get("properties_delta") or {}
+        tid = str(op.get("target_id") or pd.get("uid") or "")
+        if not tid:
+            continue
+        if t in ("CREATE_NODE", "MERGE_NODE", "UPDATE_NODE"):
+            changes.append({"target_id": tid, "change_type": "NODE"})
+        elif t in ("CREATE_REL", "MERGE_REL", "UPDATE_REL"):
+            changes.append({"target_id": tid, "change_type": "REL"})
     rb = rebase_check(tenant_id, base_ver, target_ids)
     if rb == RebaseResult.CONFLICT:
         _update_proposal_status(proposal_id, "CONFLICT")
@@ -199,10 +210,10 @@ def commit_proposal(proposal_id: str) -> Dict:
             "INSERT INTO tenant_graph_version (tenant_id, graph_version) VALUES (%s,%s) ON CONFLICT (tenant_id) DO UPDATE SET graph_version=EXCLUDED.graph_version",
             (tenant_id, new_ver),
         )
-        for tid in target_ids:
+        for ch in changes:
             cur.execute(
-                "INSERT INTO graph_changes (tenant_id, graph_version, target_id) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
-                (tenant_id, new_ver, tid),
+                "INSERT INTO graph_changes (tenant_id, graph_version, target_id, change_type) VALUES (%s,%s,%s,%s) ON CONFLICT DO NOTHING",
+                (tenant_id, new_ver, ch["target_id"], ch["change_type"]),
             )
         import uuid, json
         tx_id = "TX-" + uuid.uuid4().hex[:16]
