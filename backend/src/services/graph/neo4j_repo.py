@@ -130,6 +130,29 @@ def neighbors(center_uid: str, depth: int = 1) -> Tuple[List[Dict], List[Dict]]:
     drv.close()
     return nodes, edges
 
+def node_by_uid(uid: str, tenant_id: str) -> Dict:
+    drv = get_driver()
+    data: Dict = {}
+    with drv.session() as s:
+        res = s.run("MATCH (n {uid:$uid, tenant_id:$tid}) RETURN properties(n) AS p", {"uid": uid, "tid": tenant_id}).single()
+        if res and res.get("p"):
+            data = dict(res.get("p"))
+    drv.close()
+    return data
+
+def relation_by_pair(from_uid: str, to_uid: str, typ: str, tenant_id: str) -> Dict:
+    drv = get_driver()
+    data: Dict = {}
+    with drv.session() as s:
+        res = s.run(
+            f"MATCH (a {{uid:$fu, tenant_id:$tid}})-[r:{typ}]->(b {{uid:$tu, tenant_id:$tid}}) RETURN properties(r) AS p",
+            {"fu": from_uid, "tu": to_uid, "tid": tenant_id},
+        ).single()
+        if res and res.get("p"):
+            data = dict(res.get("p"))
+    drv.close()
+    return data
+
 def purge_user_artifacts() -> Dict:
     drv = get_driver()
     deleted_users = 0

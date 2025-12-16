@@ -3,12 +3,13 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import FieldCondition, Filter, MatchValue, Distance, VectorParams
 from src.config.settings import settings
 from src.events.publisher import get_redis
+from src.services.graph.neo4j_repo import node_by_uid
 
 def mark_entities_updated(tenant_id: str, targets: List[str], collection: str = "kb_entities") -> int:
     client = QdrantClient(url=str(settings.qdrant_url))
     cols = [c.name for c in client.get_collections().collections]
     if collection not in cols:
-        client.create_collection(collection, vectors_config=VectorParams(size=8, distance=Distance.COSINE))
+        client.create_collection(collection, vectors_config=VectorParams(size=16, distance=Distance.COSINE))
     count = 0
     for t in targets:
         cond = Filter(must=[FieldCondition(key="tenant_id", match=MatchValue(value=tenant_id)), FieldCondition(key="uid", match=MatchValue(value=t))])
@@ -26,6 +27,19 @@ def consume_graph_committed() -> Dict:
     tenant_id = ev.get("tenant_id")
     targets = ev.get("targets") or []
     if tenant_id and targets:
-        n = mark_entities_updated(tenant_id, targets)
+        n = 0
+        client = QdrantClient(url=str(settings.qdrant_url))
+        cols = [c.name for c in client.get_collections().collections]
+        if "kb_entities" not in cols:
+            client.create_collection("kb_entities", vectors_config=VectorParams(size=8, distance=Distance.COSINE))
+        for uid in targets:
+            props = node_by_uid(uid, tenant_id)
+            name = props.get("name") or props.get("title") or uid
+            import hashlib, uuid
+            h = hashlib.sha256(name.encode("utf-8")).digest()
+            vec = [int.from_bytes(h[i*2:(i+1)*2], "big")/65535.0 for i in range(8)]
+            pid = uuid.uuid4().int % (10**12)
+            client.upsert(collection_name="kb_entities", points=[{"id": pid, "vector": vec, "payload": {"tenant_id": tenant_id, "uid": uid, "name": name}}])
+            n += 1
         return {"processed": n}
     return {"processed": 0}

@@ -53,7 +53,7 @@ def embed_chunks(tenant_id: str, doc_id: str, chunks: List[Dict], collection: st
     for ch in chunks:
         vec = _hash16(ch["text"])
         pid = uuid.uuid4().int % (10**12)
-        points.append(PointStruct(id=pid, vector=vec, payload={"tenant_id": tenant_id, "chunk_id": ch["chunk_id"], "doc_id": doc_id}))
+        points.append(PointStruct(id=pid, vector=vec, payload={"tenant_id": tenant_id, "chunk_id": ch["chunk_id"], "doc_id": doc_id, "text": ch["text"]}))
     if points:
         client.upsert(collection_name=collection, points=points)
     return len(points)
