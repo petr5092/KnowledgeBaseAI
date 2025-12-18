@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
 from src.services.graph.neo4j_repo import relation_context, neighbors
 from src.config.settings import settings
@@ -58,24 +58,32 @@ async def chat(payload: ChatInput) -> Dict:
     return {"answer": answer, "usage": (usage.model_dump() if hasattr(usage, 'model_dump') else None), "context": ctx}
 
 class RoadmapInput(BaseModel):
-    subject_uid: Optional[str] = None
-    progress: Dict[str, float] = {}
-    limit: int = 30
+    subject_uid: Optional[str] = Field(None, description="Root subject UID (e.g. 'MATH-EGE'). If None, searches globally (not recommended).")
+    progress: Dict[str, float] = Field(..., description="Map of 'NodeUID' -> MasteryLevel (0.0 to 1.0). 1.0 means fully mastered.")
+    limit: int = Field(30, description="Max number of items to return.")
 
-@router.post("/roadmap")
+@router.post(
+    "/roadmap",
+    summary="Calculate Adaptive Roadmap",
+    description="Generates a personalized learning path based on the user's current mastery levels and the graph dependency structure (PREREQ).",
+)
 async def roadmap(payload: RoadmapInput) -> Dict:
     items = plan_route(payload.subject_uid, payload.progress, limit=payload.limit)
     return {"items": items}
 
 class AdaptiveQuestionsInput(BaseModel):
-    subject_uid: Optional[str] = None
-    progress: Dict[str, float] = {}
-    count: int = 10
-    difficulty_min: int = 1
-    difficulty_max: int = 5
-    exclude: List[str] = []
+    subject_uid: Optional[str] = Field(None, description="Root subject UID.")
+    progress: Dict[str, float] = Field(..., description="Current user progress.")
+    count: int = Field(10, description="Number of questions to generate.")
+    difficulty_min: int = Field(1, ge=1, le=10, description="Min difficulty (1-10).")
+    difficulty_max: int = Field(5, ge=1, le=10, description="Max difficulty (1-10).")
+    exclude: List[str] = Field([], description="List of Question UIDs to exclude (already answered).")
 
-@router.post("/adaptive_questions")
+@router.post(
+    "/adaptive_questions",
+    summary="Get Adaptive Questions",
+    description="Selects the most relevant practice questions for the user's 'Zone of Proximal Development'.",
+)
 async def adaptive_questions(payload: AdaptiveQuestionsInput) -> Dict:
     roadmap = plan_route(payload.subject_uid, payload.progress, limit=payload.count * 3)
     topic_uids = [it["uid"] for it in roadmap] or all_topic_uids_from_examples()

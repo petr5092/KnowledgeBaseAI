@@ -46,7 +46,11 @@ async def create_proposal(payload: Dict, tenant_id: str = Depends(require_tenant
     except Exception:
         raise HTTPException(status_code=500, detail="failed to create proposal")
 
-@router.post("/{proposal_id}/commit")
+@router.post(
+    "/{proposal_id}/commit",
+    summary="Commit Proposal",
+    description="Applies the proposal to the Neo4j graph. This operation is atomic and updates the graph version."
+)
 async def commit(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Dict:
     res = commit_proposal(proposal_id)
     if not res.get("ok"):
@@ -55,7 +59,11 @@ async def commit(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> 
         raise HTTPException(status_code=code, detail=res)
     return res
 
-@router.get("/{proposal_id}")
+@router.get(
+    "/{proposal_id}",
+    summary="Get Proposal Details",
+    description="Fetches the details of a specific proposal, including its operations and status."
+)
 async def get(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Dict:
     p = get_proposal(proposal_id)
     if not p or p["tenant_id"] != tenant_id:
@@ -80,7 +88,11 @@ async def approve(proposal_id: str, tenant_id: str = Depends(require_tenant)) ->
         raise HTTPException(status_code=code, detail=res)
     return res
 
-@router.post("/{proposal_id}/reject")
+@router.post(
+    "/{proposal_id}/reject",
+    summary="Reject Proposal",
+    description="Marks a proposal as REJECTED. It cannot be committed afterwards."
+)
 async def reject(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Dict:
     p = get_proposal(proposal_id)
     if not p or p["tenant_id"] != tenant_id:
@@ -95,8 +107,16 @@ async def diff(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Di
         raise HTTPException(status_code=404, detail="proposal not found")
     return build_diff(proposal_id)
 
-@router.get("/{proposal_id}/impact")
+@router.get(
+    "/{proposal_id}/impact",
+    summary="Calculate Proposal Impact",
+    description="Analyzes which parts of the graph will be affected by this proposal (Impact Analysis)."
+)
 async def impact(proposal_id: str, depth: int = 1, tenant_id: str = Depends(require_tenant)) -> Dict:
+    p = get_proposal(proposal_id)
+    if not p or p["tenant_id"] != tenant_id:
+        raise HTTPException(status_code=404, detail="proposal not found")
+    return impact_subgraph_for_proposal(proposal_id, depth=depth)
     p = get_proposal(proposal_id)
     if not p or p["tenant_id"] != tenant_id:
         raise HTTPException(status_code=404, detail="proposal not found")

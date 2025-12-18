@@ -3,9 +3,13 @@ from typing import Dict
 from src.services.graph.neo4j_repo import read_graph
 import math
 
-router = APIRouter(prefix="/v1/analytics")
+router = APIRouter(prefix="/v1/analytics", tags=["Analytics"])
 
-@router.get("/stats")
+@router.get(
+    "/stats",
+    summary="Graph Analytics",
+    description="Returns high-level metrics about the knowledge graph (node count, edge density, orphan nodes)."
+)
 async def stats() -> Dict:
     nodes, edges = read_graph()
     n = len(nodes)

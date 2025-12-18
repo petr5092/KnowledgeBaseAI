@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Literal
 from src.config.settings import settings
 from src.services.graph.neo4j_repo import relation_context, neighbors
@@ -26,11 +26,11 @@ async def tools() -> Dict:
     }
 
 class AssistantChatInput(BaseModel):
-    action: Optional[Literal["explain_relation", "viewport", "roadmap", "analytics", "questions"]] = None
-    message: str
-    from_uid: Optional[str] = None
-    to_uid: Optional[str] = None
-    center_uid: Optional[str] = None
+    action: Optional[Literal["explain_relation", "viewport", "roadmap", "analytics", "questions"]] = Field(None, description="Explicit action to trigger. If None, treats as general chat.")
+    message: str = Field(..., description="User message text.")
+    from_uid: Optional[str] = Field(None, description="Context: source node.")
+    to_uid: Optional[str] = Field(None, description="Context: target node.")
+    center_uid: Optional[str] = Field(None, description="Context: center node for viewport.")
     depth: int = 1
     subject_uid: Optional[str] = None
     progress: Dict[str, float] = {}
@@ -40,7 +40,11 @@ class AssistantChatInput(BaseModel):
     difficulty_max: int = 5
     exclude: List[str] = []
 
-@router.post("/chat")
+@router.post(
+    "/chat",
+    summary="AI Assistant Chat",
+    description="Unified endpoint for the AI Assistant. Can handle general Q&A or trigger specific actions (roadmap, analytics, etc.) based on the `action` field."
+)
 async def chat(payload: AssistantChatInput) -> Dict:
     if payload.action == "explain_relation":
         if not payload.from_uid or not payload.to_uid:

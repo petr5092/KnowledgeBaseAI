@@ -41,7 +41,46 @@ except Exception:
             def __exit__(self, a, b, c): ...
         def time(self): return self._Ctx()
 
-app = FastAPI(title="Headless Knowledge Graph Platform")
+tags_metadata = [
+    {
+        "name": "LMS Integration",
+        "description": "Endpoints for external LMS (StudyNinja) to consume the graph: roadmap planning, adaptive questions, and content navigation.",
+    },
+    {
+        "name": "AI Assistant",
+        "description": "Conversational interface and helper tools for explaining graph connections and generating content.",
+    },
+    {
+        "name": "Content Management",
+        "description": "Proposal system for safe, atomic, and reviewed graph mutations (Admin/Methodist tools).",
+    },
+    {
+        "name": "Analytics",
+        "description": "Graph topology metrics and AI usage statistics.",
+    },
+    {
+        "name": "System",
+        "description": "Health checks and Prometheus metrics.",
+    },
+]
+
+app = FastAPI(
+    title="KnowledgeBaseAI Engine",
+    description="""
+# KnowledgeBaseAI Platform
+
+This is the core graph engine for the StudyNinja ecosystem. 
+It provides a **stateless knowledge graph** service that powers adaptive learning.
+
+## Key Concepts
+
+* **LMS Integration**: Use `/v1/graph/*` endpoints to build learning paths and fetch questions.
+* **Proposals**: All writes go through a Proposal -> Review -> Commit pipeline (`/v1/proposals`).
+* **Tenancy**: Multi-tenancy is enforced via `X-Tenant-ID` header (defaulting to 'public' if not set in some modes, but required for writes).
+    """,
+    version="1.0.0",
+    openapi_tags=tags_metadata,
+)
 
 REQ_COUNTER = Counter("http_requests_total", "Total HTTP requests", ["method", "path", "status"])
 LATENCY = Histogram("http_request_latency_ms", "Request latency ms", ["method", "path"])
