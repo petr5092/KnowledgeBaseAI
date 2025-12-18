@@ -5,6 +5,7 @@ from src.services.graph.neo4j_repo import relation_context, neighbors
 from src.config.settings import settings
 from src.services.roadmap_planner import plan_route
 from src.services.questions import select_examples_for_topics, all_topic_uids_from_examples
+from src.api.common import ApiError
 
 router = APIRouter(prefix="/v1/graph", tags=["Интеграция с LMS"])
 
@@ -34,6 +35,11 @@ class ViewportResponse(BaseModel):
     summary="Окрестность узла",
     description="Возвращает локальный подграф (узлы и связи) вокруг указанного узла. Используется для визуализации графа.",
     response_model=ViewportResponse,
+    responses={
+        400: {"model": ApiError, "description": "Некорректные параметры запроса"},
+        404: {"model": ApiError, "description": "Узел не найден"},
+        500: {"model": ApiError, "description": "Внутренняя ошибка сервера"},
+    },
 )
 async def viewport(center_uid: str, depth: int = 1) -> Dict:
     """
@@ -76,6 +82,11 @@ class ChatResponse(BaseModel):
     summary="Объяснение связи (RAG)",
     description="Использует LLM для пояснения семантической связи между двумя узлами, применяя метаданные графа как контекст.",
     response_model=ChatResponse,
+    responses={
+        400: {"model": ApiError, "description": "Некорректные параметры запроса"},
+        502: {"model": ApiError, "description": "Ошибка запроса к LLM"},
+        503: {"model": ApiError, "description": "Сервис LLM недоступен"},
+    },
 )
 async def chat(payload: ChatInput) -> Dict:
     """
@@ -142,6 +153,11 @@ class RoadmapResponse(BaseModel):
     summary="Построить адаптивную дорожную карту",
     description="Возвращает персональную последовательность тем на основе текущего прогресса и зависимостей графа (PREREQ).",
     response_model=RoadmapResponse,
+    responses={
+        400: {"model": ApiError, "description": "Некорректные параметры запроса"},
+        404: {"model": ApiError, "description": "Предмет не найден"},
+        500: {"model": ApiError, "description": "Внутренняя ошибка сервера"},
+    },
 )
 async def roadmap(payload: RoadmapInput) -> Dict:
     """
@@ -179,6 +195,10 @@ class AdaptiveQuestionsResponse(BaseModel):
     summary="Адаптивные вопросы",
     description="Подбирает наиболее релевантные вопросы для «зоны ближайшего развития» ученика.",
     response_model=AdaptiveQuestionsResponse,
+    responses={
+        400: {"model": ApiError, "description": "Некорректные параметры запроса"},
+        500: {"model": ApiError, "description": "Внутренняя ошибка сервера"},
+    },
 )
 async def adaptive_questions(payload: AdaptiveQuestionsInput) -> Dict:
     """

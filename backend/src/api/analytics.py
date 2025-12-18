@@ -31,6 +31,12 @@ class StatsResponse(BaseModel):
     summary="Метрики графа",
     description="Возвращает сводные метрики графа знаний (число узлов, плотность, средняя исходящая степень).",
     response_model=StatsResponse,
+    responses={
+        500: {
+            "description": "Внутренняя ошибка сервера",
+            "content": {"application/json": {"example": {"code": "internal_error", "message": "graph store unavailable"}}},
+        }
+    },
 )
 async def stats() -> Dict:
     """

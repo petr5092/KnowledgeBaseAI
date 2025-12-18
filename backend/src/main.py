@@ -100,9 +100,13 @@ async def tenant_middleware(request, call_next):
     set_tenant_id(tid)
     cid = request.headers.get("X-Correlation-ID") or new_correlation_id()
     set_correlation_id(cid)
+    rid = request.headers.get("X-Request-ID") or ("req-" + __import__("uuid").uuid4().hex[:8])
     resp = await call_next(request)
     try:
         resp.headers["X-Correlation-ID"] = cid
+        resp.headers["X-Request-ID"] = rid
+        if tid:
+            resp.headers["X-Tenant-ID"] = tid
     except Exception:
         ...
     return resp

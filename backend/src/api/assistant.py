@@ -6,6 +6,7 @@ from src.services.graph.neo4j_repo import relation_context, neighbors
 from src.services.roadmap_planner import plan_route
 from src.api.analytics import stats as analytics_stats
 from src.services.questions import select_examples_for_topics, all_topic_uids_from_examples
+from src.api.common import ApiError
 
 router = APIRouter(prefix="/v1/assistant", tags=["ИИ ассистент"])
 
@@ -54,7 +55,12 @@ class AssistantChatInput(BaseModel):
 @router.post(
     "/chat",
     summary="Чат с ИИ-ассистентом",
-    description="Единая точка для ИИ-ассистента. Поддерживает общий диалог или выполнение действий (дорожная карта, аналитика и т.д.) через поле `action`."
+    description="Единая точка для ИИ-ассистента. Поддерживает общий диалог или выполнение действий (дорожная карта, аналитика и т.д.) через поле `action`.",
+    responses={
+        400: {"model": ApiError, "description": "Некорректные параметры запроса"},
+        502: {"model": ApiError, "description": "Ошибка запроса к LLM"},
+        503: {"model": ApiError, "description": "Сервис LLM недоступен"},
+    }
 )
 async def chat(payload: AssistantChatInput) -> Dict:
     """
