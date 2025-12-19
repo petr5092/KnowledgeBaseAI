@@ -1,6 +1,13 @@
 import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.exceptions import RequestValidationError
+from src.api.errors import (
+    http_exception_handler,
+    validation_exception_handler,
+    global_exception_handler
+)
 from src.core.logging import setup_logging, logger
 from src.config.settings import settings
 from src.core.context import extract_tenant_id_from_request, set_tenant_id
@@ -42,6 +49,12 @@ except Exception:
         def time(self): return self._Ctx()
 
 app = FastAPI(title="Headless Knowledge Graph Platform")
+
+
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, global_exception_handler)
+
 
 REQ_COUNTER = Counter("http_requests_total", "Total HTTP requests", ["method", "path", "status"])
 LATENCY = Histogram("http_request_latency_ms", "Request latency ms", ["method", "path"])
