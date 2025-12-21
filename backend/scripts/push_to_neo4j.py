@@ -3,6 +3,10 @@ import os
 import json
 from typing import List, Dict
 from neo4j import GraphDatabase
+from dotenv import load_dotenv
+
+# Загрузка .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 KB_DIR = os.path.join(BASE_DIR, 'kb')

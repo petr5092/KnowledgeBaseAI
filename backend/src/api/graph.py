@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from src.services.graph.neo4j_repo import relation_context, neighbors
+from src.services.graph.neo4j_repo import relation_context, neighbors, get_node_details
 from src.config.settings import settings
 from src.services.roadmap_planner import plan_route
 from src.services.questions import select_examples_for_topics, all_topic_uids_from_examples
@@ -11,6 +11,13 @@ router = APIRouter(prefix="/v1/graph")
 class ViewportQuery(BaseModel):
     center_uid: str
     depth: int = 1
+
+@router.get("/node/{uid}")
+async def get_node(uid: str) -> Dict:
+    data = get_node_details(uid)
+    if not data:
+        raise HTTPException(status_code=404, detail="Node not found")
+    return data
 
 @router.get("/viewport")
 async def viewport(center_uid: str, depth: int = 1) -> Dict:
