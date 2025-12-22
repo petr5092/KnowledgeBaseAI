@@ -102,7 +102,8 @@ export function NodeDetailsSidebar({ uid, onClose, onAskAI }: Props) {
     }
   }, [uid])
 
-  if (!uid) return null
+  // Анимация: панель всегда рендерится, но уезжает за экран
+  const isVisible = !!uid
 
   return (
     <div
@@ -122,7 +123,8 @@ export function NodeDetailsSidebar({ uid, onClose, onAskAI }: Props) {
         flexDirection: 'column',
         gap: 16,
         boxShadow: '-4px 0 20px rgba(0,0,0,0.5)',
-        transition: 'transform 0.3s ease',
+        transform: isVisible ? 'translateX(0)' : 'translateX(100%)', // Анимация выезда
+        transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)', // Плавная кривая (easeOut)
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

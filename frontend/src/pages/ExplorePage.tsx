@@ -12,7 +12,8 @@ type ExplorePageProps = {
   onSelectUid: (uid: string) => void
 }
 
-type VisNode = VisNetworkNode & {
+type VisNode = Omit<VisNetworkNode, 'id'> & {
+  id: string
   x?: number
   y?: number
 }
@@ -170,7 +171,7 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
     let nodes = baseNodes
     if (isContextValid && savedPositions) {
       nodes = baseNodes.map((n) => {
-        const pos = savedPositions[n.id as string]
+        const pos = savedPositions[n.id] // Теперь TS знает, что n.id — строка
         // Если позиции для узла нет, оставляем как есть (vis-network сам расставит)
         if (!pos) return n
         return { ...n, x: pos.x, y: pos.y }
@@ -219,17 +220,14 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
 
     // Восстанавливаем камеру из REF (не триггерит эффект)
     const savedCamera = graphStateRef.current.camera
-    console.log('[Explore] Init Network. Saved camera:', savedCamera, 'Context valid:', isContextValid)
     
     if (savedCamera && isContextValid) {
       // Инициализируем ref сразу, чтобы при быстром уходе он не был null
       cameraRef.current = savedCamera
 
-      console.log('[Explore] Restoring camera position...')
       // Используем setTimeout, чтобы дать vis-network инициализироваться перед сдвигом камеры
       setTimeout(() => {
         if (!isMounted) return 
-        console.log('[Explore] MOVING CAMERA NOW to:', savedCamera.position)
         network.moveTo({
           position: savedCamera.position,
           scale: savedCamera.scale,
@@ -287,8 +285,6 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
       const lastKnownCamera = cameraRef.current || { position: network.getViewPosition(), scale: network.getScale() }
       const positions = network.getPositions() // Получаем позиции узлов
       
-      console.log('[Explore] Unmounting. Saving camera:', lastKnownCamera)
-      
       saveGraphState({
         camera: lastKnownCamera,
         positions: positions, // Сохраняем позиции
@@ -305,11 +301,9 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
     
     // Используем REF для проверки камеры
     if (graphStateRef.current.camera && isContextValid) {
-        console.log('[Explore] Skipping focus because camera is restored')
         return
     }
 
-    console.log('[Explore] Focusing on node (default behavior)')
     const allNodes = network.body.data.nodes
     if (!allNodes.get(selectedUid)) return
 

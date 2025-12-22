@@ -1,150 +1,133 @@
-# KnowledgeBaseAI
+# KnowledgeBaseAI Frontend
 
-[![CI](https://github.com/AndrewHakmi/KnowledgeBaseAI/actions/workflows/ci.yml/badge.svg)](https://github.com/AndrewHakmi/KnowledgeBaseAI/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-BUSL--1.1-blue)](#license)
-[![Backend](https://img.shields.io/badge/backend-FastAPI-009688)](./backend/README.md)
-[![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61DAFB)](./frontend/README.md)
-[![Graph](https://img.shields.io/badge/graph-Neo4j-4581C3)](https://neo4j.com/)
-[![Vector](https://img.shields.io/badge/vector-Qdrant-FF4D4D)](https://qdrant.tech/)
+React + TypeScript + Vite приложение для визуализации и управления графом знаний.
 
-KnowledgeBaseAI is a **knowledge graph platform** that turns fragmented learning content into a structured, queryable, and explainable graph of concepts, skills, methods, and prerequisites.
+## 🏗️ Архитектура и Структура
 
-It is designed to power:
+Проект организован по принципу разделения ответственности (Separation of Concerns).
 
-- adaptive learning paths
-- curriculum planning
-- knowledge analytics and quality control
-- AI-assisted knowledge construction
+### Основные директории
 
-## Live
+*   **`src/pages`**: Страницы приложения. Каждая страница — это отдельный маршрут (Route).
+    *   `ExplorePage.tsx`: Главная страница с интерактивным графом (`vis-network`).
+    *   `AnalyticsPage.tsx`: Страница аналитики.
+    *   `RoadmapPage.tsx`: Дорожная карта обучения.
+*   **`src/context`**: Глобальное управление состоянием (State Management).
+    *   `GraphContext.tsx`: Хранилище данных графа, которое живет "над" страницами и сохраняет данные при навигации.
+*   **`src/components`**: Переиспользуемые UI компоненты.
+    *   `NodeDetailsSidebar.tsx`: Боковая панель с детальной информацией об узле.
+*   **`src/config`**: Конфигурационные файлы (UI темы, константы).
+    *   `graphTheme.ts`: Цвета узлов, толщина линий, настройки физики.
+    *   `appConfig.ts`: Глобальные настройки приложения (например, ID стартового узла).
+*   **`src/api.ts`**: Слой общения с Бэкендом (запросы fetch/axios).
 
-- UI: https://kb.studyninja.ru, https://kb.xteam.pro
-- API: https://api.kb.studyninja.ru, https://api.kb.xteam.pro
+---
 
-## Why it matters
+## 🧠 Как работает Граф (ExplorePage)
 
-Most learning platforms store content as pages and videos. KnowledgeBaseAI stores it as a **graph**:
+Страница `ExplorePage` отвечает за отрисовку графа знаний. Она использует библиотеку **vis-network**, которая рисует узлы и связи на `Canvas` и симулирует физику (отталкивание узлов).
 
-- prerequisites become explicit
-- gaps and inconsistencies become measurable
-- learning paths become computable
-- explanations become traceable ("why this topic next")
+### Проблема навигации
+В React при переходе между вкладками (например, "Explore" -> "Аналитика") компоненты страницы полностью уничтожаются. Это значит, что граф пропадает, а при возвращении загружается заново (узлы разлетаются, камера сбрасывается в центр).
 
-## What you can build on top
+### Решение: Сохранение Состояния (GraphContext)
 
-- LMS integrations (progress in, recommendations out)
-- adaptive roadmaps per learner
-- content QA dashboards (coverage, orphan nodes, missing links)
-- AI copilots for curriculum designers
+Мы реализовали механизм "кеширования" состояния графа, чтобы переходы были мгновенными и незаметными для пользователя.
 
-## Product highlights
+**Как это работает (Пошагово):**
 
-- **Stateless core**: user progress can live in an external LMS; the platform focuses on graph intelligence.
-- **Graph-first model**: subjects → sections → topics → skills → methods, with prerequisites and weighted links.
-- **Admin tooling**: generate/import knowledge bases, recompute weights, validate snapshots.
-- **Observability-ready**: Prometheus metrics, structured logging, correlation IDs.
-- **Safety-first graph mutations**: Proposals pipeline with validation, rebase, integrity gate and atomic commit.
-- **Explainability**: Evidence attached to changes and diff views for HITL review.
+1.  **Глобальное Хранилище (`GraphContext`)**
+    *   Мы создали контекст, который оборачивает все приложение (`main.tsx`).
+    *   Он хранит: `viewport` (сами данные: узлы и связи), `camera` (координаты камеры и зум) и `positions` (координаты каждого узла X,Y).
+    *   Поскольку контекст находится на самом верху, он **не уничтожается** при смене страниц.
 
-## Quickstart (Docker)
+2.  **Загрузка Страницы (Монтирование)**
+    *   Когда вы открываете `ExplorePage`, компонент проверяет: "Есть ли данные в Контексте?".
+    *   **Если ДА:** Он берет готовые данные и координаты узлов. Граф создается сразу в нужном виде, без анимации "разлетания".
+    *   **Если НЕТ:** Он делает запрос к API (`getViewport`), загружает данные и рисует их с нуля.
+
+3.  **Восстановление Камеры**
+    *   Сразу после создания графа мы смотрим в Контекст: "Была ли сохранена позиция камеры?".
+    *   Если была, мы вызываем `network.moveTo(...)`, чтобы мгновенно перенести взгляд пользователя в ту точку, где он был в прошлый раз.
+
+4.  **Уход со Страницы (Размонтирование)**
+    *   Когда вы нажимаете на другую вкладку, срабатывает функция очистки (`cleanup`).
+    *   В этот момент мы "замораживаем" текущее состояние: берем текущие координаты камеры и позиции всех узлов и сохраняем их в `GraphContext`.
+
+### 🗂️ Детальная информация (NodeDetailsSidebar)
+
+При взаимодействии с графом пользователь может получить подробности об узле.
+
+1.  **Клик по узлу:**
+    *   `vis-network` генерирует событие `selectNode`.
+    *   Мы обновляем состояние `detailsUid` (ID выбранного узла).
+2.  **Открытие Панели:**
+    *   Справа плавно выезжает компонент `NodeDetailsSidebar`.
+    *   Этот компонент делает **отдельный запрос** к API (`/v1/graph/node/{uid}`), чтобы получить полные данные (метаданные, списки связей, описание).
+    *   В панели отображаются:
+        *   Заголовок и Тип узла.
+        *   Входящие связи (кто ссылается на этот узел).
+        *   Исходящие связи (на кого ссылается этот узел).
+        *   Действия ("Спросить AI", "Начать учить").
+
+---
+
+## 🎨 Настройка Внешнего Вида (Theming)
+
+Весь дизайн графа вынесен в файл `src/config/graphTheme.ts`. Вам не нужно искать цвета по коду компонентов.
+
+**Пример `graphTheme.ts`:**
+```typescript
+export const GRAPH_THEME = {
+  nodes: {
+    colors: {
+      Subject: '#ff9f1c', // Цвет предметов
+      Topic: '#7c5cff',   // Цвет тем
+    },
+    sizes: {
+      Subject: 40, // Размер предметов
+      Topic: 24,
+    }
+  },
+  physics: {
+    springLength: 200, // Длина связей (пружинок)
+  }
+}
+```
+Чтобы изменить цвет или размер, просто поменяйте значения в этом файле.
+
+---
+
+## 🛠️ Запуск и Разработка
 
 ```bash
-cp .env.example .env.dev
-ENV_FILE=.env.dev docker compose --env-file .env.dev up -d --build
+# Установка зависимостей
+npm install
+
+# Запуск локального сервера (доступен на http://localhost:5173)
+npm run dev
 ```
 
-## What's new (backend)
+## ⚠️ Важные технические моменты
 
-- Proposals pipeline:
-  - `POST /v1/proposals` creates DRAFT with deterministic checksum
-  - `POST /v1/proposals/{id}/commit` applies ops atomically (Neo4j), audits to Postgres
-  - `GET /v1/proposals/{id}` fetches proposal
-  - `POST /v1/proposals/{id}/approve` triggers commit, `POST /v1/proposals/{id}/reject` sets status
-  - `GET /v1/proposals` lists proposals with filters
-- Integrity gate:
-  - ID-only rebase detection
-  - PREREQ cycle check
-  - Dangling Skill rejection (requires BASED_ON)
-  - ASYNC fallback when checks exceed threshold
-- Evidence & Diff:
-  - `GET /v1/proposals/{id}/diff` returns before/after and evidence chunk text
-  - Nodes with evidence create `SourceChunk` and `EVIDENCED_BY` relation
-- Vector layer:
-  - Ingestion: normalize, chunk, deterministic embed to Qdrant (`kb_chunks`)
-  - Sync/rescore: Graph.Committed consumer upserts entity vectors (`kb_entities`)
-- Observability:
-  - `/metrics` endpoint, counters for integrity violations and ingestion success
-  - `X-Correlation-ID` middleware and audit propagation
-- Migrations & safety:
-  - Schema version gatekeeper on startup
-  - No direct Neo4j writes outside CommitWorker (guarded by tests)
+*   **useRef:** Используется для хранения ссылок на `network` (инстанс графа) и `cameraRef`, чтобы иметь доступ к актуальным данным внутри замыканий `useEffect` и таймеров, не вызывая лишних перерисовок.
+*   **Race Conditions:** При инициализации `vis-network` используется `setTimeout(..., 100)`, чтобы дать браузеру время отрисовать контейнер (DOM) перед тем, как двигать камеру. Без этого координаты могут быть некорректными.
 
-## Documentation (technical)
+## 🚀 Changelog (Эпик 2: Модуль "Explore")
 
-This README stays product-focused. Technical details live in dedicated docs:
+Реализованы ключевые функции для превращения прототипа в полноценный инструмент анализа.
 
-- Backend overview: [`backend/README.md`](./backend/README.md)
-- Frontend overview: [`frontend/README.md`](./frontend/README.md)
-- Backend development: [`backend/development.md`](./backend/development.md)
-- Backend deployment: [`backend/deployment.md`](./backend/deployment.md)
-- Frontend development: [`frontend/development.md`](./frontend/development.md)
-- Frontend deployment: [`frontend/deployment.md`](./frontend/deployment.md)
+### [EXP-01] Оптимизация рендеринга vis-network
+*   **Проблема:** При переключении вкладок граф пересоздавался, теряя позицию камеры и заставляя узлы "разлетаться".
+*   **Решение:**
+    *   Внедрен `GraphContext` для глобального хранения состояния (viewport, camera, node positions).
+    *   Реализована логика восстановления позиции камеры и координат узлов при монтировании компонента.
+    *   Устранены лишние ре-рендеры и гонки состояний (Race Conditions).
 
-## Technical summary (short)
-
-- Backend: FastAPI (Python 3.12)
-- Frontend: React + TypeScript + Vite
-- Storage: Neo4j (graph), Postgres (users/auth), Qdrant (vectors)
-- Jobs: Redis + ARQ
-- Edge: Traefik (TLS + routing)
-
-## API highlights
-
-- Graph & assistant: `/v1/*` routes as before
-- Proposals: `/v1/proposals`, review & diff endpoints
-- Metrics: `/metrics`
-- Health: `/health`
-
-## Security model (short)
-
-- JWT authentication (`/v1/auth/*`)
-- Admin endpoints protected by role-based access (`/v1/admin/*`)
-- Bootstrap first admin via env on first deploy
-
-## Changelog
-
-- See `Changelog.md` for recent changes and checkpoints.
-
-## Roadmap (global)
-
-### Phase 1 — Platform hardening
-- production-grade auth hardening (rate limiting, password policy, audit logs)
-- migrations for Postgres schema
-- operational playbooks (backup/restore, incident response)
-
-### Phase 2 — Integrations & ecosystem
-- LMS connectors (import progress, export recommendations)
-- OpenAPI client generation and SDKs
-- webhooks/events for downstream systems
-
-### Phase 3 — Intelligence layer
-- improved graph quality scoring and anomaly detection
-- explainable recommendations (traceable paths)
-- hybrid retrieval (graph + vectors) for assistants
-
-### Phase 4 — Productization
-- multi-tenant support
-- admin UI for curriculum designers
-- enterprise deployment options
-
-## Contributing
-
-- Please read the development guides (backend/frontend).
-- Use feature branches and open PRs.
-- Never commit secrets (production env files must be ignored).
-
-## License
-
-This project is licensed under the **Business Source License 1.1 (BUSL-1.1)**.
-
-See: [`LICENSE`](./LICENSE)
+### [EXP-02] Расширенная карточка узла
+*   **Задача:** При клике на узел (событие `selectNode`) открывать детальную панель (Sidebar/Drawer) справа.
+*   **Решение:**
+    *   Создан компонент `NodeDetailsSidebar`, который рендерится условно при наличии `detailsUid`.
+    *   Реализована загрузка расширенных данных узла (incoming/outgoing relations) через API.
+    *   Добавлены кнопки действий ("Спросить AI", "Начать учить").
+    *   Панель имеет анимацию появления и кнопку закрытия.
