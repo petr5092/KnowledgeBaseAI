@@ -14,10 +14,14 @@ class ToolInfo(BaseModel):
     name: str
     description: str
 
+class ToolsResponse(BaseModel):
+    tools: List[ToolInfo]
+
 @router.get(
     "/tools",
     summary="Список инструментов ассистента",
-    description="Возвращает перечень доступных возможностей ИИ-ассистента."
+    description="Возвращает перечень доступных возможностей ИИ-ассистента.",
+    response_model=ToolsResponse,
 )
 async def tools() -> Dict:
     """

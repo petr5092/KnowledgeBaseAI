@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException, Header, Security
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 
 from src.api.deps import require_admin
 from src.services.graph.neo4j_repo import Neo4jRepo
 
-router = APIRouter(prefix="/v1/admin/graph", dependencies=[Depends(require_admin)], tags=["Админка: граф"])
+router = APIRouter(prefix="/v1/admin/graph", dependencies=[Depends(require_admin), Security(HTTPBearer())], tags=["Админка: граф"])
 
 ALLOWED_NODE_LABELS = {
     "Subject",

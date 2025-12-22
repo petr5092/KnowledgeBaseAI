@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Security
+from fastapi.security import HTTPBearer
 from typing import Dict, Optional
 from pydantic import BaseModel, Field
 from src.schemas.proposal import Proposal, Operation, ProposalStatus
@@ -10,7 +11,7 @@ from src.db.pg import get_proposal, set_proposal_status, list_proposals
 from src.services.diff import build_diff
 from src.services.impact import impact_subgraph_for_proposal
 
-router = APIRouter(prefix="/v1/proposals", tags=["Управление контентом"])
+router = APIRouter(prefix="/v1/proposals", tags=["Управление контентом"], dependencies=[Security(HTTPBearer())])
 
 def require_tenant() -> str:
     tid = get_tenant_id()

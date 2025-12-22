@@ -27,21 +27,41 @@ class RegisterResponse(BaseModel):
     ok: bool
     id: int
     email: str
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"ok": True, "id": 42, "email": "user@example.com"}]
+        }
+    }
 
 class LoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"access_token": "eyJ...","refresh_token":"eyJ...","token_type":"bearer"}]
+        }
+    }
 
 class RefreshResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"access_token": "eyJ...","refresh_token":"eyJ...","token_type":"bearer"}]
+        }
+    }
 
 class MeResponse(BaseModel):
     id: int
     email: str
     role: str
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"id": 42, "email": "user@example.com", "role": "admin"}]
+        }
+    }
 
 def _bearer_token(authorization: str | None) -> str | None:
     if not authorization:

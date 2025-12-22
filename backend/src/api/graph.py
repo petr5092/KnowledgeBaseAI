@@ -29,6 +29,18 @@ class ViewportResponse(BaseModel):
     edges: List[EdgeDTO]
     center_uid: str
     depth: int
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "nodes": [{"id": 1, "uid": "TOP-DEMO", "labels": ["Topic"]}],
+                    "edges": [{"from": 1, "to": 2, "type": "PREREQ"}],
+                    "center_uid": "TOP-DEMO",
+                    "depth": 1,
+                }
+            ]
+        }
+    }
 
 @router.get(
     "/viewport",
@@ -76,6 +88,17 @@ class ChatResponse(BaseModel):
     answer: str
     usage: Optional[Dict] = None
     context: RelationContext
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "answer": "Тема B опирается на базовые понятия из темы A...",
+                    "usage": {"prompt_tokens": 120, "completion_tokens": 56, "total_tokens": 176},
+                    "context": {"rel": "PREREQ", "props": {"weight": 0.7}, "from_title": "Тема A", "to_title": "Тема B"},
+                }
+            ]
+        }
+    }
 
 @router.post(
     "/chat",
@@ -147,6 +170,18 @@ class RoadmapItem(BaseModel):
 
 class RoadmapResponse(BaseModel):
     items: List[RoadmapItem]
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "items": [
+                        {"uid": "TOP-ALG-1", "title": "Алгебра: основы", "mastered": 0.2, "missing_prereqs": 1, "priority": 0.91},
+                        {"uid": "TOP-ALG-2", "title": "Линейные уравнения", "mastered": 0.0, "missing_prereqs": 0, "priority": 0.85},
+                    ]
+                }
+            ]
+        }
+    }
 
 @router.post(
     "/roadmap",
@@ -189,6 +224,18 @@ class QuestionDTO(BaseModel):
 
 class AdaptiveQuestionsResponse(BaseModel):
     questions: List[QuestionDTO]
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "questions": [
+                        {"uid": "Q-123", "title": "Решите уравнение", "statement": "2x+3=7", "difficulty": 0.4, "topic_uid": "TOP-ALG-2"},
+                        {"uid": "Q-456", "title": "График функции", "statement": "y=2x+1", "difficulty": 0.6, "topic_uid": "TOP-ALG-1"},
+                    ]
+                }
+            ]
+        }
+    }
 
 @router.post(
     "/adaptive_questions",

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Security
+from fastapi.security import HTTPBearer
 from typing import Dict, Optional
 from pydantic import BaseModel
 from src.services.jobs.rebuild import start_rebuild_async, get_job_status
@@ -6,7 +7,7 @@ from src.services.graph.utils import recompute_relationship_weights
 from src.workers.integrity_async import process_once
 from src.workers.outbox_publisher import process_once as outbox_publish_once
 
-router = APIRouter(prefix="/v1/maintenance", tags=["Обслуживание"])
+router = APIRouter(prefix="/v1/maintenance", tags=["Обслуживание"], dependencies=[Security(HTTPBearer())])
 
 class JobQueuedResponse(BaseModel):
     job_id: str

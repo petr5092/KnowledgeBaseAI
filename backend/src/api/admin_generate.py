@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Security
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import Dict, List
 from src.services.kb.builder import generate_subject_openai_async
 from src.services.graph.utils import sync_from_jsonl, compute_static_weights, analyze_knowledge
 from src.api.deps import require_admin
 
-router = APIRouter(prefix="/v1/admin", dependencies=[Depends(require_admin)], tags=["Админка: генерация"])
+router = APIRouter(prefix="/v1/admin", dependencies=[Depends(require_admin), Security(HTTPBearer())], tags=["Админка: генерация"])
 
 class GenerateSubjectInput(BaseModel):
     subject_uid: str

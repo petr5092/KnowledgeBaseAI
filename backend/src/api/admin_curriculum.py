@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Security
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import Dict, List
 from src.services.curriculum.repo import create_curriculum, add_curriculum_nodes, get_graph_view
 from src.api.deps import require_admin
 
-router = APIRouter(prefix="/v1/admin", dependencies=[Depends(require_admin)], tags=["Админка: учебные планы"])
+router = APIRouter(prefix="/v1/admin", dependencies=[Depends(require_admin), Security(HTTPBearer())], tags=["Админка: учебные планы"])
 
 class CreateCurriculumInput(BaseModel):
     code: str
