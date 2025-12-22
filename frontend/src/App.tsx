@@ -7,6 +7,7 @@ import RoadmapPage from './pages/RoadmapPage'
 import SettingsPage from './pages/SettingsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import { assistantChat, type AssistantAction } from './api'
+import ThemeToggle from './components/ThemeToggle'
 
 type ChatMessage = {
   id: string
@@ -194,6 +195,8 @@ export default function App() {
               >
                 Домой
               </button>
+
+              <ThemeToggle />  {/* ← здесь */}
             </div>
           </div>
 

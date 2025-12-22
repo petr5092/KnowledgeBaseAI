@@ -1,4 +1,4 @@
-:root {
+/* :root {
   --bg: #070a12;
   --panel: rgba(255, 255, 255, 0.06);
   --panel-2: rgba(255, 255, 255, 0.1);
@@ -99,4 +99,167 @@ button {
 
 .kb-input:focus {
   border-color: rgba(124, 92, 255, 0.6);
+} */
+
+:root {
+  /* Тёмная тема по умолчанию */
+  --bg: #0a0e17;               /* чуть светлее чистого чёрного */
+  --panel: rgba(255, 255, 255, 0.08);
+  --panel-2: rgba(255, 255, 255, 0.12);
+  --text: #e2e8f0;             /* мягкий светло-серый, контраст ~12:1 */
+  --muted: #94a3b8;            /* серый для второстепенного текста */
+  --border: rgba(255, 255, 255, 0.15);
+  --accent: #7c5cff;
+  --accent-2: #2ee9a6;
+  --danger: #ff6b6b;
+
+  color-scheme: dark;
+  color: var(--text);
+  background-color: var(--bg);
+
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  line-height: 1.5;
+  font-weight: 450;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Светлая тема */
+html:not(.dark) {
+  --bg: #f8fafc;
+  --panel: rgba(255, 255, 255, 0.9);
+  --panel-2: rgba(255, 255, 255, 1);
+  --text: #1e293b;             /* тёмно-синий, контраст ~13:1 */
+  --muted: #64748b;
+  --border: rgba(0, 0, 0, 0.12);
+  --accent: #7c5cff;
+  --accent-2: #2ee9a6;
+  --danger: #ff6b6b;
+
+  color-scheme: light;
+}
+
+/* Плавные переходы */
+html {
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease;
+}
+
+* {
+  box-sizing: border-box;
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease,
+    opacity 0.3s ease;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+#root {
+  height: 100%;
+}
+
+.kb-bg {
+  background:
+    radial-gradient(1200px 800px at 20% 10%, rgba(124, 92, 255, 0.18), transparent 60%),
+    radial-gradient(900px 700px at 80% 20%, rgba(46, 233, 166, 0.12), transparent 55%),
+    radial-gradient(900px 700px at 50% 90%, rgba(255, 77, 109, 0.06), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+  transition: background 0.6s ease;
+}
+
+html:not(.dark) .kb-bg {
+  background:
+    radial-gradient(1200px 800px at 20% 10%, rgba(124, 92, 255, 0.08), transparent 60%),
+    radial-gradient(900px 700px at 80% 20%, rgba(46, 233, 166, 0.06), transparent 55%),
+    radial-gradient(900px 700px at 50% 90%, rgba(255, 77, 109, 0.04), transparent 55%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.02), transparent);
+}
+
+.kb-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  backdrop-filter: blur(14px);
+}
+
+.kb-btn {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+html:not(.dark) .kb-btn {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.kb-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+html:not(.dark) .kb-btn:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.kb-btn-primary {
+  border-color: rgba(124, 92, 255, 0.5);
+  background: rgba(124, 92, 255, 0.22);
+}
+
+html:not(.dark) .kb-btn-primary {
+  background: rgba(124, 92, 255, 0.14);
+}
+
+.kb-btn-primary:hover {
+  background: rgba(124, 92, 255, 0.3);
+}
+
+html:not(.dark) .kb-btn-primary:hover {
+  background: rgba(124, 92, 255, 0.22);
+}
+
+.kb-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+html:not(.dark) .kb-input {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.kb-input:focus {
+  border-color: var(--accent);
 }
