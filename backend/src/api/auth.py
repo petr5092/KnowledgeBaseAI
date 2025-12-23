@@ -5,8 +5,9 @@ from pydantic import BaseModel
 from src.services.auth.jwt_tokens import create_access_token, create_refresh_token, decode_token
 from src.services.auth.passwords import hash_password, verify_password
 from src.services.auth.users_repo import create_user, get_user_by_email, get_user_by_id
+from pydantic import BaseModel
 
-router = APIRouter(prefix="/v1/auth")
+router = APIRouter(prefix="/v1/auth", tags=["Аутентификация"])
 
 
 class RegisterPayload(BaseModel):
@@ -22,6 +23,45 @@ class LoginPayload(BaseModel):
 class RefreshPayload(BaseModel):
     refresh_token: str
 
+class RegisterResponse(BaseModel):
+    ok: bool
+    id: int
+    email: str
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"ok": True, "id": 42, "email": "user@example.com"}]
+        }
+    }
+
+class LoginResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"access_token": "eyJ...","refresh_token":"eyJ...","token_type":"bearer"}]
+        }
+    }
+
+class RefreshResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"access_token": "eyJ...","refresh_token":"eyJ...","token_type":"bearer"}]
+        }
+    }
+
+class MeResponse(BaseModel):
+    id: int
+    email: str
+    role: str
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"id": 42, "email": "user@example.com", "role": "admin"}]
+        }
+    }
 
 def _bearer_token(authorization: str | None) -> str | None:
     if not authorization:
@@ -34,8 +74,18 @@ def _bearer_token(authorization: str | None) -> str | None:
     return parts[1].strip() or None
 
 
-@router.post("/register")
+@router.post("/register", summary="Регистрация", description="Создает пользователя и возвращает его идентификатор и email.", response_model=RegisterResponse)
 def register(payload: RegisterPayload):
+    """
+    Принимает:
+      - email: почта пользователя
+      - password: пароль в открытом виде
+
+    Возвращает:
+      - ok: True
+      - id: идентификатор пользователя
+      - email: почта пользователя
+    """
     try:
         existing = get_user_by_email(payload.email)
     except RuntimeError:
@@ -49,8 +99,18 @@ def register(payload: RegisterPayload):
     return {"ok": True, "id": user.id, "email": user.email}
 
 
-@router.post("/login")
+@router.post("/login", summary="Вход", description="Проверяет учетные данные и возвращает пару токенов (access/refresh).", response_model=LoginResponse)
 def login(payload: LoginPayload):
+    """
+    Принимает:
+      - email: почта пользователя
+      - password: пароль
+
+    Возвращает:
+      - access_token: JWT-токен доступа
+      - refresh_token: JWT-токен обновления
+      - token_type: 'bearer'
+    """
     try:
         user = get_user_by_email(payload.email)
     except RuntimeError:
@@ -68,8 +128,17 @@ def login(payload: LoginPayload):
     }
 
 
-@router.post("/refresh")
+@router.post("/refresh", summary="Обновление токена", description="Обновляет пару токенов по действительному refresh токену.", response_model=RefreshResponse)
 def refresh(payload: RefreshPayload):
+    """
+    Принимает:
+      - refresh_token: валидный токен обновления
+
+    Возвращает:
+      - access_token: новый токен доступа
+      - refresh_token: новый токен обновления
+      - token_type: 'bearer'
+    """
     try:
         data = decode_token(payload.refresh_token)
     except Exception:
@@ -95,8 +164,17 @@ def refresh(payload: RefreshPayload):
     }
 
 
-@router.get("/me")
+@router.get("/me", summary="Текущий пользователь", description="Возвращает информацию о пользователе по access-токену.", response_model=MeResponse)
 def me(authorization: str | None = Header(default=None)):
+    """
+    Принимает:
+      - Authorization: заголовок формата 'Bearer <access_token>'
+
+    Возвращает:
+      - id: идентификатор пользователя
+      - email: почта
+      - role: роль пользователя
+    """
     token = _bearer_token(authorization)
     if not token:
         raise HTTPException(status_code=401, detail="missing token")

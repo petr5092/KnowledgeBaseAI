@@ -1,46 +1,21 @@
-import { useMemo, useState } from 'react'
-import ReactFlow, { Background, Controls, MiniMap, addEdge, useEdgesState, useNodesState, type Edge, type Node, type Connection } from 'reactflow'
+import { useMemo, useState, useEffect } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import ReactFlow, { Background, Controls, MiniMap, type Node, type Connection } from 'reactflow'
 import 'reactflow/dist/style.css'
+
+import { type RootState, type AppDispatch } from '../store'
+import * as actions from '../store/editSlice'
 
 type EditPageProps = {
   selectedUid: string
   onSelectUid: (uid: string) => void
 }
 
-function makeInitialGraph(selectedUid: string) {
-  const nodes: Node[] = [
-    {
-      id: selectedUid,
-      position: { x: 0, y: 0 },
-      data: { label: selectedUid },
-      type: 'default',
-    },
-    {
-      id: 'SKL-DEMO',
-      position: { x: 240, y: 120 },
-      data: { label: 'SKL-DEMO' },
-      type: 'default',
-    },
-  ]
-
-  const edges: Edge[] = [
-    {
-      id: `${selectedUid}->SKL-DEMO`,
-      source: selectedUid,
-      target: 'SKL-DEMO',
-      label: 'USES_SKILL',
-      animated: true,
-      style: { stroke: 'rgba(46, 233, 166, 0.8)' },
-    },
-  ]
-
-  return { nodes, edges }
-}
-
 export default function EditPage(props: EditPageProps) {
-  const initial = useMemo(() => makeInitialGraph(props.selectedUid), [props.selectedUid])
-  const [nodes, setNodes, onNodesChange] = useNodesState(initial.nodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges)
+  const dispatch = useDispatch<AppDispatch>()
+
+  const { nodes, edges } = useSelector((state: RootState) => state.edit)
+
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(props.selectedUid || null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [canSave, setCanSave] = useState(false);
@@ -83,9 +58,9 @@ export default function EditPage(props: EditPageProps) {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={(c: Connection) => setEdges((eds) => addEdge({ ...c, animated: true, label: 'linked' }, eds))}
+          onNodesChange={(changes) => dispatch(actions.onNodesChange(changes))}
+          onEdgesChange={(changes) => dispatch(actions.onEdgesChange(changes))}
+          onConnect={(c: Connection) => dispatch(actions.onConnect(c))}
           onSelectionChange={(sel) => {
             const n = sel.nodes?.[0]
             const e = sel.edges?.[0]
@@ -103,6 +78,7 @@ export default function EditPage(props: EditPageProps) {
 
       <div className="kb-panel" style={{ padding: 12, borderRadius: 14, display: 'grid', gap: 10 }}>
         <div style={{ fontSize: 12, color: 'var(--muted)' }}>Свойства</div>
+
         {selectedNode && (
           <div style={{ display: 'grid', gap: 8 }}>
             <div style={{ fontSize: 13, fontWeight: 650 }}>Узел</div>
@@ -116,19 +92,14 @@ export default function EditPage(props: EditPageProps) {
                 <input
                   className="kb-input"
                   value={String((selectedNode.data as any)?.label || '')}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    setNodes((nds) => nds.map((n) => (n.id === selectedNode.id ? { ...n, data: { ...(n.data as any), label: v } } : n)))
-                  }}
+                  onChange={(e) => dispatch(actions.updateNodeLabel({ id: selectedNode.id, label: e.target.value }))}
                 />
               </label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   className="kb-btn"
                   onClick={() => {
-                    const id = selectedNode.id
-                    setNodes((nds) => nds.filter((n) => n.id !== id))
-                    setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id))
+                    dispatch(actions.deleteNode(selectedNode.id))
                     setSelectedNodeId(null)
                   }}
                 >
@@ -138,6 +109,7 @@ export default function EditPage(props: EditPageProps) {
             </div>
           </div>
         )}
+
         {selectedEdge && (
           <div style={{ display: 'grid', gap: 8 }}>
             <div style={{ fontSize: 13, fontWeight: 650 }}>Ребро</div>
@@ -151,18 +123,14 @@ export default function EditPage(props: EditPageProps) {
                 <input
                   className="kb-input"
                   value={String((selectedEdge.label as any) || '')}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    setEdges((eds) => eds.map((edge) => (edge.id === selectedEdge.id ? { ...edge, label: v } : edge)))
-                  }}
+                  onChange={(e) => dispatch(actions.updateEdgeLabel({ id: selectedEdge.id, label: e.target.value }))}
                 />
               </label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   className="kb-btn"
                   onClick={() => {
-                    const id = selectedEdge.id
-                    setEdges((eds) => eds.filter((e) => e.id !== id))
+                    dispatch(actions.deleteEdge(selectedEdge.id))
                     setSelectedEdgeId(null)
                   }}
                 >
@@ -172,7 +140,9 @@ export default function EditPage(props: EditPageProps) {
             </div>
           </div>
         )}
+
         {!selectedNode && !selectedEdge && <div style={{ fontSize: 12, color: 'var(--muted)' }}>Выберите узел или ребро</div>}
+
         <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
           <button
             className="kb-btn"
@@ -180,7 +150,7 @@ export default function EditPage(props: EditPageProps) {
               const payload = { nodes, edges }
               try {
                 localStorage.setItem('kb_edit_draft', JSON.stringify(payload))
-              } catch {}
+              } catch { }
             }}
           >
             Сохранить черновик
@@ -191,10 +161,9 @@ export default function EditPage(props: EditPageProps) {
               try {
                 const raw = localStorage.getItem('kb_edit_draft')
                 if (!raw) return
-                const data = JSON.parse(raw) as { nodes: Node[]; edges: Edge[] }
-                setNodes(data.nodes || [])
-                setEdges(data.edges || [])
-              } catch {}
+                const data = JSON.parse(raw)
+                dispatch(actions.setGraph(data))
+              } catch { }
             }}
           >
             Загрузить черновик
@@ -204,7 +173,7 @@ export default function EditPage(props: EditPageProps) {
             onClick={() => {
               try {
                 localStorage.removeItem('kb_edit_draft')
-              } catch {}
+              } catch { }
             }}
           >
             Очистить черновик

@@ -72,7 +72,7 @@ function toVisData(viewport: ViewportResponse) {
       }
     })
 
-  const edges = viewport.edges.map((e, idx): VisEdge => ({
+  const edges = viewport.edges.map((e: any, idx: number): VisNetworkEdge => ({
     id: `${e.source}->${e.target}:${idx}`,
     from: e.source,
     to: e.target,
@@ -286,7 +286,6 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
     network.on('animationFinished', updateCameraRef) // Обновляем камеру после программной анимации (moveTo)
 
     networkRef.current = network
-
     return () => {
       isMounted = false // Предотвращаем выполнение отложенных задач
       // Сохраняем позицию камеры перед уничтожением
@@ -337,20 +336,18 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
           <select
             className="kb-input"
             value={depth}
-            onChange={(e) => setDepth(Number(e.target.value))}
+            onChange={(e) => dispatch(setDepth(Number(e.target.value)))}
             style={{ width: 120 }}
           >
             {[1, 2, 3].map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
+              <option key={d} value={d}>{d}</option>
             ))}
           </select>
         </div>
       </div>
 
       {error && (
-        <div className="kb-panel" style={{ padding: 12, borderRadius: 14, borderColor: 'rgba(255, 77, 109, 0.35)' }}>
+        <div className="kb-panel" style={{ padding: 12, borderRadius: 14, borderColor: 'rgba(255, 77, 109, 0.35)', borderStyle: 'solid', borderWidth: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 650 }}>Ошибка</div>
           <div style={{ marginTop: 6, fontSize: 12, color: 'var(--muted)', whiteSpace: 'pre-wrap' }}>{error}</div>
         </div>
@@ -386,33 +383,13 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
         <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
 
         {loading && (
-          <div
-            className="kb-panel"
-            style={{
-              position: 'absolute',
-              left: 14,
-              bottom: 14,
-              padding: '10px 12px',
-              borderRadius: 14,
-              background: 'rgba(0,0,0,0.35)',
-            }}
-          >
+          <div className="kb-panel" style={{ position: 'absolute', left: 14, bottom: 14, padding: '10px 12px', borderRadius: 14, background: 'rgba(0,0,0,0.35)' }}>
             <div style={{ fontSize: 12, color: 'var(--muted)' }}>Загрузка…</div>
           </div>
         )}
 
         {viewport && (
-          <div
-            className="kb-panel"
-            style={{
-              position: 'absolute',
-              right: 14,
-              bottom: 14,
-              padding: '10px 12px',
-              borderRadius: 14,
-              background: 'rgba(0,0,0,0.35)',
-            }}
-          >
+          <div className="kb-panel" style={{ position: 'absolute', right: 14, bottom: 14, padding: '10px 12px', borderRadius: 14, background: 'rgba(0,0,0,0.35)' }}>
             <div style={{ fontSize: 12, color: 'var(--muted)' }}>Nodes: {viewport.nodes.length}</div>
             <div style={{ fontSize: 12, color: 'var(--muted)' }}>Edges: {viewport.edges.length}</div>
           </div>
