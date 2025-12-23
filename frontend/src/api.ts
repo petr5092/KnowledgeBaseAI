@@ -41,9 +41,28 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   return (await parseBody(res)) as T
 }
 
+// 4.2 Graph Data Model
+export type NodeKind = 'Subject' | 'Section' | 'Topic' | 'Skill' | 'Resource' | 'concept' | 'skill' | 'resource' // Union of real & required types
+
+export interface GraphNode {
+  uid: string
+  title?: string
+  kind: NodeKind
+  data?: Record<string, unknown>
+  [key: string]: unknown // Allow extra props from Neo4j
+}
+
+export interface GraphEdge {
+  source: string
+  target: string
+  relation: string // In Neo4j response this might be 'type' or 'kind'
+  weight?: number
+  [key: string]: unknown
+}
+
 export type ViewportResponse = {
-  nodes: Array<{ uid: string; title?: string; kind?: string }>
-  edges: Array<{ source: string; target: string; kind?: string; weight?: number }>
+  nodes: GraphNode[]
+  edges: GraphEdge[]
   center_uid: string
   depth: number
 }
@@ -51,6 +70,20 @@ export type ViewportResponse = {
 export async function getViewport(params: { center_uid: string; depth: number }) {
   const qs = new URLSearchParams({ center_uid: params.center_uid, depth: String(params.depth) })
   return apiFetch<ViewportResponse>(`/v1/graph/viewport?${qs.toString()}`)
+}
+
+export type NodeDetails = {
+  uid: string
+  title?: string
+  kind?: string
+  labels?: string[]
+  incoming: Array<{ rel: string; uid: string; title?: string }>
+  outgoing: Array<{ rel: string; uid: string; title?: string }>
+  [key: string]: unknown
+}
+
+export async function getNodeDetails(uid: string) {
+  return apiFetch<NodeDetails>(`/v1/graph/node/${uid}`)
 }
 
 export type RoadmapRequest = {

@@ -7,6 +7,7 @@ import RoadmapPage from './pages/RoadmapPage'
 import SettingsPage from './pages/SettingsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import { assistantChat, type AssistantAction } from './api'
+import { APP_CONFIG } from './config/appConfig'
 
 type ChatMessage = {
   id: string
@@ -39,7 +40,7 @@ export default function App() {
   const navigate = useNavigate()
   const title = useActiveRouteTitle()
 
-  const [selectedUid, setSelectedUid] = useState<string>('TOP-DEMO')
+  const [selectedUid, setSelectedUid] = useState<string>(APP_CONFIG.defaultStartNode)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
@@ -152,7 +153,7 @@ export default function App() {
             <button className="kb-btn kb-btn-primary" onClick={() => setChatOpen(true)} style={{ flex: 1 }}>
               Спросить
             </button>
-            <button className="kb-btn" onClick={() => setSelectedUid((prev) => (prev === 'TOP-DEMO' ? 'SKL-DEMO' : 'TOP-DEMO'))}>
+            <button className="kb-btn" onClick={() => setSelectedUid((prev) => (prev === APP_CONFIG.defaultStartNode ? 'sub-cs' : APP_CONFIG.defaultStartNode))}>
               Переключить
             </button>
           </div>

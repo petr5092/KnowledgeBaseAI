@@ -114,7 +114,7 @@ def neighbors(center_uid: str, depth: int = 1) -> Tuple[List[Dict], List[Dict]]:
     depth = max(0, min(int(depth), 6))
     with drv.session() as s:
         query = (
-            "MATCH p=(c {uid:$uid})-[:CONTAINS|PREREQ|HAS_SKILL|LINKED|TARGETS*0.." + str(depth) + "]-(n) "
+            "MATCH p=(c {uid:$uid})-[:CONTAINS|PREREQ|HAS_SKILL|LINKED|TARGETS|HAS_SECTION|HAS_TOPIC|REQUIRES_SKILL|HAS_METHOD|HAS_EXAMPLE|HAS_THEORY|HAS_STEP*0.." + str(depth) + "]-(n) "
             "RETURN collect(DISTINCT n) AS ns, collect(DISTINCT relationships(p)) AS rs"
         )
         res = s.run(query, {"uid": center_uid}).single()
@@ -126,15 +126,28 @@ def neighbors(center_uid: str, depth: int = 1) -> Tuple[List[Dict], List[Dict]]:
             if nid in seen:
                 continue
             seen.add(nid)
-            nodes.append({"id": nid, "uid": n.get("uid"), "label": n.get("title"), "labels": list(n.labels)})
+            # kind - это первая метка (например, Topic, Subject)
+            kind = list(n.labels)[0] if n.labels else "Unknown"
+            nodes.append({
+                "id": nid, 
+                "uid": n.get("uid"), 
+                "title": n.get("title"), # Было label
+                "kind": kind,            # Добавили kind
+                "labels": list(n.labels)
+            })
         added = set()
         for rels in rs:
             for r in rels:
-                key = (r.start_node.id, r.end_node.id, type(r).__name__)
+                key = (r.start_node["uid"], r.end_node["uid"], type(r).__name__)
                 if key in added:
                     continue
                 added.add(key)
-                edges.append({"from": r.start_node.id, "to": r.end_node.id, "type": type(r).__name__})
+                edges.append({
+                    "source": r.start_node["uid"], # Было from
+                    "target": r.end_node["uid"],   # Было to
+                    "kind": type(r).__name__,      # Было type
+                    "weight": r.get("weight", 1.0)
+                })
     drv.close()
     return nodes, edges
 
@@ -172,3 +185,29 @@ def purge_user_artifacts() -> Dict:
         deleted_rels = res2["c"] if res2 else 0
     drv.close()
     return {"deleted_users": deleted_users, "deleted_completed_rels": deleted_rels}
+
+def get_node_details(uid: str) -> Dict:
+    drv = get_driver()
+    data = {}
+    with drv.session() as s:
+        # Получаем свойства узла
+        res = s.run("MATCH (n {uid:$uid}) RETURN n", {"uid": uid}).single()
+        if not res:
+            return {}
+        
+        node = res["n"]
+        data = dict(node)
+        data["labels"] = list(node.labels)
+        # Kind
+        data["kind"] = list(node.labels)[0] if node.labels else "Unknown"
+        
+        # Получаем входящие связи
+        in_res = s.run("MATCH (n {uid:$uid})<-[r]-(other) RETURN type(r) as rel, other.uid as uid, other.title as title", {"uid": uid})
+        data["incoming"] = [{"rel": r["rel"], "uid": r["uid"], "title": r["title"]} for r in in_res]
+        
+        # Получаем исходящие связи
+        out_res = s.run("MATCH (n {uid:$uid})-[r]->(other) RETURN type(r) as rel, other.uid as uid, other.title as title", {"uid": uid})
+        data["outgoing"] = [{"rel": r["rel"], "uid": r["uid"], "title": r["title"]} for r in out_res]
+        
+    drv.close()
+    return data

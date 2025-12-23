@@ -7,20 +7,20 @@ export default defineConfig({
     allowedHosts: ['kb.studyninja.ru', 'kb.xteam.pro', 'dev.kb.studyninja.ru', 'dev.kb.xteam.pro'],
     proxy: {
       '/v1': {
-        target: 'https://api.kb.xteam.pro',
+        target: 'http://localhost:8000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
       '/ws': {
-        target: 'wss://api.kb.xteam.pro',
+        target: 'ws://localhost:8000',
         ws: true,
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
       '/health': {
-        target: 'https://api.kb.xteam.pro',
+        target: 'http://localhost:8000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
     },
   },
