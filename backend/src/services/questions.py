@@ -97,6 +97,54 @@ def select_examples_for_topics(
                     continue
                 e['difficulty'] = _norm(d_raw)
                 pool.append(e)
+    if not pool:
+        titles: Dict[str, str] = {}
+        topics_source: List[Dict] = []
+        if settings.neo4j_uri and settings.neo4j_user and settings.neo4j_password.get_secret_value():
+            try:
+                repo = Neo4jRepo()
+                if topic_uids:
+                    rows = repo.read(
+                        "UNWIND $t AS tuid MATCH (t:Topic {uid:tuid}) RETURN t.uid AS uid, t.title AS title",
+                        {"t": topic_uids},
+                    )
+                else:
+                    rows = repo.read(
+                        "MATCH (t:Topic) RETURN t.uid AS uid, t.title AS title LIMIT 50",
+                        {},
+                    )
+                for r in rows or []:
+                    u = str(r.get("uid") or "")
+                    if not u:
+                        continue
+                    titles[u] = str(r.get("title") or u)
+                    topics_source.append({"uid": u, "title": titles[u]})
+                repo.close()
+            except Exception:
+                topics_source = []
+        source_topics = topic_uids or [t["uid"] for t in topics_source]
+        if not source_topics:
+            source_topics = []
+        i = 0
+        for tu in source_topics:
+            if len(pool) >= max(1, limit):
+                break
+            title = titles.get(tu) or tu
+            for k in range(2):
+                qid = f"Q-STUB-{tu}-{k}"
+                if qid in exclude:
+                    continue
+                pool.append(
+                    {
+                        "uid": qid,
+                        "title": f"Вопрос по теме: {title}",
+                        "statement": f"Опишите ключевое понятие из темы '{title}' и приведите пример.",
+                        "difficulty": 0.5,
+                        "topic_uid": tu,
+                    }
+                )
+                if len(pool) >= limit:
+                    break
     selected: List[Dict] = []
     seen_by_topic: Dict[str, int] = {tu: 0 for tu in topic_uids}
     for e in pool:
@@ -118,4 +166,3 @@ def select_examples_for_topics(
 def all_topic_uids_from_examples() -> List[str]:
     idx = get_examples_indexed()
     return list(idx["by_topic"].keys())
-

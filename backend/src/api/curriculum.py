@@ -3,13 +3,25 @@ from pydantic import BaseModel
 from typing import Dict, List, Set
 from src.services.graph.neo4j_repo import get_driver
 
-router = APIRouter(prefix="/v1/curriculum")
+router = APIRouter(prefix="/v1/curriculum", tags=["Учебные планы"])
 
 class PathfindInput(BaseModel):
     target_uid: str
 
-@router.post("/pathfind")
+class PathfindResponse(BaseModel):
+    target: str
+    path: List[str]
+
+@router.post("/pathfind", summary="Построить порядок темы", description="Возвращает упорядоченный список тем из транзитивного замыкания PREREQ для указанной цели.", response_model=PathfindResponse)
 async def pathfind(payload: PathfindInput) -> Dict:
+    """
+    Принимает:
+      - target_uid: UID конечной темы
+
+    Возвращает:
+      - target: исходный UID
+      - path: упорядоченный список UID тем для прохождения
+    """
     drv = get_driver()
     with drv.session() as s:
         res = s.run(

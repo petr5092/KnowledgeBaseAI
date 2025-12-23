@@ -11,6 +11,14 @@ import { assistantChat, type AssistantAction } from './api'
 import { type RootState } from './store'
 import { setSelectedUid, toggleChat, addMessage } from './store/appSlice'
 import { addTransaction, markSuccess, markFailed } from './store/transactionsSlice'
+import ThemeToggle from './components/ThemeToggle'
+
+type ChatMessage = {
+  id: string
+  role: 'user' | 'assistant'
+  text: string
+  createdAt: number
+}
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
@@ -146,6 +154,15 @@ export default function App() {
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="kb-btn" onClick={() => dispatch(toggleChat())}>Ассистент</button>
               <button className="kb-btn" onClick={() => navigate('/')}>Домой</button>
+              <button className="kb-btn" onClick={() => setChatOpen(true)}>
+                Ассистент
+              </button>
+              <button className="kb-btn" onClick={() => navigate('/')}
+              >
+                Домой
+              </button>
+
+              <ThemeToggle />  {/* ← здесь */}
             </div>
           </div>
 
