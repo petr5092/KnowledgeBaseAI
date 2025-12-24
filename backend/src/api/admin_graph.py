@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header, Security
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 
 from src.api.deps import require_admin
 from src.services.graph.neo4j_repo import Neo4jRepo
 
-router = APIRouter(prefix="/v1/admin/graph", dependencies=[Depends(require_admin)])
+router = APIRouter(prefix="/v1/admin/graph", dependencies=[Depends(require_admin), Security(HTTPBearer())], tags=["Админка: граф"])
 
 ALLOWED_NODE_LABELS = {
     "Subject",
@@ -80,8 +81,17 @@ def _validate_props(props: Dict[str, Any]) -> Dict[str, Any]:
     return props
 
 
-@router.post("/nodes")
-async def create_node(payload: NodeCreateInput) -> Dict:
+@router.post("/nodes", summary="Создать узел", description="Создает узел с указанными метками и свойствами (без изменения uid).")
+async def create_node(payload: NodeCreateInput, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
+    """
+    Принимает:
+      - uid: UID узла
+      - labels: метки из разрешенного списка
+      - props: свойства, кроме uid
+
+    Возвращает:
+      - uid: UID созданного узла
+    """
     labels = _validate_labels(payload.labels)
     props = _validate_props(payload.props)
 
@@ -99,8 +109,17 @@ async def create_node(payload: NodeCreateInput) -> Dict:
         repo.close()
 
 
-@router.get("/nodes/{uid}")
+@router.get("/nodes/{uid}", summary="Получить узел", description="Возвращает метки и свойства узла по UID.")
 async def get_node(uid: str) -> Dict:
+    """
+    Принимает:
+      - uid: UID узла
+
+    Возвращает:
+      - uid: UID
+      - labels: список меток
+      - props: свойства узла без uid
+    """
     repo = Neo4jRepo()
     try:
         rows = repo.read("MATCH (n {uid:$uid}) RETURN labels(n) AS labels, properties(n) AS props", {"uid": uid})
@@ -113,8 +132,17 @@ async def get_node(uid: str) -> Dict:
         repo.close()
 
 
-@router.patch("/nodes/{uid}")
-async def patch_node(uid: str, payload: NodePatchInput) -> Dict:
+@router.patch("/nodes/{uid}", summary="Изменить узел", description="Устанавливает/удаляет свойства узла. UID менять нельзя.")
+async def patch_node(uid: str, payload: NodePatchInput, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
+    """
+    Принимает:
+      - uid: UID узла
+      - set: свойства для установки
+      - unset: список свойств для удаления
+
+    Возвращает:
+      - ok: True
+    """
     if "uid" in payload.set or "uid" in payload.unset:
         raise HTTPException(status_code=400, detail="uid cannot be modified")
 
@@ -135,8 +163,16 @@ async def patch_node(uid: str, payload: NodePatchInput) -> Dict:
         repo.close()
 
 
-@router.delete("/nodes/{uid}")
-async def delete_node(uid: str, detach: bool = False) -> Dict:
+@router.delete("/nodes/{uid}", summary="Удалить узел", description="Удаляет узел. По умолчанию не удаляет связи; используйте detach=true для детач-удаления.")
+async def delete_node(uid: str, detach: bool = False, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
+    """
+    Принимает:
+      - uid: UID узла
+      - detach: если True, удаляет вместе со связями
+
+    Возвращает:
+      - ok: True
+    """
     repo = Neo4jRepo()
     try:
         rows = repo.read("MATCH (n {uid:$uid}) RETURN count(n) AS c", {"uid": uid})
@@ -157,8 +193,19 @@ async def delete_node(uid: str, detach: bool = False) -> Dict:
         repo.close()
 
 
-@router.post("/edges")
-async def create_edge(payload: EdgeCreateInput) -> Dict:
+@router.post("/edges", summary="Создать связь", description="Создает отношение между узлами указанного типа с props. Запрещены самосвязи.")
+async def create_edge(payload: EdgeCreateInput, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
+    """
+    Принимает:
+      - edge_uid: UID связи (опционально)
+      - from_uid: UID исходного узла
+      - to_uid: UID целевого узла
+      - type: тип отношения из разрешенного набора
+      - props: свойства отношения (кроме uid)
+
+    Возвращает:
+      - edge_uid: UID созданной связи
+    """
     if payload.from_uid == payload.to_uid:
         raise HTTPException(status_code=400, detail="self-loop is not allowed")
 
@@ -196,8 +243,19 @@ async def create_edge(payload: EdgeCreateInput) -> Dict:
         repo.close()
 
 
-@router.get("/edges/{edge_uid}")
+@router.get("/edges/{edge_uid}", summary="Получить связь", description="Возвращает from/to, тип и свойства связи по ее UID.")
 async def get_edge(edge_uid: str) -> Dict:
+    """
+    Принимает:
+      - edge_uid: UID связи
+
+    Возвращает:
+      - edge_uid: UID
+      - from_uid: исходный узел
+      - to_uid: целевой узел
+      - type: тип отношения
+      - props: свойства, без uid
+    """
     repo = Neo4jRepo()
     try:
         rows = repo.read(
@@ -219,8 +277,17 @@ async def get_edge(edge_uid: str) -> Dict:
         repo.close()
 
 
-@router.get("/edges")
+@router.get("/edges", summary="Список связей по паре узлов", description="Возвращает список связей между двумя узлами. Можно фильтровать по типу.")
 async def list_edges(from_uid: str, to_uid: str, type: Optional[str] = None) -> Dict:
+    """
+    Принимает:
+      - from_uid: UID исходного узла
+      - to_uid: UID целевого узла
+      - type: опционально, тип отношения
+
+    Возвращает:
+      - items: список объектов {edge_uid, type, props}
+    """
     repo = Neo4jRepo()
     try:
         if type:
@@ -246,8 +313,17 @@ async def list_edges(from_uid: str, to_uid: str, type: Optional[str] = None) -> 
         repo.close()
 
 
-@router.patch("/edges/{edge_uid}")
-async def patch_edge(edge_uid: str, payload: EdgePatchInput) -> Dict:
+@router.patch("/edges/{edge_uid}", summary="Изменить связь", description="Устанавливает/удаляет свойства отношения. UID менять нельзя.")
+async def patch_edge(edge_uid: str, payload: EdgePatchInput, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
+    """
+    Принимает:
+      - edge_uid: UID связи
+      - set: свойства для установки
+      - unset: список свойств для удаления
+
+    Возвращает:
+      - ok: True
+    """
     if "uid" in payload.set or "uid" in payload.unset:
         raise HTTPException(status_code=400, detail="uid cannot be modified")
 
@@ -268,8 +344,15 @@ async def patch_edge(edge_uid: str, payload: EdgePatchInput) -> Dict:
         repo.close()
 
 
-@router.delete("/edges/{edge_uid}")
-async def delete_edge(edge_uid: str) -> Dict:
+@router.delete("/edges/{edge_uid}", summary="Удалить связь", description="Удаляет отношение по UID.")
+async def delete_edge(edge_uid: str, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
+    """
+    Принимает:
+      - edge_uid: UID связи
+
+    Возвращает:
+      - ok: True
+    """
     repo = Neo4jRepo()
     try:
         rows = repo.read("MATCH ()-[r {uid:$uid}]->() RETURN count(r) AS c", {"uid": edge_uid})

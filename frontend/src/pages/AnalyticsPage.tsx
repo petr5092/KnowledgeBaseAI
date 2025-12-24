@@ -1,34 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
-import { getAnalyticsStats, type AnalyticsStats } from '../api'
+import { useEffect, useMemo } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { type RootState, type AppDispatch } from '../store'
+import { fetchStats } from '../store/analyticsSlice'
 import { computeLinearScale } from '../widgets/d3'
 
 export default function AnalyticsPage() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [stats, setStats] = useState<AnalyticsStats | null>(null)
+  const dispatch = useDispatch<AppDispatch>()
+
+  const { data: stats, loading, error } = useSelector((state: RootState) => state.analytics)
 
   useEffect(() => {
-    let cancelled = false
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await getAnalyticsStats()
-        if (cancelled) return
-        setStats(data)
-      } catch (e) {
-        if (cancelled) return
-        setError(e instanceof Error ? e.message : 'Ошибка загрузки статистики')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    void load()
-    return () => {
-      cancelled = true
-    }
-  }, [])
+    dispatch(fetchStats())
+  }, [dispatch])
 
+  // D3 весы для визуализации
   const densityScale = useMemo(() => computeLinearScale([0, 1], [0, 100]), [])
   const outScale = useMemo(() => computeLinearScale([0, 10], [0, 100]), [])
 
@@ -40,12 +25,19 @@ export default function AnalyticsPage() {
       </div>
 
       {error && (
-        <div className="kb-panel" style={{ padding: 12, borderRadius: 14, borderColor: 'rgba(255, 77, 109, 0.35)' }}>
-          {error}
+        <div className="kb-panel" style={{ padding: 12, borderRadius: 14, border: '1px solid rgba(255, 77, 109, 0.35)' }}>
+          <div style={{ color: '#ff4d6d', fontSize: 13 }}>{error}</div>
+          <button
+            onClick={() => dispatch(fetchStats())}
+            style={{ marginTop: 8, background: 'none', border: '1px solid var(--border)', color: 'white', cursor: 'pointer', padding: '4px 8px', borderRadius: 6 }}
+          >
+            Повторить попытку
+          </button>
         </div>
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+
         <div className="kb-panel" style={{ padding: 12, borderRadius: 14 }}>
           <div style={{ fontSize: 13, fontWeight: 650, marginBottom: 8 }}>Граф</div>
           <div style={{ display: 'grid', gap: 8 }}>
@@ -57,7 +49,13 @@ export default function AnalyticsPage() {
               unit=""
               loading={loading}
             />
-            <BarMetric label="Плотность" value={stats?.graph.density ?? 0} scale={densityScale} unit="" loading={loading} />
+            <BarMetric
+              label="Плотность"
+              value={stats?.graph.density ?? 0}
+              scale={densityScale}
+              unit=""
+              loading={loading}
+            />
           </div>
         </div>
 
@@ -71,6 +69,12 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
+
+      {loading && !stats && (
+        <div style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center', marginTop: 10 }}>
+          Загрузка актуальных данных...
+        </div>
+      )}
     </div>
   )
 }
@@ -96,7 +100,17 @@ function BarMetric(props: { label: string; value: number; scale: (x: number) => 
         </div>
       </div>
       <div style={{ position: 'relative', height: 8, background: 'rgba(255,255,255,0.15)', borderRadius: 6, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: 'rgba(46,233,166,0.8)' }} />
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: `${pct}%`,
+            background: 'rgba(46,233,166,0.8)',
+            transition: 'width 0.4s ease-out'
+          }}
+        />
       </div>
     </div>
   )

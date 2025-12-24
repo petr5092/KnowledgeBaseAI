@@ -2,10 +2,17 @@ from fastapi import APIRouter, WebSocket
 import asyncio
 import json
 
-router = APIRouter()
+router = APIRouter(tags=["События"])
 
 @router.websocket("/ws/progress")
 async def ws_progress(ws: WebSocket):
+    """
+    Принимает:
+      - query param job_id: идентификатор фоновой задачи
+
+    Возвращает:
+      - поток сообщений JSON с обновлениями прогресса задачи
+    """
     await ws.accept()
     job_id = (ws.query_params.get("job_id") if hasattr(ws, 'query_params') else None) or "default"
     try:
