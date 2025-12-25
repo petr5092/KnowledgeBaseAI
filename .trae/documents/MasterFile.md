@@ -276,6 +276,7 @@
 *   **[2025-12-25]**: Completed Task (Graph Changes Type). Added change_type NODE/REL in graph_changes and filter in queries; unit test passed.
 *   **[2025-12-25]**: Completed Task (CI Workflow). Added GitHub Actions workflow to run tests via docker compose.
 *   **[2025-12-25]**: Completed Task (CORS Middleware). Enabled CORS via settings.cors_allow_origins.
+*   **[2025-12-25]**: Completed Task (Curriculum Roadmap API). Added `/v1/curriculum/roadmap` endpoint using planner; unit test passed.
 *   **[2025-12-16]**: Completed Task 0.1.1.1 (Canonicalization Service). Implemented `backend/src/core/canonical.py`; unit tests passed (4).
 *   **[2025-12-16]**: Completed Task 0.1.2.1 (Tenant Context & DAO Base). Added tenant middleware and DAO base; unit tests passed (2).
 *   **[2025-12-16]**: Completed Task 1.2.1.1 (Proposal Creation & Validation). Added `POST /v1/proposals`, validation and checksum; unit tests passed (3).
