@@ -18,7 +18,7 @@ async function fetchDiff(proposalId: string): Promise<{ items: DiffItem[] }> {
   return res.json()
 }
 
-export function ReviewDiff({ proposalId }: { proposalId: string }) {
+export function ReviewDiff({ proposalId, onSelect }: { proposalId: string; onSelect?: (uids: string[]) => void }) {
   const [items, setItems] = useState<DiffItem[]>([])
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
@@ -33,7 +33,16 @@ export function ReviewDiff({ proposalId }: { proposalId: string }) {
     items.map((it, idx) =>
       React.createElement(
         "div",
-        { key: idx, style: { border: "1px solid #ddd", padding: 8, marginBottom: 8 } },
+        { key: idx, style: { border: "1px solid #ddd", padding: 8, marginBottom: 8, cursor: "pointer" }, onClick: () => {
+          const uids: string[] = []
+          const fu = it.from_node?.uid || it.key?.from
+          const tu = it.to_node?.uid || it.key?.to
+          const au = it.after?.uid
+          if (fu) uids.push(fu)
+          if (tu) uids.push(tu)
+          if (au) uids.push(au)
+          onSelect && onSelect(uids.filter(Boolean))
+        }},
         React.createElement("div", null, `Kind: ${it.kind}`),
         it.type ? React.createElement("div", null, `Type: ${it.type}`) : null,
         it.from_node ? React.createElement("div", null, `From: ${it.from_node.uid} (${it.from_node.name || ""})`) : null,
