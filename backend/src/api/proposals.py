@@ -205,7 +205,7 @@ async def diff(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Di
     summary="Calculate Proposal Impact",
     description="Analyzes which parts of the graph will be affected by this proposal (Impact Analysis)."
 )
-async def impact(proposal_id: str, depth: int = 1, tenant_id: str = Depends(require_tenant)) -> Dict:
+async def impact(proposal_id: str, depth: int = 1, types: str | None = None, max_nodes: int | None = None, max_edges: int | None = None, tenant_id: str = Depends(require_tenant)) -> Dict:
     """
     Принимает:
       - proposal_id: идентификатор заявки
@@ -217,4 +217,5 @@ async def impact(proposal_id: str, depth: int = 1, tenant_id: str = Depends(requ
     p = get_proposal(proposal_id)
     if not p or p["tenant_id"] != tenant_id:
         raise HTTPException(status_code=404, detail="proposal not found")
-    return impact_subgraph_for_proposal(proposal_id, depth=depth)
+    type_list = [t for t in (types or "").split(",") if t]
+    return impact_subgraph_for_proposal(proposal_id, depth=depth, types=type_list or None, max_nodes=max_nodes, max_edges=max_edges)
