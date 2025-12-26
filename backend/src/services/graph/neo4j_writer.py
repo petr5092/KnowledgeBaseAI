@@ -1,5 +1,5 @@
 from typing import Dict
-from datetime import datetime
+from datetime import datetime, UTC
 def _kw_merge() -> str:
     return "".join(["ME","RGE"])
 def _kw_set() -> str:
@@ -10,7 +10,7 @@ def merge_node(tx, tenant_id: str, typ: str, uid: str, props: Dict, evidence: Di
     p["uid"] = uid
     p["tenant_id"] = tenant_id
     p.setdefault("lifecycle_status", "ACTIVE")
-    p.setdefault("created_at", datetime.utcnow().isoformat())
+    p.setdefault("created_at", datetime.now(UTC).isoformat())
     tx.run(f"{_kw_merge()} (n:{typ} {{uid:$uid, tenant_id:$tenant_id}}) "+_kw_set()+" n += $props", uid=uid, tenant_id=tenant_id, props=p)
     ev = evidence or {}
     cid = ev.get("source_chunk_id")

@@ -7,7 +7,7 @@ import os
 from src.services import impact as impact_mod
 
 @pytest.fixture(autouse=True)
-def _clean_db():
+def _clean_state():
     ensure_tables()
     conn = get_conn(); conn.autocommit = True
     with conn.cursor() as cur:
@@ -23,17 +23,17 @@ def _clean_db():
     except Exception:
         ...
     try:
-        impact_mod._CACHE.clear()
-        os.environ.pop("INTEGRITY_TEST_SLEEP_MS", None)
-        os.environ.pop("INTEGRITY_CHECK_THRESHOLD_MS", None)
-        os.environ.pop("IMPACT_CACHE_TTL_S", None)
-    except Exception:
-        ...
-    try:
         drv = get_driver()
         with drv.session() as s:
             s.run("MATCH (n) DETACH DELETE n")
         drv.close()
+    except Exception:
+        ...
+    try:
+        impact_mod._CACHE.clear()
+        os.environ.pop("INTEGRITY_TEST_SLEEP_MS", None)
+        os.environ.pop("INTEGRITY_CHECK_THRESHOLD_MS", None)
+        os.environ.pop("IMPACT_CACHE_TTL_S", None)
     except Exception:
         ...
     yield

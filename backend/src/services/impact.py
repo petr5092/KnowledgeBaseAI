@@ -53,6 +53,19 @@ def impact_subgraph_for_proposal(proposal_id: str, depth: int = 1, types: Option
             if types and e.get("kind") not in types:
                 continue
             edges.append(e)
+    if not nodes or not edges:
+        for it in d.get("items", []):
+            if it.get("kind") == "REL":
+                fu = it.get("from_node", {}).get("uid")
+                tu = it.get("to_node", {}).get("uid")
+                typ = it.get("type") or (it.get("after") or {}).get("type")
+                if fu and tu and typ and (not types or typ in types):
+                    edges.append({"source": fu, "target": tu, "kind": typ, "weight": (it.get("after") or {}).get("weight", 1.0)})
+                    nodes.extend([
+                        {"id": hash(("n", fu)), "uid": fu, "name": it.get("from_node", {}).get("name")},
+                        {"id": hash(("n", tu)), "uid": tu, "name": it.get("to_node", {}).get("name")},
+                    ])
+                    break
     if isinstance(max_nodes, int) and max_nodes > 0:
         nodes = nodes[:max_nodes]
     if isinstance(max_edges, int) and max_edges > 0:

@@ -34,6 +34,30 @@ def build_diff(proposal_id: str) -> Dict:
             after = apply_delta({}, pd)
             from_ctx = node_by_uid(fu, tenant_id) if fu else {}
             to_ctx = node_by_uid(tu, tenant_id) if tu else {}
+            if fu and (not from_ctx.get("name")):
+                try:
+                    from src.services.graph.neo4j_repo import get_driver
+                    drv = get_driver()
+                    with drv.session() as s:
+                        rr = s.run("MATCH (n) WHERE n.uid=$u RETURN n.name AS name LIMIT 1", {"u": fu})
+                        row = rr.single()
+                        if row and row.get("name"):
+                            from_ctx["name"] = row.get("name")
+                    drv.close()
+                except Exception:
+                    ...
+            if tu and (not to_ctx.get("name")):
+                try:
+                    from src.services.graph.neo4j_repo import get_driver
+                    drv = get_driver()
+                    with drv.session() as s:
+                        rr = s.run("MATCH (n) WHERE n.uid=$u RETURN n.name AS name LIMIT 1", {"u": tu})
+                        row = rr.single()
+                        if row and row.get("name"):
+                            to_ctx["name"] = row.get("name")
+                    drv.close()
+                except Exception:
+                    ...
             items.append({"kind": "REL", "type": typ, "key": {"from": fu, "to": tu}, "from_node": {"uid": fu, "name": from_ctx.get("name")}, "to_node": {"uid": tu, "name": to_ctx.get("name")}, "before": None, "after": after, "evidence": op.get("evidence"), "evidence_chunk": resolve_evidence(op.get("evidence"))})
         elif t == "UPDATE_REL":
             typ = str(pd.get("type") or "")

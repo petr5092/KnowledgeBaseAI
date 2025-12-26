@@ -152,21 +152,22 @@ def neighbors(center_uid: str, depth: int = 1) -> Tuple[List[Dict], List[Dict]]:
             nodes.append({
                 "id": nid, 
                 "uid": n.get("uid"), 
-                "title": n.get("title"), # Было label
+                "name": n.get("name"), 
+                "title": n.get("title"),
                 "kind": kind,            # Добавили kind
                 "labels": list(n.labels)
             })
         added = set()
         for rels in rs:
             for r in rels:
-                key = (r.start_node["uid"], r.end_node["uid"], type(r).__name__)
+                key = (r.start_node["uid"], r.end_node["uid"], r.type)
                 if key in added:
                     continue
                 added.add(key)
                 edges.append({
                     "source": r.start_node["uid"], # Было from
                     "target": r.end_node["uid"],   # Было to
-                    "kind": type(r).__name__,      # Было type
+                    "kind": r.type,                # Было type
                     "weight": r.get("weight", 1.0)
                 })
     finally:
@@ -182,7 +183,11 @@ def node_by_uid(uid: str, tenant_id: str) -> Dict:
     data: Dict = {}
     s = drv.session()
     try:
-        res = s.run("MATCH (n {uid:$uid, tenant_id:$tid}) RETURN properties(n) AS p", {"uid": uid, "tid": tenant_id})
+        res = s.run(
+            "MATCH (n) WHERE n.uid=$uid AND (n.tenant_id=$tid OR n.tenant_id IS NULL) "
+            "RETURN n ORDER BY coalesce(n.created_at,'') DESC LIMIT 1",
+            {"uid": uid, "tid": tenant_id}
+        )
         row = None
         try:
             row = res.single()
@@ -193,9 +198,46 @@ def node_by_uid(uid: str, tenant_id: str) -> Dict:
                 row = None
         if row:
             try:
-                data = dict(row["p"])
+                data = dict(row["n"])
             except Exception:
                 ...
+            if data and not data.get("name"):
+                nm = data.get("title")
+                if nm:
+                    data["name"] = nm
+        if not data:
+            res2 = s.run(
+                "MATCH (n) WHERE n.uid=$uid RETURN n ORDER BY coalesce(n.created_at,'') DESC LIMIT 1",
+                {"uid": uid}
+            )
+            r2 = None
+            try:
+                r2 = res2.single()
+            except Exception:
+                try:
+                    r2 = next(iter(res2))
+                except Exception:
+                    r2 = None
+            if r2:
+                try:
+                    data = dict(r2["n"])
+                except Exception:
+                    ...
+        if not data:
+            res3 = s.run("MATCH (n {uid:$uid, tenant_id:$tid}) RETURN properties(n) AS p LIMIT 1", {"uid": uid, "tid": tenant_id})
+            row3 = None
+            try:
+                row3 = res3.single()
+            except Exception:
+                try:
+                    row3 = next(iter(res3))
+                except Exception:
+                    row3 = None
+            if row3 and row3.get("p"):
+                try:
+                    data = dict(row3["p"])
+                except Exception:
+                    ...
     finally:
         try:
             s.close()
