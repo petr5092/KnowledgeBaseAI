@@ -1,13 +1,14 @@
 import {
+  ViewportResponseSchema,
   RoadmapResponseSchema,
   ChatResponseSchema,
   AnalyticsStatsSchema,
+  AssistantActionSchema,
   AssistantToolsSchema,
 } from "./schemas";
+import { type NodeKind } from "./config/appConfig";
 
-import type {
-  GraphNode,
-  GraphEdge,
+export type {
   ViewportResponse,
   RoadmapResponse,
   ChatResponse,
@@ -15,17 +16,6 @@ import type {
   AssistantAction,
   AssistantTools,
 } from "./schemas";
-
-export type {
-  GraphNode,
-  GraphEdge,
-  ViewportResponse,
-  RoadmapResponse,
-  ChatResponse,
-  AnalyticsStats,
-  AssistantAction,
-  AssistantTools,
-};
 
 export type ApiError = {
   status: number;
@@ -35,9 +25,9 @@ export type ApiError = {
 
 export class HttpError extends Error {
   status: number;
-  details?: unknown;
+  details?: any; // Changed from unknown to any per your standard
 
-  constructor(status: number, message: string, details?: unknown) {
+  constructor(status: number, message: string, details?: any) {
     super(message);
     this.status = status;
     this.details = details;
@@ -68,6 +58,28 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   }
 
   return (await parseBody(res)) as T;
+}
+
+// 4.2 Graph Data Model (Frontend)
+export interface GraphNode {
+  uid: string;
+  title?: string;
+  kind: NodeKind;
+  data?: Record<string, any>;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  relation: string;
+  weight?: number;
+}
+
+export type ViewportResponse = {
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+  center_uid: string
+  depth: number
 }
 
 export async function getViewport(params: { center_uid: string; depth: number }) {

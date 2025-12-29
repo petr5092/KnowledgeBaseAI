@@ -1,8 +1,13 @@
-export type ThemeNodeKind = 'Subject' | 'Section' | 'Topic' | 'Skill' | 'Resource' | 'Default'
+import type { NodeKind } from './appConfig'
+
+export type ThemeNodeKind = NodeKind | 'Subject' | 'Section' | 'Topic' | 'Skill' | 'Resource' | 'Default'
 
 export const GRAPH_THEME = {
   nodes: {
     colors: {
+      concept: '#7c5cff',
+      skill: '#e71d36',
+      resource: '#ff9f1c',
       Subject: '#ff9f1c', // Orange/Gold
       Section: '#2ec4b6', // Teal/Blue
       Topic: '#7c5cff',   // Purple
@@ -11,6 +16,9 @@ export const GRAPH_THEME = {
       Default: '#7c5cff',
     } as Record<ThemeNodeKind, string>,
     sizes: {
+      concept: 24,
+      skill: 18,
+      resource: 16,
       Subject: 40,
       Section: 32,
       Topic: 24,
