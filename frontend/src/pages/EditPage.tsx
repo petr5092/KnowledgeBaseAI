@@ -16,6 +16,20 @@ export default function EditPage(props: EditPageProps) {
 
   const { nodes, edges } = useSelector((state: RootState) => state.edit)
 
+  const getNodeLabel = (node: Node): string => {
+    const data: unknown = node.data
+    if (data && typeof data === 'object' && 'label' in data) {
+      const v = (data as { label?: unknown }).label
+      return typeof v === 'string' ? v : String(v ?? '')
+    }
+    return ''
+  }
+
+  const getEdgeLabel = (edge: { label?: unknown }): string => {
+    const v = edge.label
+    return typeof v === 'string' ? v : String(v ?? '')
+  }
+
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(props.selectedUid || null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [canSave, setCanSave] = useState(false);
@@ -91,7 +105,7 @@ export default function EditPage(props: EditPageProps) {
                 <span style={{ fontSize: 12, color: 'var(--muted)' }}>Label</span>
                 <input
                   className="kb-input"
-                  value={String((selectedNode.data as any)?.label || '')}
+                  value={getNodeLabel(selectedNode)}
                   onChange={(e) => dispatch(actions.updateNodeLabel({ id: selectedNode.id, label: e.target.value }))}
                 />
               </label>
@@ -122,7 +136,7 @@ export default function EditPage(props: EditPageProps) {
                 <span style={{ fontSize: 12, color: 'var(--muted)' }}>Тип</span>
                 <input
                   className="kb-input"
-                  value={String((selectedEdge.label as any) || '')}
+                  value={getEdgeLabel(selectedEdge)}
                   onChange={(e) => dispatch(actions.updateEdgeLabel({ id: selectedEdge.id, label: e.target.value }))}
                 />
               </label>

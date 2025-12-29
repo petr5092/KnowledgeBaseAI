@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useCallback } from 'react'
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import ExplorePage from './pages/ExplorePage'
@@ -7,24 +7,12 @@ import PracticePage from './pages/PracticePage'
 import RoadmapPage from './pages/RoadmapPage'
 import SettingsPage from './pages/SettingsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
-import { assistantChat, type AssistantAction } from './api'
+import ThemeToggle from './components/ThemeToggle'
 import { APP_CONFIG } from './config/appConfig'
-
-type ChatMessage = {
-  id: string
-  role: 'user' | 'assistant'
-  text: string
-  createdAt: number
-}
-
-function uid() {
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
-function formatTime(ts: number) {
-  const d = new Date(ts)
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
+import { UI_CONFIG } from './config/uiConfig'
+import { setSelectedUid, toggleChat } from './store/appSlice'
+import type { RootState } from './store'
+import { AIChat } from './components/AIChat'
 
 function useActiveRouteTitle() {
   const location = useLocation()
@@ -41,10 +29,11 @@ export default function App() {
   const dispatch = useDispatch()
   const title = useActiveRouteTitle()
 
-  const [selectedUid, setSelectedUid] = useState<string>(APP_CONFIG.defaultStartNode)
-  const [chatOpen, setChatOpen] = useState(false)
-  const [chatInput, setChatInput] = useState('')
-  const [action, setAction] = useState<AssistantAction | undefined>(undefined)
+  const { selectedUid, isChatOpen } = useSelector((state: RootState) => state.app)
+  
+  const handleSelectUid = useCallback((id: string) => {
+    dispatch(setSelectedUid(id))
+  }, [dispatch])
 
   const navItems = useMemo(
     () => [
@@ -69,50 +58,6 @@ export default function App() {
     if (routes[hash]) navigate(routes[hash], { replace: true })
   }, [navigate])
 
-  async function sendChat() {
-    const text = chatInput.trim()
-    if (!text) return
-
-    const txAction = dispatch(addTransaction({ type: 'assistant_query', text, action }))
-    const currentTxId = (txAction.payload as any).txId
-
-    dispatch(addMessage({ id: uid(), role: 'user', text, createdAt: Date.now() }))
-    setChatInput('')
-
-    try {
-      const data = await assistantChat({
-        action,
-        message: text,
-        from_uid: selectedUid,
-        to_uid: selectedUid,
-        center_uid: selectedUid,
-        depth: 1,
-        subject_uid: selectedUid,
-        progress: {},
-        limit: 30,
-        count: 10,
-        difficulty_min: 1,
-        difficulty_max: 5,
-        exclude: [],
-      })
-
-      const assistantText = typeof data === 'string' ? data : JSON.stringify(data)
-
-      dispatch(markSuccess(currentTxId))
-      dispatch(addMessage({ id: uid(), role: 'assistant', text: assistantText, createdAt: Date.now() }))
-
-    } catch (error: any) {
-      dispatch(markFailed({ txId: currentTxId, error: error.message }))
-
-      dispatch(addMessage({
-        id: uid(),
-        role: 'assistant',
-        text: 'Не удалось связаться с API. Проверь статус транзакции в логах или подключение к бэкенду.',
-        createdAt: Date.now(),
-      }))
-    }
-  }
-
   return (
     <div className="kb-bg" style={{ height: '100%', display: 'flex' }}>
       <aside className="kb-panel" style={{ width: 300, margin: 16, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -128,10 +73,18 @@ export default function App() {
             <div style={{ fontWeight: 600 }}>{selectedUid}</div>
           </div>
           <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-            <button className="kb-btn kb-btn-primary" onClick={() => setChatOpen(true)} style={{ flex: 1 }}>
+            <button className="kb-btn kb-btn-primary" onClick={() => dispatch(toggleChat())} style={{ flex: 1 }}>
               Спросить
             </button>
-            <button className="kb-btn" onClick={() => setSelectedUid((prev) => (prev === APP_CONFIG.defaultStartNode ? 'sub-cs' : APP_CONFIG.defaultStartNode))}>
+            <button 
+              className="kb-btn" 
+              onClick={() => {
+                const nodes = APP_CONFIG.testNodes;
+                const currentIndex = nodes.indexOf(selectedUid);
+                const nextIndex = (currentIndex + 1) % nodes.length;
+                dispatch(setSelectedUid(nodes[nextIndex]));
+              }}
+            >
               Переключить
             </button>
           </div>
@@ -155,13 +108,6 @@ export default function App() {
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="kb-btn" onClick={() => dispatch(toggleChat())}>Ассистент</button>
               <button className="kb-btn" onClick={() => navigate('/')}>Домой</button>
-              <button className="kb-btn" onClick={() => setChatOpen(true)}>
-                Ассистент
-              </button>
-              <button className="kb-btn" onClick={() => navigate('/')}
-              >
-                Домой
-              </button>
 
               <ThemeToggle />  {/* ← здесь */}
             </div>
@@ -169,8 +115,8 @@ export default function App() {
 
           <div style={{ flex: 1, minHeight: 0 }}>
             <Routes>
-              <Route path="/" element={<ExplorePage selectedUid={selectedUid} onSelectUid={(id) => dispatch(setSelectedUid(id))} />} />
-              <Route path="/edit" element={<EditPage selectedUid={selectedUid} onSelectUid={(id) => dispatch(setSelectedUid(id))} />} />
+              <Route path="/" element={<ExplorePage selectedUid={selectedUid} onSelectUid={handleSelectUid} />} />
+              <Route path="/edit" element={<EditPage selectedUid={selectedUid} onSelectUid={handleSelectUid} />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/roadmap" element={<RoadmapPage selectedUid={selectedUid} />} />
               <Route path="/practice" element={<PracticePage />} />
@@ -179,44 +125,20 @@ export default function App() {
           </div>
         </div>
       </main>
-      <button className="kb-btn kb-btn-primary" onClick={() => dispatch(toggleChat())}
-        style={{ position: 'fixed', right: 18, bottom: 18, width: 56, height: 56, borderRadius: 999, display: 'grid', placeItems: 'center', boxShadow: '0 18px 40px rgba(0,0,0,0.45)' }}>
+      <button 
+        className="kb-btn kb-btn-primary kb-ai-fab" 
+        onClick={() => dispatch(toggleChat())}
+        style={{ 
+          bottom: UI_CONFIG.fabBottomOffset, 
+          right: UI_CONFIG.chatRightOffset,
+          width: UI_CONFIG.fabSize,
+          height: UI_CONFIG.fabSize
+        }}
+      >
         AI
       </button>
 
-      {isChatOpen && (
-        <div className="kb-panel" style={{ position: 'fixed', right: 18, bottom: 86, width: 380, height: 520, borderRadius: 18, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.18)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ fontSize: 13, fontWeight: 650 }}>ИИ ассистент</div>
-              <div style={{ fontSize: 12, color: 'var(--muted)' }}>Контекст: {selectedUid}</div>
-            </div>
-            <button className="kb-btn" onClick={() => dispatch(toggleChat())}>Закрыть</button>
-          </div>
-
-          <div style={{ flex: 1, padding: 12, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {messages.map((m) => (
-              <div key={m.id} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '88%', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div style={{ padding: '10px 12px', borderRadius: 14, border: '1px solid var(--border)', background: m.role === 'user' ? 'rgba(124, 92, 255, 0.18)' : 'rgba(255, 255, 255, 0.06)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 13 }}>
-                  {m.text}
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--muted)' }}>{formatTime(m.createdAt)}</div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ padding: 12, borderTop: '1px solid var(--border)', display: 'flex', gap: 8 }}>
-            <select className="kb-input" value={action || ''} onChange={(e) => setAction((e.target.value || undefined) as AssistantAction)} style={{ maxWidth: 120 }}>
-              <option value="">Ответ</option>
-              <option value="explain_relation">Связь</option>
-              <option value="viewport">Граф</option>
-              <option value="roadmap">План</option>
-            </select>
-            <input className="kb-input" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Спроси..." onKeyDown={(e) => e.key === 'Enter' && void sendChat()} />
-            <button className="kb-btn kb-btn-primary" onClick={() => void sendChat()}>Go</button>
-          </div>
-        </div>
-      )}
+      <AIChat />
     </div>
   )
 }
