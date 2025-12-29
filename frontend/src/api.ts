@@ -1,13 +1,13 @@
 import {
-  ViewportResponseSchema,
   RoadmapResponseSchema,
   ChatResponseSchema,
   AnalyticsStatsSchema,
-  AssistantActionSchema,
   AssistantToolsSchema,
 } from "./schemas";
 
 import type {
+  GraphNode,
+  GraphEdge,
   ViewportResponse,
   RoadmapResponse,
   ChatResponse,
@@ -15,6 +15,17 @@ import type {
   AssistantAction,
   AssistantTools,
 } from "./schemas";
+
+export type {
+  GraphNode,
+  GraphEdge,
+  ViewportResponse,
+  RoadmapResponse,
+  ChatResponse,
+  AnalyticsStats,
+  AssistantAction,
+  AssistantTools,
+};
 
 export type ApiError = {
   status: number;
@@ -57,32 +68,6 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   }
 
   return (await parseBody(res)) as T;
-}
-
-// 4.2 Graph Data Model
-export type NodeKind = 'Subject' | 'Section' | 'Topic' | 'Skill' | 'Resource' | 'concept' | 'skill' | 'resource' // Union of real & required types
-
-export interface GraphNode {
-  uid: string
-  title?: string
-  kind: NodeKind
-  data?: Record<string, unknown>
-  [key: string]: unknown // Allow extra props from Neo4j
-}
-
-export interface GraphEdge {
-  source: string
-  target: string
-  relation: string // In Neo4j response this might be 'type' or 'kind'
-  weight?: number
-  [key: string]: unknown
-}
-
-export type ViewportResponse = {
-  nodes: GraphNode[]
-  edges: GraphEdge[]
-  center_uid: string
-  depth: number
 }
 
 export async function getViewport(params: { center_uid: string; depth: number }) {
