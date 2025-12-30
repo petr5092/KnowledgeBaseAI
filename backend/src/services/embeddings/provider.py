@@ -48,7 +48,7 @@ class OpenAIEmbeddingProvider(BaseEmbeddingProvider):
 
 def get_provider(dim_default: int = 16) -> BaseEmbeddingProvider:
     mode = os.environ.get("EMBEDDINGS_MODE", "hash").lower()
-    dim = int(os.environ.get("EMBEDDINGS_DIM", str(dim_default)))
+    dim = int(dim_default)
     if mode == "model":
         try:
             return OpenAIEmbeddingProvider(dim=dim)

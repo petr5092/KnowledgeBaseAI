@@ -192,7 +192,10 @@ def commit_proposal(proposal_id: str) -> Dict:
         def writer(session):
             def run(tx):
                 _apply_ops_tx(tx, tenant_id, ops)
-            session.execute_write(run)
+            if hasattr(session, "execute_write"):
+                session.execute_write(run)
+            else:
+                session.write_transaction(run)
         with drv.session() as s:
             writer(s)
     except Exception as e:

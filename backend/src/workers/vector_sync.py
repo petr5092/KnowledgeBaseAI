@@ -10,7 +10,8 @@ def mark_entities_updated(tenant_id: str, targets: List[str], collection: str = 
     client = QdrantClient(url=str(settings.qdrant_url))
     cols = [c.name for c in client.get_collections().collections]
     if collection not in cols:
-        client.create_collection(collection, vectors_config=VectorParams(size=8, distance=Distance.COSINE))
+        dim = int(settings.qdrant_default_vector_dim)
+        client.create_collection(collection, vectors_config=VectorParams(size=dim, distance=Distance.COSINE))
     count = 0
     for t in targets:
         cond = Filter(must=[FieldCondition(key="tenant_id", match=MatchValue(value=tenant_id)), FieldCondition(key="uid", match=MatchValue(value=t))])
@@ -31,23 +32,39 @@ def consume_graph_committed() -> Dict:
         n = 0
         client = QdrantClient(url=str(settings.qdrant_url))
         cols = [c.name for c in client.get_collections().collections]
-        name = str(settings.qdrant_collection_name)
+        collection = str(settings.qdrant_collection_name)
         dim = int(settings.qdrant_default_vector_dim)
-        if name not in cols:
-            client.create_collection(name, vectors_config=VectorParams(size=dim, distance=Distance.COSINE))
+        if collection not in cols:
+            client.create_collection(collection, vectors_config=VectorParams(size=dim, distance=Distance.COSINE))
         else:
             try:
-                info = client.get_collection(name)
+                info = client.get_collection(collection)
                 dim = int(info.result.config.params.vectors.size)  # type: ignore
             except Exception:
                 dim = int(settings.qdrant_default_vector_dim)
         for uid in targets:
             props = node_by_uid(uid, tenant_id)
-            name = props.get("name") or props.get("title") or uid
+            text = props.get("name") or props.get("title") or uid
             import uuid
-            vec = get_provider(dim_default=dim).embed_text(name)
+            vec = get_provider(dim_default=dim).embed_text(text)
+            if len(vec) != dim:
+                if len(vec) > dim:
+                    vec = vec[:dim]
+                else:
+                    vec = vec + [0.0] * (dim - len(vec))
             pid = uuid.uuid4().int % (10**12)
-            client.upsert(collection_name=name, points=[{"id": pid, "vector": vec, "payload": {"tenant_id": tenant_id, "uid": uid, "name": name}}])
+            try:
+                client.upsert(collection_name=collection, points=[{"id": pid, "vector": vec, "payload": {"tenant_id": tenant_id, "uid": uid, "name": text}}])
+            except Exception as e:
+                msg = str(e)
+                import re
+                m = re.search(r"expected dim:\s*(\d+)", msg)
+                if m:
+                    exp = int(m.group(1))
+                    adj = vec[:exp] if len(vec) >= exp else (vec + [0.0] * (exp - len(vec)))
+                    client.upsert(collection_name=collection, points=[{"id": pid, "vector": adj, "payload": {"tenant_id": tenant_id, "uid": uid, "name": text}}])
+                else:
+                    raise
             n += 1
         return {"processed": n}
     return {"processed": 0}

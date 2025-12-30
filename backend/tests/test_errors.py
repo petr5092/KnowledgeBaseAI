@@ -40,7 +40,7 @@ def forbidden():
 def unavailable():
     raise HTTPException(status_code=503, detail="postgres not configured")
 
-client = TestClient(app)
+client = TestClient(app, raise_server_exceptions=False)
 
 def test_http_exception():
     resp = client.get("/http-error")

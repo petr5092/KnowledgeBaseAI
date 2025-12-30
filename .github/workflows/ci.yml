@@ -19,10 +19,36 @@ jobs:
       - name: Start services
         run: |
           docker compose --env-file .env.prod up -d
-      - name: Wait for fastapi
+      - name: Healthcheck services
         run: |
-          sleep 10
-          docker compose ps
+          for i in {1..30}; do
+            if docker compose --env-file .env.prod exec -T fastapi python - <<'PY'
+import socket, sys
+def check(host, port):
+  s = socket.socket()
+  s.settimeout(2)
+  try:
+    s.connect((host, port))
+    s.close()
+    return True
+  except Exception:
+    return False
+ok = all([
+  check("neo4j", 7687),
+  check("redis", 6379),
+  check("postgres", 5432),
+])
+sys.exit(0 if ok else 1)
+PY
+            then
+              echo "Services healthy"
+              break
+            else
+              echo "Waiting for services..."
+              sleep 5
+            fi
+          done
+          docker compose --env-file .env.prod ps
       - name: Run unit tests
         run: |
           docker compose --env-file .env.prod exec -T fastapi pytest -q

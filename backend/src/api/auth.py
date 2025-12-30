@@ -6,6 +6,7 @@ from src.services.auth.jwt_tokens import create_access_token, create_refresh_tok
 from src.services.auth.passwords import hash_password, verify_password
 from src.services.auth.users_repo import create_user, get_user_by_email, get_user_by_id
 from pydantic import BaseModel
+import os
 
 router = APIRouter(prefix="/v1/auth", tags=["Аутентификация"])
 
@@ -86,6 +87,8 @@ def register(payload: RegisterPayload):
       - id: идентификатор пользователя
       - email: почта пользователя
     """
+    if not (os.environ.get("PG_DSN") or "").strip():
+        raise HTTPException(status_code=503, detail="postgres not configured")
     try:
         existing = get_user_by_email(payload.email)
     except RuntimeError:
@@ -111,6 +114,8 @@ def login(payload: LoginPayload):
       - refresh_token: JWT-токен обновления
       - token_type: 'bearer'
     """
+    if not (os.environ.get("PG_DSN") or "").strip():
+        raise HTTPException(status_code=503, detail="postgres not configured")
     try:
         user = get_user_by_email(payload.email)
     except RuntimeError:
@@ -139,6 +144,8 @@ def refresh(payload: RefreshPayload):
       - refresh_token: новый токен обновления
       - token_type: 'bearer'
     """
+    if not (os.environ.get("PG_DSN") or "").strip():
+        raise HTTPException(status_code=503, detail="postgres not configured")
     try:
         data = decode_token(payload.refresh_token)
     except Exception:

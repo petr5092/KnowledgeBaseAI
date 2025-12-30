@@ -9,18 +9,25 @@ async function fetchImpact(proposalId: string, depth: number): Promise<{ nodes: 
   return res.json()
 }
 
-export function ImpactGraph({ proposalId, depth = 1 }: { proposalId: string; depth?: number }) {
+export function ImpactGraph({ proposalId, depth = 1, types, selectedUids }: { proposalId: string; depth?: number; types?: string[]; selectedUids?: string[] }) {
   const [nodes, setNodes] = useState<NodeItem[]>([])
   const [edges, setEdges] = useState<EdgeItem[]>([])
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
-    fetchImpact(proposalId, depth)
+    const qs = new URLSearchParams()
+    qs.set("depth", String(depth))
+    if (types && types.length) qs.set("types", types.join(","))
+    fetch(`/v1/proposals/${proposalId}/impact?${qs.toString()}`)
+      .then(res => {
+        if (!res.ok) throw new Error("failed to fetch impact")
+        return res.json()
+      })
       .then(d => {
         setNodes(d.nodes || [])
         setEdges(d.edges || [])
       })
       .catch(e => setError(String(e)))
-  }, [proposalId, depth])
+  }, [proposalId, depth, JSON.stringify(types || [])])
   if (error) return React.createElement("div", null, `Error: ${error}`)
   return React.createElement(
     "div",
@@ -33,7 +40,11 @@ export function ImpactGraph({ proposalId, depth = 1 }: { proposalId: string; dep
         "div",
         { style: { flex: 1 } },
         React.createElement("h4", null, "Nodes"),
-        React.createElement("ul", null, nodes.map((n, i) => React.createElement("li", { key: i }, `${n.uid} ${n.name ? "(" + n.name + ")" : ""} ${n.type ? "[" + n.type + "]" : ""}`)))
+        React.createElement("ul", null, nodes.map((n, i) => {
+          const isSel = (selectedUids || []).includes(String(n.uid))
+          const label = `${n.uid} ${n.name ? "(" + n.name + ")" : ""} ${n.type ? "[" + n.type + "]" : ""}`
+          return React.createElement("li", { key: i, style: { fontWeight: isSel ? "bold" : "normal" } }, label)
+        }))
       ),
       React.createElement(
         "div",

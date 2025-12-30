@@ -94,14 +94,17 @@ app = FastAPI(
 REQ_COUNTER = Counter("http_requests_total", "Total HTTP requests", ["method", "path", "status"])
 LATENCY = Histogram("http_request_latency_ms", "Request latency ms", ["method", "path"])
 
-@app.on_event("startup")
-async def on_startup():
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("startup", neo4j_uri=settings.neo4j_uri)
     ok = check_and_gatekeep()
     if not ok:
         raise SystemExit("Schema version gate failed")
     ensure_bootstrap_admin()
+    yield
 
 @app.middleware("http")
 async def tenant_middleware(request, call_next):

@@ -75,7 +75,8 @@ def read_graph(subject_uid: str | None = None) -> Tuple[List[Dict], List[Dict]]:
     drv = get_driver()
     nodes: List[Dict] = []
     edges: List[Dict] = []
-    with drv.session() as s:
+    s = drv.session()
+    try:
         res = s.run(
             (
                 "MATCH (s:Subject) "
@@ -89,13 +90,19 @@ def read_graph(subject_uid: str | None = None) -> Tuple[List[Dict], List[Dict]]:
         es = res["es"] if res else []
         nodes = [{"id": n["id"], "uid": n.get("uid"), "label": n.get("label"), "labels": n.get("labels", [])} for n in ns]
         edges = [{"from": e.get("source"), "to": e.get("target"), "type": e.get("rel")} for e in es]
+    finally:
+        try:
+            s.close()
+        except Exception:
+            ...
     drv.close()
     return nodes, edges
 
 def relation_context(from_uid: str, to_uid: str) -> Dict:
     drv = get_driver()
     ctx: Dict = {}
-    with drv.session() as s:
+    s = drv.session()
+    try:
         res = s.run(
             (
                 "MATCH (a {uid:$from})-[r]->(b {uid:$to}) "
@@ -104,6 +111,11 @@ def relation_context(from_uid: str, to_uid: str) -> Dict:
         ).single()
         if res:
             ctx = {"rel": res["rel"], "props": res["props"], "from_title": res["a_title"], "to_title": res["b_title"]}
+    finally:
+        try:
+            s.close()
+        except Exception:
+            ...
     drv.close()
     return ctx
 
@@ -112,17 +124,26 @@ def neighbors(center_uid: str, depth: int = 1) -> Tuple[List[Dict], List[Dict]]:
     nodes: List[Dict] = []
     edges: List[Dict] = []
     depth = max(0, min(int(depth), 6))
-    with drv.session() as s:
+    s = drv.session()
+    try:
         query = (
-            "MATCH p=(c {uid:$uid})-[:CONTAINS|PREREQ|HAS_SKILL|LINKED|TARGETS|HAS_SECTION|HAS_TOPIC|REQUIRES_SKILL|HAS_METHOD|HAS_EXAMPLE|HAS_THEORY|HAS_STEP*0.." + str(depth) + "]-(n) "
+            "MATCH p=(c {uid:$uid})-[*0.." + str(depth) + "]-(n) "
             "RETURN collect(DISTINCT n) AS ns, collect(DISTINCT relationships(p)) AS rs"
         )
-        res = s.run(query, {"uid": center_uid}).single()
-        ns = res["ns"] if res else []
-        rs = res["rs"] if res else []
+        res = s.run(query, {"uid": center_uid})
+        row = None
+        try:
+            row = res.single()
+        except Exception:
+            try:
+                row = next(iter(res))
+            except Exception:
+                row = None
+        ns = row["ns"] if row else []
+        rs = row["rs"] if row else []
         seen = set()
         for n in ns:
-            nid = n.id
+            nid = getattr(n, "element_id", None) or n.id
             if nid in seen:
                 continue
             seen.add(nid)
@@ -131,46 +152,127 @@ def neighbors(center_uid: str, depth: int = 1) -> Tuple[List[Dict], List[Dict]]:
             nodes.append({
                 "id": nid, 
                 "uid": n.get("uid"), 
-                "title": n.get("title"), # Было label
+                "name": n.get("name"), 
+                "title": n.get("title"),
                 "kind": kind,            # Добавили kind
                 "labels": list(n.labels)
             })
         added = set()
         for rels in rs:
             for r in rels:
-                key = (r.start_node["uid"], r.end_node["uid"], type(r).__name__)
+                key = (r.start_node["uid"], r.end_node["uid"], r.type)
                 if key in added:
                     continue
                 added.add(key)
                 edges.append({
                     "source": r.start_node["uid"], # Было from
                     "target": r.end_node["uid"],   # Было to
-                    "kind": type(r).__name__,      # Было type
+                    "kind": r.type,                # Было type
                     "weight": r.get("weight", 1.0)
                 })
+    finally:
+        try:
+            s.close()
+        except Exception:
+            ...
     drv.close()
     return nodes, edges
 
 def node_by_uid(uid: str, tenant_id: str) -> Dict:
     drv = get_driver()
     data: Dict = {}
-    with drv.session() as s:
-        res = s.run("MATCH (n {uid:$uid, tenant_id:$tid}) RETURN properties(n) AS p", {"uid": uid, "tid": tenant_id}).single()
-        if res and res.get("p"):
-            data = dict(res.get("p"))
+    s = drv.session()
+    try:
+        res = s.run(
+            "MATCH (n) WHERE n.uid=$uid AND (n.tenant_id=$tid OR n.tenant_id IS NULL) "
+            "RETURN n ORDER BY coalesce(n.created_at,'') DESC LIMIT 1",
+            {"uid": uid, "tid": tenant_id}
+        )
+        row = None
+        try:
+            row = res.single()
+        except Exception:
+            try:
+                row = next(iter(res))
+            except Exception:
+                row = None
+        if row:
+            try:
+                data = dict(row["n"])
+            except Exception:
+                ...
+            if data and not data.get("name"):
+                nm = data.get("title")
+                if nm:
+                    data["name"] = nm
+        if not data:
+            res2 = s.run(
+                "MATCH (n) WHERE n.uid=$uid RETURN n ORDER BY coalesce(n.created_at,'') DESC LIMIT 1",
+                {"uid": uid}
+            )
+            r2 = None
+            try:
+                r2 = res2.single()
+            except Exception:
+                try:
+                    r2 = next(iter(res2))
+                except Exception:
+                    r2 = None
+            if r2:
+                try:
+                    data = dict(r2["n"])
+                except Exception:
+                    ...
+        if not data:
+            res3 = s.run("MATCH (n {uid:$uid, tenant_id:$tid}) RETURN properties(n) AS p LIMIT 1", {"uid": uid, "tid": tenant_id})
+            row3 = None
+            try:
+                row3 = res3.single()
+            except Exception:
+                try:
+                    row3 = next(iter(res3))
+                except Exception:
+                    row3 = None
+            if row3 and row3.get("p"):
+                try:
+                    data = dict(row3["p"])
+                except Exception:
+                    ...
+    finally:
+        try:
+            s.close()
+        except Exception:
+            ...
     drv.close()
     return data
 
 def relation_by_pair(from_uid: str, to_uid: str, typ: str, tenant_id: str) -> Dict:
     drv = get_driver()
     data: Dict = {}
-    with drv.session() as s:
+    s = drv.session()
+    try:
         res = s.run(
             f"MATCH (a {{uid:$fu, tenant_id:$tid}})-[r:{typ}]->(b {{uid:$tu, tenant_id:$tid}}) RETURN properties(r) AS p",
             {"fu": from_uid, "tu": to_uid, "tid": tenant_id},
-        ).single()
-        if res and res.get("p"):
-            data = dict(res.get("p"))
+        )
+        row = None
+        try:
+            row = res.single()
+        except Exception:
+            try:
+                row = next(iter(res))
+            except Exception:
+                row = None
+        if row:
+            try:
+                data = dict(row["p"])
+            except Exception:
+                ...
+    finally:
+        try:
+            s.close()
+        except Exception:
+            ...
     drv.close()
     return data
 
@@ -178,24 +280,54 @@ def purge_user_artifacts() -> Dict:
     drv = get_driver()
     deleted_users = 0
     deleted_rels = 0
-    with drv.session() as s:
-        res = s.run("MATCH (u:User) DETACH DELETE u RETURN COUNT(u) AS c").single()
-        deleted_users = res["c"] if res else 0
-        res2 = s.run("MATCH ()-[r:COMPLETED]-() DELETE r RETURN COUNT(r) AS c").single()
-        deleted_rels = res2["c"] if res2 else 0
+    s = drv.session()
+    try:
+        res = s.run("MATCH (u:User) DETACH DELETE u RETURN COUNT(u) AS c")
+        row = None
+        try:
+            row = res.single()
+        except Exception:
+            try:
+                row = next(iter(res))
+            except Exception:
+                row = None
+        deleted_users = row["c"] if row else 0
+        res2 = s.run("MATCH ()-[r:COMPLETED]-() DELETE r RETURN COUNT(r) AS c")
+        row2 = None
+        try:
+            row2 = res2.single()
+        except Exception:
+            try:
+                row2 = next(iter(res2))
+            except Exception:
+                row2 = None
+        deleted_rels = row2["c"] if row2 else 0
+    finally:
+        try:
+            s.close()
+        except Exception:
+            ...
     drv.close()
     return {"deleted_users": deleted_users, "deleted_completed_rels": deleted_rels}
 
 def get_node_details(uid: str) -> Dict:
     drv = get_driver()
     data = {}
-    with drv.session() as s:
+    s = drv.session()
+    try:
         # Получаем свойства узла
-        res = s.run("MATCH (n {uid:$uid}) RETURN n", {"uid": uid}).single()
-        if not res:
+        res = s.run("MATCH (n {uid:$uid}) RETURN n", {"uid": uid})
+        row = None
+        try:
+            row = res.single()
+        except Exception:
+            try:
+                row = next(iter(res))
+            except Exception:
+                row = None
+        if not row:
             return {}
-        
-        node = res["n"]
+        node = row["n"]
         data = dict(node)
         data["labels"] = list(node.labels)
         # Kind
@@ -208,6 +340,10 @@ def get_node_details(uid: str) -> Dict:
         # Получаем исходящие связи
         out_res = s.run("MATCH (n {uid:$uid})-[r]->(other) RETURN type(r) as rel, other.uid as uid, other.title as title", {"uid": uid})
         data["outgoing"] = [{"rel": r["rel"], "uid": r["uid"], "title": r["title"]} for r in out_res]
-        
+    finally:
+        try:
+            s.close()
+        except Exception:
+            ...
     drv.close()
     return data
