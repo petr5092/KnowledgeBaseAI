@@ -36,7 +36,8 @@ export class HttpError extends Error {
 function getApiBaseUrl() {
   const w = window as unknown as { __ENV__?: Record<string, string> };
   const fromEnvJs = w.__ENV__?.VITE_API_BASE_URL;
-  return fromEnvJs || "";
+  const fromVite = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_API_BASE_URL;
+  return fromEnvJs || fromVite || "";
 }
 
 async function parseBody(res: Response) {
@@ -87,7 +88,25 @@ export type ViewportResponse = {
 
 export async function getViewport(params: { center_uid: string; depth: number }) {
   const qs = new URLSearchParams({ center_uid: params.center_uid, depth: String(params.depth) })
-  return apiFetch<ViewportResponse>(`/v1/graph/viewport?${qs.toString()}`)
+  const raw = await apiFetch<unknown>(`/v1/graph/viewport?${qs.toString()}`)
+  const obj = raw as Record<string, unknown>
+  const nodesRaw = (obj["nodes"] as any[]) ?? []
+  const edgesRaw = (obj["edges"] as any[]) ?? []
+  const nodes: GraphNode[] = nodesRaw.map((n) => {
+    const uid = n?.uid ?? String(n?.id ?? "")
+    const title = n?.title ?? n?.label ?? undefined
+    const kind = (n?.kind ?? n?.labels?.[0] ?? "concept") as NodeKind
+    const data = { id: n?.id ?? uid, labels: n?.labels ?? [], ...((n?.data as Record<string, unknown>) ?? {}) }
+    return { uid, title, kind, data }
+  })
+  const edges: GraphEdge[] = edgesRaw.map((e) => {
+    const source = e?.source ?? e?.from ?? ""
+    const target = e?.target ?? e?.to ?? ""
+    const relation = e?.relation ?? e?.type ?? e?.kind ?? undefined
+    const rest = e as Record<string, unknown>
+    return { source: String(source), target: String(target), relation: relation ? String(relation) : undefined, ...rest }
+  })
+  return { nodes, edges, center_uid: params.center_uid, depth: params.depth } satisfies ViewportResponse
 }
 
 export type NodeDetails = {

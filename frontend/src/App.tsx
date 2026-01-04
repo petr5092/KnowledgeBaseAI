@@ -9,6 +9,10 @@ import SettingsPage from './pages/SettingsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import { assistantChat, type AssistantAction } from './api'
 import { APP_CONFIG } from './config/appConfig'
+import ThemeToggle from './components/ThemeToggle'
+import { type RootState } from './store'
+import { setSelectedUid, toggleChat, addMessage } from './store/appSlice'
+import { addTransaction, markSuccess, markFailed } from './store/transactionsSlice'
 
 type ChatMessage = {
   id: string
@@ -41,8 +45,9 @@ export default function App() {
   const dispatch = useDispatch()
   const title = useActiveRouteTitle()
 
-  const [selectedUid, setSelectedUid] = useState<string>(APP_CONFIG.defaultStartNode)
-  const [chatOpen, setChatOpen] = useState(false)
+  const selectedUid = useSelector((s: RootState) => s.app.selectedUid)
+  const isChatOpen = useSelector((s: RootState) => s.app.isChatOpen)
+  const messages = useSelector((s: RootState) => s.app.messages)
   const [chatInput, setChatInput] = useState('')
   const [action, setAction] = useState<AssistantAction | undefined>(undefined)
 
@@ -73,8 +78,11 @@ export default function App() {
     const text = chatInput.trim()
     if (!text) return
 
-    const txAction = dispatch(addTransaction({ type: 'assistant_query', text, action }))
-    const currentTxId = (txAction.payload as any).txId
+    dispatch(addTransaction({ type: 'assistant_query', text, action }))
+    const currentTxId = ((): string => {
+      const entries = ( (window as any).__STORE__ ? (window as any).__STORE__.getState().transactions.entries : (undefined) ) as any[] | undefined
+      return entries && entries[0]?.txId ? entries[0].txId : `tx_${Date.now()}`
+    })()
 
     dispatch(addMessage({ id: uid(), role: 'user', text, createdAt: Date.now() }))
     setChatInput('')
@@ -128,10 +136,10 @@ export default function App() {
             <div style={{ fontWeight: 600 }}>{selectedUid}</div>
           </div>
           <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-            <button className="kb-btn kb-btn-primary" onClick={() => setChatOpen(true)} style={{ flex: 1 }}>
+            <button className="kb-btn kb-btn-primary" onClick={() => dispatch(toggleChat())} style={{ flex: 1 }}>
               Спросить
             </button>
-            <button className="kb-btn" onClick={() => setSelectedUid((prev) => (prev === APP_CONFIG.defaultStartNode ? 'sub-cs' : APP_CONFIG.defaultStartNode))}>
+            <button className="kb-btn" onClick={() => dispatch(setSelectedUid(selectedUid === APP_CONFIG.defaultStartNode ? 'sub-cs' : APP_CONFIG.defaultStartNode))}>
               Переключить
             </button>
           </div>
@@ -155,7 +163,7 @@ export default function App() {
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="kb-btn" onClick={() => dispatch(toggleChat())}>Ассистент</button>
               <button className="kb-btn" onClick={() => navigate('/')}>Домой</button>
-              <button className="kb-btn" onClick={() => setChatOpen(true)}>
+              <button className="kb-btn" onClick={() => dispatch(toggleChat())}>
                 Ассистент
               </button>
               <button className="kb-btn" onClick={() => navigate('/')}
@@ -163,7 +171,7 @@ export default function App() {
                 Домой
               </button>
 
-              <ThemeToggle />  {/* ← здесь */}
+              <ThemeToggle />
             </div>
           </div>
 
