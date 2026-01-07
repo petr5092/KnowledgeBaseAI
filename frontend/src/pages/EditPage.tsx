@@ -12,15 +12,50 @@ type EditPageProps = {
 }
 
 export default function EditPage(props: EditPageProps) {
+  const { nodes, edges } = useSelector((state: RootState) => state.edit)
   const dispatch = useDispatch<AppDispatch>()
 
-  const { nodes, edges } = useSelector((state: RootState) => state.edit)
+  // Memoize nodeTypes to prevent unnecessary re-renders
+  const nodeTypes = useMemo(() => ({}), [])
+  const edgeTypes = useMemo(() => ({}), [])
+
+  const getNodeLabel = (node: Node): string => {
+    const data: unknown = node.data
+    if (data && typeof data === 'object' && 'label' in data) {
+      const v = (data as { label?: unknown }).label
+      return typeof v === 'string' ? v : String(v ?? '')
+    }
+    return ''
+  }
+
+  const getEdgeLabel = (edge: { label?: unknown }): string => {
+    const v = edge.label
+    return typeof v === 'string' ? v : String(v ?? '')
+  }
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(props.selectedUid || null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [canSave, setCanSave] = useState(false);
-  const selectedNode = useMemo(() => nodes.find((n) => n.id === selectedNodeId) || null, [nodes, selectedNodeId])
-  const selectedEdge = useMemo(() => edges.find((e) => e.id === selectedEdgeId) || null, [edges, selectedEdgeId])
+  // Auto-load draft on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('kb_edit_draft')
+      if (raw) {
+        const data = JSON.parse(raw)
+        dispatch(actions.setGraph(data))
+      }
+    } catch (e) {
+      console.error('[Edit] Failed to load draft', e)
+    }
+  }, [dispatch])
+
+  // Auto-save draft on changes
+  useEffect(() => {
+    if (nodes.length > 0 || edges.length > 0) {
+      const payload = { nodes, edges }
+      localStorage.setItem('kb_edit_draft', JSON.stringify(payload))
+    }
+  }, [nodes, edges])
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -58,6 +93,8 @@ export default function EditPage(props: EditPageProps) {
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           onNodesChange={(changes) => dispatch(actions.onNodesChange(changes))}
           onEdgesChange={(changes) => dispatch(actions.onEdgesChange(changes))}
           onConnect={(c: Connection) => dispatch(actions.onConnect(c))}
@@ -91,7 +128,7 @@ export default function EditPage(props: EditPageProps) {
                 <span style={{ fontSize: 12, color: 'var(--muted)' }}>Label</span>
                 <input
                   className="kb-input"
-                  value={String((selectedNode.data as any)?.label || '')}
+                  value={getNodeLabel(selectedNode)}
                   onChange={(e) => dispatch(actions.updateNodeLabel({ id: selectedNode.id, label: e.target.value }))}
                 />
               </label>
@@ -122,7 +159,7 @@ export default function EditPage(props: EditPageProps) {
                 <span style={{ fontSize: 12, color: 'var(--muted)' }}>Тип</span>
                 <input
                   className="kb-input"
-                  value={String((selectedEdge.label as any) || '')}
+                  value={getEdgeLabel(selectedEdge)}
                   onChange={(e) => dispatch(actions.updateEdgeLabel({ id: selectedEdge.id, label: e.target.value }))}
                 />
               </label>
@@ -142,43 +179,6 @@ export default function EditPage(props: EditPageProps) {
         )}
 
         {!selectedNode && !selectedEdge && <div style={{ fontSize: 12, color: 'var(--muted)' }}>Выберите узел или ребро</div>}
-
-        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-          <button
-            className="kb-btn"
-            onClick={() => {
-              const payload = { nodes, edges }
-              try {
-                localStorage.setItem('kb_edit_draft', JSON.stringify(payload))
-              } catch { }
-            }}
-          >
-            Сохранить черновик
-          </button>
-          <button
-            className="kb-btn"
-            onClick={() => {
-              try {
-                const raw = localStorage.getItem('kb_edit_draft')
-                if (!raw) return
-                const data = JSON.parse(raw)
-                dispatch(actions.setGraph(data))
-              } catch { }
-            }}
-          >
-            Загрузить черновик
-          </button>
-          <button
-            className="kb-btn"
-            onClick={() => {
-              try {
-                localStorage.removeItem('kb_edit_draft')
-              } catch { }
-            }}
-          >
-            Очистить черновик
-          </button>
-        </div>
       </div>
     </div>
   )

@@ -4,7 +4,9 @@ import { optional, z } from "zod";
 export const GraphNodeSchema = z.object({
   uid: z.string(),
   title: z.string().optional(),
-  kind: z.enum(["concept", "skill", "resource"]).optional(),
+  // Backend returns Neo4j label as kind (e.g. "Topic", "Subject", "Skill", ...)
+  // so on frontend we treat it as a string and normalize where needed.
+  kind: z.string().optional().default("Unknown"),
   color: z.string().optional(),
   shape: z.string().optional(),
   data: z.record(z.string(), z.unknown()).optional().transform((val) => val ?? {}),
@@ -14,8 +16,8 @@ export const GraphNodeSchema = z.object({
 export const GraphEdgeSchema = z.object({
   source: z.string(),
   target: z.string(),
-  relation: z.string().optional(),
-  kind: z.string().optional(),
+  // Backend uses "kind" for relation type (e.g. "PREREQ", "CONTAINS", ...)
+  kind: z.string().optional().default("Unknown"),
   weight: z.number().optional(),
 });
 

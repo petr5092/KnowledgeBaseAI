@@ -2,15 +2,16 @@ name: knowledgebase
 
 services:
   traefik:
+    profiles: ["infra"]
+    platform: linux/amd64
     env_file:
       - ${ENV_FILE:-.env.prod}
-    image: traefik:v3.0
+    image: traefik:v2.11
     command:
       - --configFile=/etc/traefik/traefik.yml
     ports:
       - "80:80"
       - "443:443"
-      - "7687:7687"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/traefik:/acme
@@ -27,6 +28,7 @@ services:
       - "traefik.http.routers.traefik.middlewares=dashboard-auth"
 
   frontend:
+    platform: linux/amd64
     profiles: ["prod"]
     env_file:
       - ${ENV_FILE:-.env.prod}
@@ -54,9 +56,12 @@ services:
       - "traefik.http.routers.frontend-xteam-sec.tls.certresolver=le"
 
   frontend-dev:
+    platform: linux/amd64
     profiles: ["dev"]
-    image: node:20-alpine
+    image: node:20
     working_dir: /app
+    ports:
+      - "5173:5173"
     volumes:
       - ./frontend:/app
     command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
@@ -73,14 +78,17 @@ services:
       - "traefik.http.routers.frontend-dev-stud-sec.tls.certresolver=le"
 
   frontend-prod-hot:
-    profiles: ["dev"]
+    platform: linux/amd64
+    profiles: ["frontend-hot"]
     env_file:
       - ${ENV_FILE:-.env.prod}
-    image: node:20-alpine
+    image: node:20
     working_dir: /app
+    ports:
+      - "5174:5174"
     volumes:
       - ./frontend:/app
-    command: sh -c "npm ci --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5174"
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5174"
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.frontend-prod-hot-svc.loadbalancer.server.port=5174"
@@ -102,12 +110,17 @@ services:
       - "traefik.http.routers.frontend-prod-hot-xteam-sec.tls.certresolver=le"
 
   fastapi:
+    platform: linux/amd64
     profiles: ["prod"]
     env_file:
       - ${ENV_FILE:-.env.prod}
     build:
       context: ./backend
       dockerfile: Dockerfile.fastapi
+    environment:
+      PG_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      NEO4J_URI: bolt://neo4j:7687
+      QDRANT_URL: http://qdrant:6333
     volumes:
       - ./backend:/app
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000
@@ -132,12 +145,19 @@ services:
       - "traefik.http.routers.fastapi-xteam-sec.tls.certresolver=le"
 
   fastapi-dev:
+    platform: linux/amd64
     profiles: ["dev"]
     env_file:
       - ${ENV_FILE:-.env.dev}
     build:
       context: ./backend
       dockerfile: Dockerfile.fastapi
+    environment:
+      PG_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      NEO4J_URI: bolt://neo4j:7687
+      QDRANT_URL: http://qdrant:6333
+    ports:
+      - "8000:8000"
     volumes:
       - ./backend:/app
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
@@ -162,9 +182,10 @@ services:
       - "traefik.http.routers.fastapi-dev-xteam-sec.tls.certresolver=le"
 
   redis:
+    platform: linux/amd64
     env_file:
       - ${ENV_FILE:-.env.prod}
-    image: redis:7
+    image: redis:7-bookworm
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -172,6 +193,9 @@ services:
       - "traefik.enable=false"
 
   prometheus:
+    profiles: ["infra"]
+    user: "0"
+    platform: linux/amd64
     image: prom/prometheus:latest
     restart: unless-stopped
     profiles: ["monitoring"]
@@ -181,7 +205,9 @@ services:
       - --web.enable-remote-write-receiver
 
   grafana:
-    image: grafana/grafana:10.4.2
+    profiles: ["infra"]
+    platform: linux/amd64
+    image: grafana/grafana:10.4.2-ubuntu
     restart: unless-stopped
     profiles: ["monitoring"]
     ports:
@@ -190,7 +216,8 @@ services:
       - "traefik.enable=false"
 
   neo4j:
-    image: neo4j:5.21
+    platform: linux/amd64
+    image: neo4j:5.26
     restart: unless-stopped
     environment:
       NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
@@ -200,8 +227,8 @@ services:
     ports:
       - "7474:7474"
     volumes:
-      - /var/lib/neo4j/data:/data
-      - /var/lib/neo4j/logs:/logs
+      - ./data/neo4j:/data
+      - ./data/neo4j_logs:/logs
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.neo4j-svc.loadbalancer.server.port=7474"
@@ -219,27 +246,30 @@ services:
       - "traefik.tcp.routers.neo4j-bolt.tls=true"
 
   postgres:
+    platform: linux/amd64
     env_file:
       - ${ENV_FILE:-.env.prod}
-    image: postgres:15
+    image: postgres:15-bookworm
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - /var/lib/postgresql/data:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data
     labels:
       - "traefik.enable=false"
 
   qdrant:
+    platform: linux/amd64
     env_file:
       - ${ENV_FILE:-.env.prod}
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.12.0
     restart: unless-stopped
     environment:
       QDRANT__SERVICE__GRPC_PORT: 6334
     volumes:
-      - /var/lib/qdrant:/qdrant/storage
+      - ./data/qdrant:/qdrant/storage
     labels:
       - "traefik.enable=false"

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from 'react'
+import React, { createContext, useCallback, useContext, useState } from 'react'
 import type { ViewportResponse } from '../api'
 import { APP_CONFIG } from '../config/appConfig'
 
@@ -6,11 +6,12 @@ import { APP_CONFIG } from '../config/appConfig'
 type GraphState = {
   viewport: ViewportResponse | null
   selectedUid: string
+  depth: number // Сохраняем глубину запроса
   camera: {
     position: { x: number; y: number }
     scale: number
   } | null
-  positions: { x: number; y: number } | null // Добавили позиции узлов
+  positions: Record<string, { x: number; y: number }> | null // Позиции узлов по id
 }
 
 type GraphContextType = {
@@ -26,12 +27,12 @@ export function GraphProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GraphState>({
     viewport: null,
     selectedUid: APP_CONFIG.defaultStartNode,
+    depth: APP_CONFIG.defaultDepth,
     camera: null,
     positions: null,
   })
 
   const saveGraphState = useCallback((updates: Partial<GraphState>) => {
-    console.log('saveGraphState', updates)    
     setState((prev) => ({ ...prev, ...updates }))
   }, [])
 
@@ -39,6 +40,7 @@ export function GraphProvider({ children }: { children: React.ReactNode }) {
     setState({
       viewport: null,
       selectedUid: APP_CONFIG.defaultStartNode,
+      depth: APP_CONFIG.defaultDepth,
       camera: null,
       positions: null,
     })

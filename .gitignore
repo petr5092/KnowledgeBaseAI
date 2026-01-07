@@ -14,7 +14,14 @@ __pycache__/
 
 # OS
 .DS_Store
+
 # Python virtualenv
 .venv/
 venv/
 .vite
+
+# Data & Databases
+data/
+backend/src/kb/processed/
+*.log
+*.sqlite

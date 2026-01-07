@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, memo } from 'react'
 import { Network, type Edge as VisNetworkEdge, type Node as VisNetworkNode } from 'vis-network'
-import type { ViewportResponse } from '../api'
+import type { ViewportResponse, GraphEdge } from '../api'
 import { getViewport } from '../api'
 import { NodeDetailsSidebar } from '../components/NodeDetailsSidebar'
 import { GRAPH_THEME } from '../config/graphTheme' 
 import type { ThemeNodeKind } from '../config/graphTheme'
+import { toggleChat } from '../store/appSlice'
+import { useDispatch } from 'react-redux'
 import { useGraphContext } from '../context/GraphContext'
+import { KBSelect } from '../components/KBSelect'
+import { APP_CONFIG, type NodeKind } from '../config/appConfig'
 
 type ExplorePageProps = {
   selectedUid: string
@@ -17,17 +21,35 @@ type VisNode = VisNetworkNode & {
   y?: number
 }
 
-type VisEdge = VisNetworkEdge
-
 function toVisData(viewport: ViewportResponse) {
-  const nodes = viewport.nodes.map((n): VisNode => {
-    // Безопасное приведение типа
-    const kindKey = n.kind as ThemeNodeKind
-    const validKind = (GRAPH_THEME.nodes.colors[kindKey] ? kindKey : 'Default') as ThemeNodeKind
-    
-    const color = GRAPH_THEME.nodes.colors[validKind]
-    const size = GRAPH_THEME.nodes.sizes[validKind]
-    const label = n.title || n.uid
+  const seenIds = new Set<string>()
+  
+  // Маппинг типов БД к техническому стандарту 4.2
+  const mapKind = (kind: string): NodeKind => {
+    const k = kind.toLowerCase()
+    return APP_CONFIG.kindMap[k] || APP_CONFIG.defaultKind
+  }
+
+  const nodes = viewport.nodes
+    .filter(n => {
+      if (seenIds.has(n.uid)) {
+        return false
+      }
+      seenIds.add(n.uid)
+      return true
+    })
+    .map((n): VisNode => {
+      // Применяем маппинг к стандарту (соответствие DoD 4.2)
+      const standardKind = mapKind(n.kind)
+      
+      // Для оформления пытаемся использовать оригинальный kind, 
+      // если его нет в теме - используем смаппленный стандартный
+      const kindKey = n.kind as ThemeNodeKind
+      const validKind = (GRAPH_THEME.nodes.colors[kindKey] ? kindKey : standardKind) as ThemeNodeKind
+      
+      const color = GRAPH_THEME.nodes.colors[validKind]
+      const size = GRAPH_THEME.nodes.sizes[validKind]
+      const label = n.title || n.uid
 
     // Функция для переноса длинных слов
      const formatLabel = (text: string) => {
@@ -72,11 +94,10 @@ function toVisData(viewport: ViewportResponse) {
       }
     })
 
-  const edges = viewport.edges.map((e: any, idx: number): VisNetworkEdge => ({
+  const edges = viewport.edges.map((e: GraphEdge, idx: number): VisNetworkEdge => ({
     id: `${e.source}->${e.target}:${idx}`,
     from: e.source,
     to: e.target,
-    // label: undefined,
     color: GRAPH_THEME.edges.color,
     dashes: [...GRAPH_THEME.edges.dashes],
     width: GRAPH_THEME.edges.width,
@@ -86,23 +107,20 @@ function toVisData(viewport: ViewportResponse) {
   return { nodes, edges }
 }
 
-export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePageProps) {
+const ExplorePage = memo(function ExplorePage({ selectedUid, onSelectUid }: ExplorePageProps) {
+  const dispatch = useDispatch()
   const { graphState, saveGraphState } = useGraphContext()
-  
-  // LOG: Проверяем состояние при рендере
-  console.log('[Explore] Render. GraphState:', { 
-      storedUid: graphState.selectedUid, 
-      currentUid: selectedUid, 
-      hasViewport: !!graphState.viewport,
-      hasCamera: !!graphState.camera 
-  })
 
-  const [depth, setDepth] = useState(1)
+  const [depth, setDepth] = useState(graphState.depth ?? APP_CONFIG.defaultDepth)
+  const [filterKind, setFilterKind] = useState<string>('All')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  // Если данные в контексте актуальны для текущего узла, используем их
-  const isContextValid = graphState.selectedUid === selectedUid && graphState.viewport
+  // Данные валидны, если узел совпадает И глубина совпадает
+  const isContextValid = 
+    graphState.selectedUid === selectedUid && 
+    !!graphState.viewport && 
+    graphState.depth === depth
   const viewport = isContextValid ? graphState.viewport : null
 
   // State for sidebar
@@ -115,7 +133,23 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
 
   const visData = useMemo(() => {
     if (!viewport) return { nodes: [], edges: [] }
-    return toVisData(viewport)
+    
+    // Фильтрация по типу (Kind)
+    const filteredNodes = filterKind === 'All' 
+      ? viewport.nodes 
+      : viewport.nodes.filter(n => n.kind === filterKind)
+      
+    return toVisData({ ...viewport, nodes: filteredNodes })
+  }, [viewport, filterKind])
+
+  // Список доступных типов для фильтра
+  const kindOptions = useMemo(() => {
+    if (!viewport) return [{ value: 'All', label: 'All' }]
+    const kinds = Array.from(new Set(viewport.nodes.map(n => n.kind)))
+    return [
+      { value: 'All', label: 'All' },
+      ...kinds.map(k => ({ value: k, label: k }))
+    ]
   }, [viewport])
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -142,11 +176,12 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
     getViewport({ center_uid: selectedUid, depth })
       .then((res) => {
         if (cancelled) return
-        // Сохраняем в контекст
+        // Сохраняем в контекст вместе с глубиной
         saveGraphState({ 
           viewport: res, 
           selectedUid: selectedUid,
-          camera: null // Reset camera on new node
+          depth: depth, // Сохраняем, для какой глубины эти данные
+          camera: null // Reset camera on new node or depth
         })
       })
       .catch((err) => {
@@ -174,7 +209,6 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
     
     // Подмешиваем сохраненные позиции из REF (не вызывает ре-рендер при обновлении)
     const savedPositions = graphStateRef.current.positions
-    console.log(graphStateRef.current.positions);
     
     const nodes = isContextValid && savedPositions 
       ? baseNodes.map(n => ({
@@ -226,17 +260,12 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
 
     // Восстанавливаем камеру из REF (не триггерит эффект)
     const savedCamera = graphStateRef.current.camera
-    console.log('[Explore] Init Network. Saved camera:', savedCamera, 'Context valid:', isContextValid)
-    
     if (savedCamera && isContextValid) {
       // Инициализируем ref сразу, чтобы при быстром уходе он не был null
       cameraRef.current = savedCamera
-
-      console.log('[Explore] Restoring camera position...')
       // Используем setTimeout, чтобы дать vis-network инициализироваться перед сдвигом камеры
       setTimeout(() => {
         if (!isMounted) return 
-        console.log('[Explore] MOVING CAMERA NOW to:', savedCamera.position)
         network.moveTo({
           position: savedCamera.position,
           scale: savedCamera.scale,
@@ -293,8 +322,6 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
       const lastKnownCamera = cameraRef.current || { position: network.getViewPosition(), scale: network.getScale() }
       const positions = network.getPositions() // Получаем позиции узлов
       
-      console.log('[Explore] Unmounting. Saving camera:', lastKnownCamera)
-      
       saveGraphState({
         camera: lastKnownCamera,
         positions: positions, // Сохраняем позиции
@@ -311,13 +338,11 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
     
     // Используем REF для проверки камеры
     if (graphStateRef.current.camera && isContextValid) {
-        console.log('[Explore] Skipping focus because camera is restored')
         return
     }
 
-    console.log('[Explore] Focusing on node (default behavior)')
-    const allNodes = network.body.data.nodes
-    if (!allNodes.get(selectedUid)) return
+    const pos = network.getPositions([selectedUid]) as Record<string, { x: number; y: number }>
+    if (!pos[selectedUid]) return
 
     network.selectNodes([selectedUid])
     network.focus(selectedUid, { scale: 1.1, animation: { duration: 350, easingFunction: 'easeInOutQuad' } })
@@ -330,19 +355,20 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>Explore (vis-network)</div>
           <div style={{ fontSize: 16, fontWeight: 650 }}>Большой граф + физика</div>
         </div>
-
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>Depth</div>
-          <select
-            className="kb-input"
-            value={depth}
-            onChange={(e) => dispatch(setDepth(Number(e.target.value)))}
-            style={{ width: 120 }}
-          >
-            {[1, 2, 3].map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
+        
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center'}}>
+          <KBSelect 
+            label="Kind" 
+            value={filterKind} 
+            onChange={setFilterKind} 
+            options={kindOptions} 
+          />
+          <KBSelect 
+            label="Depth" 
+            value={depth} 
+            onChange={setDepth} 
+            options={[1, 2, 3].map(d => ({ value: d, label: String(d) }))} 
+          />
         </div>
       </div>
 
@@ -368,8 +394,15 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
       >
         <NodeDetailsSidebar 
           uid={detailsUid} 
-          onClose={() => setDetailsUid(null)} 
-          onAskAI={(uid) => alert(`TODO: Open Chat for ${uid}`)} 
+          onClose={() => {
+            setDetailsUid(null)
+            // Важно: если узел остался выделенным в vis-network, повторный клик не вызовет selectNode.
+            // Снимаем выделение, чтобы сайдбар мог открываться снова на тот же узел.
+            networkRef.current?.unselectAll()
+          }} 
+          onAskAI={(_uid) => {
+            dispatch(toggleChat())
+          }} 
         />
         <div
           style={{
@@ -381,6 +414,22 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
         /> 
 
         <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
+
+        {viewport && viewport.nodes.length === 0 && !loading && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: 'var(--muted)',
+            textAlign: 'center',
+            zIndex: 1
+          }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🗺️</div>
+            <div style={{ fontWeight: 600, color: 'var(--text)' }}>Граф пуст</div>
+            <div style={{ fontSize: 13, marginTop: 4 }}>Попробуйте выбрать другой узел или изменить глубину.</div>
+          </div>
+        )}
 
         {loading && (
           <div className="kb-panel" style={{ position: 'absolute', left: 14, bottom: 14, padding: '10px 12px', borderRadius: 14, background: 'rgba(0,0,0,0.35)' }}>
@@ -430,4 +479,6 @@ export default function ExplorePage({ selectedUid, onSelectUid }: ExplorePagePro
       </div>
     </div>
   )
-}
+})
+
+export default ExplorePage

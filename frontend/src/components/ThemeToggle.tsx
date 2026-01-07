@@ -41,11 +41,12 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+      className="kb-btn"
       aria-label="Переключить тему"
       title="Переключить тему"
+      style={{ display: 'flex', alignItems: 'center', gap: 6 }}
     >
-      {isDark ? 'Светлая' : 'Тёмная'}
+      <span>{isDark ? 'Светлая' : 'Тёмная'}</span>
     </button>
   );
 }
