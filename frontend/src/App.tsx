@@ -109,7 +109,7 @@ export default function App() {
               <button className="kb-btn" onClick={() => dispatch(toggleChat())}>Ассистент</button>
               <button className="kb-btn" onClick={() => navigate('/')}>Домой</button>
 
-              <ThemeToggle />  {/* ← здесь */}
+              <ThemeToggle />
             </div>
           </div>
 

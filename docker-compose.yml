@@ -198,6 +198,7 @@ services:
     platform: linux/amd64
     image: prom/prometheus:latest
     restart: unless-stopped
+    profiles: ["monitoring"]
     labels:
       - "traefik.enable=false"
     command:
@@ -208,6 +209,7 @@ services:
     platform: linux/amd64
     image: grafana/grafana:10.4.2-ubuntu
     restart: unless-stopped
+    profiles: ["monitoring"]
     ports:
       - "3000:3000"
     labels:
