@@ -4,6 +4,8 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.openapi.docs import get_redoc_html
+from starlette.staticfiles import StaticFiles
 from src.core.logging import setup_logging, logger
 from src.config.settings import settings
 from src.core.context import extract_tenant_id_from_request, set_tenant_id
@@ -89,8 +91,14 @@ app = FastAPI(
     openapi_tags=tags_metadata,
     contact={"name": "StudyNinja API", "url": "https://studyninja.ai", "email": "api@studyninja.ai"},
     license_info={"name": "Proprietary"},
+    redoc_url=None,
 )
 
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
+
+@app.get("/redoc", include_in_schema=False)
+async def redoc_html():
+    return get_redoc_html(openapi_url=app.openapi_url, title=app.title + " - ReDoc", redoc_js_url="/static/redoc/redoc.standalone.js")
 
 
 REQ_COUNTER = Counter("http_requests_total", "Total HTTP requests", ["method", "path", "status"])
