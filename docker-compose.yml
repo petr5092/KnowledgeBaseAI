@@ -12,6 +12,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "7687:7687"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/traefik:/acme
@@ -193,27 +194,63 @@ services:
       - "traefik.enable=false"
 
   prometheus:
-    profiles: ["infra"]
+    profiles: ["infra","monitoring"]
     user: "0"
     platform: linux/amd64
     image: prom/prometheus:latest
     restart: unless-stopped
-    profiles: ["monitoring"]
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      - "traefik.http.services.prom-svc.loadbalancer.server.port=9090"
+      - "traefik.http.routers.prom-stud.rule=Host(`prom.${KB_DOMAIN}`)"
+      - "traefik.http.routers.prom-stud.entrypoints=web"
+      - "traefik.http.routers.prom-stud.service=prom-svc"
+      - "traefik.http.routers.prom-stud-sec.rule=Host(`prom.${KB_DOMAIN}`)"
+      - "traefik.http.routers.prom-stud-sec.entrypoints=websecure"
+      - "traefik.http.routers.prom-stud-sec.service=prom-svc"
+      - "traefik.http.routers.prom-stud-sec.tls=true"
+      - "traefik.http.routers.prom-stud-sec.tls.certresolver=le"
+      - "traefik.http.routers.prom-xteam.rule=Host(`prom.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.prom-xteam.entrypoints=web"
+      - "traefik.http.routers.prom-xteam.service=prom-svc"
+      - "traefik.http.routers.prom-xteam-sec.rule=Host(`prom.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.prom-xteam-sec.entrypoints=websecure"
+      - "traefik.http.routers.prom-xteam-sec.service=prom-svc"
+      - "traefik.http.routers.prom-xteam-sec.tls=true"
+      - "traefik.http.routers.prom-xteam-sec.tls.certresolver=le"
+      - "traefik.http.routers.prom-stud-sec.middlewares=dashboard-auth"
+      - "traefik.http.routers.prom-xteam-sec.middlewares=dashboard-auth"
     command:
       - --web.enable-remote-write-receiver
 
   grafana:
-    profiles: ["infra"]
+    profiles: ["infra","monitoring"]
     platform: linux/amd64
     image: grafana/grafana:10.4.2-ubuntu
     restart: unless-stopped
-    profiles: ["monitoring"]
     ports:
       - "3000:3000"
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      - "traefik.http.services.grafana-svc.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana-stud.rule=Host(`grafana.${KB_DOMAIN}`)"
+      - "traefik.http.routers.grafana-stud.entrypoints=web"
+      - "traefik.http.routers.grafana-stud.service=grafana-svc"
+      - "traefik.http.routers.grafana-stud-sec.rule=Host(`grafana.${KB_DOMAIN}`)"
+      - "traefik.http.routers.grafana-stud-sec.entrypoints=websecure"
+      - "traefik.http.routers.grafana-stud-sec.service=grafana-svc"
+      - "traefik.http.routers.grafana-stud-sec.tls=true"
+      - "traefik.http.routers.grafana-stud-sec.tls.certresolver=le"
+      - "traefik.http.routers.grafana-xteam.rule=Host(`grafana.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.grafana-xteam.entrypoints=web"
+      - "traefik.http.routers.grafana-xteam.service=grafana-svc"
+      - "traefik.http.routers.grafana-xteam-sec.rule=Host(`grafana.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.grafana-xteam-sec.entrypoints=websecure"
+      - "traefik.http.routers.grafana-xteam-sec.service=grafana-svc"
+      - "traefik.http.routers.grafana-xteam-sec.tls=true"
+      - "traefik.http.routers.grafana-xteam-sec.tls.certresolver=le"
+      - "traefik.http.routers.grafana-stud-sec.middlewares=dashboard-auth"
+      - "traefik.http.routers.grafana-xteam-sec.middlewares=dashboard-auth"
 
   neo4j:
     platform: linux/amd64
@@ -221,6 +258,7 @@ services:
     restart: unless-stopped
     environment:
       NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
+      NEO4J_server_bolt_tls__level: DISABLED
       NEO4J_server_memory_pagecache_size: 2G
       NEO4J_server_memory_heap_initial__size: 1G
       NEO4J_server_memory_heap_max__size: 2G
@@ -232,18 +270,20 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.neo4j-svc.loadbalancer.server.port=7474"
-      - "traefik.http.routers.neo4j-http.rule=Host(`graph.kb.xteam.pro`)"
+      - "traefik.http.routers.neo4j-http.rule=Host(`graph.${KB_ALT_DOMAIN}`) || Host(`graph.${KB_DOMAIN}`)"
       - "traefik.http.routers.neo4j-http.entrypoints=web"
-      - "traefik.http.routers.neo4j-https.rule=Host(`graph.kb.xteam.pro`)"
+      - "traefik.http.routers.neo4j-http.service=neo4j-svc"
+      - "traefik.http.routers.neo4j-https.rule=Host(`graph.${KB_ALT_DOMAIN}`) || Host(`graph.${KB_DOMAIN}`)"
       - "traefik.http.routers.neo4j-https.entrypoints=websecure"
       - "traefik.http.routers.neo4j-https.service=neo4j-svc"
       - "traefik.http.routers.neo4j-https.tls=true"
       - "traefik.http.routers.neo4j-https.tls.certresolver=le"
       - "traefik.tcp.services.neo4j-bolt.loadbalancer.server.port=7687"
-      - "traefik.tcp.routers.neo4j-bolt.rule=HostSNI(`graph.kb.xteam.pro`)"
+      - "traefik.tcp.routers.neo4j-bolt.rule=HostSNI(`graph.${KB_ALT_DOMAIN}`,`graph.${KB_DOMAIN}`)"
       - "traefik.tcp.routers.neo4j-bolt.entrypoints=bolt"
       - "traefik.tcp.routers.neo4j-bolt.service=neo4j-bolt"
       - "traefik.tcp.routers.neo4j-bolt.tls=true"
+      - "traefik.tcp.routers.neo4j-bolt.tls.certresolver=le"
 
   postgres:
     platform: linux/amd64
@@ -272,4 +312,51 @@ services:
     volumes:
       - ./data/qdrant:/qdrant/storage
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      - "traefik.http.services.qdrant-svc.loadbalancer.server.port=6333"
+      - "traefik.http.routers.qdrant-stud.rule=Host(`qdrant.${KB_DOMAIN}`)"
+      - "traefik.http.routers.qdrant-stud.entrypoints=web"
+      - "traefik.http.routers.qdrant-stud.service=qdrant-svc"
+      - "traefik.http.routers.qdrant-stud-sec.rule=Host(`qdrant.${KB_DOMAIN}`)"
+      - "traefik.http.routers.qdrant-stud-sec.entrypoints=websecure"
+      - "traefik.http.routers.qdrant-stud-sec.service=qdrant-svc"
+      - "traefik.http.routers.qdrant-stud-sec.tls=true"
+      - "traefik.http.routers.qdrant-stud-sec.tls.certresolver=le"
+      - "traefik.http.routers.qdrant-xteam.rule=Host(`qdrant.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.qdrant-xteam.entrypoints=web"
+      - "traefik.http.routers.qdrant-xteam.service=qdrant-svc"
+      - "traefik.http.routers.qdrant-xteam-sec.rule=Host(`qdrant.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.qdrant-xteam-sec.entrypoints=websecure"
+      - "traefik.http.routers.qdrant-xteam-sec.service=qdrant-svc"
+      - "traefik.http.routers.qdrant-xteam-sec.tls=true"
+      - "traefik.http.routers.qdrant-xteam-sec.tls.certresolver=le"
+      - "traefik.http.routers.qdrant-stud-sec.middlewares=dashboard-auth"
+      - "traefik.http.routers.qdrant-xteam-sec.middlewares=dashboard-auth"
+
+  adminer:
+    platform: linux/amd64
+    image: adminer:latest
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.adminer-svc.loadbalancer.server.port=8080"
+      - "traefik.http.routers.adminer-stud.rule=Host(`adminer.${KB_DOMAIN}`)"
+      - "traefik.http.routers.adminer-stud.entrypoints=web"
+      - "traefik.http.routers.adminer-stud.service=adminer-svc"
+      - "traefik.http.routers.adminer-stud-sec.rule=Host(`adminer.${KB_DOMAIN}`)"
+      - "traefik.http.routers.adminer-stud-sec.entrypoints=websecure"
+      - "traefik.http.routers.adminer-stud-sec.service=adminer-svc"
+      - "traefik.http.routers.adminer-stud-sec.tls=true"
+      - "traefik.http.routers.adminer-stud-sec.tls.certresolver=le"
+      - "traefik.http.routers.adminer-xteam.rule=Host(`adminer.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.adminer-xteam.entrypoints=web"
+      - "traefik.http.routers.adminer-xteam.service=adminer-svc"
+      - "traefik.http.routers.adminer-xteam-sec.rule=Host(`adminer.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.adminer-xteam-sec.entrypoints=websecure"
+      - "traefik.http.routers.adminer-xteam-sec.service=adminer-svc"
+      - "traefik.http.routers.adminer-xteam-sec.tls=true"
+      - "traefik.http.routers.adminer-xteam-sec.tls.certresolver=le"
+      - "traefik.http.routers.adminer-stud-sec.middlewares=dashboard-auth"
+      - "traefik.http.routers.adminer-xteam-sec.middlewares=dashboard-auth"

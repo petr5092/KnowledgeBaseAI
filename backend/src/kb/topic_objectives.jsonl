@@ -118,3 +118,63 @@
 {"uid": "OBJ-TOP-KORRELYACIYA-I-REGRESSIY-e0a5f4-APPLY", "topic_uid": "TOP-KORRELYACIYA-I-REGRESSIY-e0a5f4", "title": "Применять методы к задачам: Корреляция и регрессия"}
 {"uid": "OBJ-TOP-PRIMENENIE-TEORII-VEROYA-010822-BASICS", "topic_uid": "TOP-PRIMENENIE-TEORII-VEROYA-010822", "title": "Освоить базовые понятия: Применение теории вероятностей"}
 {"uid": "OBJ-TOP-PRIMENENIE-TEORII-VEROYA-010822-APPLY", "topic_uid": "TOP-PRIMENENIE-TEORII-VEROYA-010822", "title": "Применять методы к задачам: Применение теории вероятностей"}
+{"uid": "OBJ-TOP-OSNOVNYE-OPERACII-S-CHIS-a12f03-BASICS", "topic_uid": "TOP-OSNOVNYE-OPERACII-S-CHIS-a12f03", "title": "Освоить базовые понятия: Основные операции с числами"}
+{"uid": "OBJ-TOP-OSNOVNYE-OPERACII-S-CHIS-a12f03-APPLY", "topic_uid": "TOP-OSNOVNYE-OPERACII-S-CHIS-a12f03", "title": "Применять методы к задачам: Основные операции с числами"}
+{"uid": "OBJ-TOP-LINEINYE-URAVNENIYA-f18f5a-BASICS", "topic_uid": "TOP-LINEINYE-URAVNENIYA-f18f5a", "title": "Освоить базовые понятия: Линейные уравнения"}
+{"uid": "OBJ-TOP-LINEINYE-URAVNENIYA-f18f5a-APPLY", "topic_uid": "TOP-LINEINYE-URAVNENIYA-f18f5a", "title": "Применять методы к задачам: Линейные уравнения"}
+{"uid": "OBJ-TOP-KVADRATNYE-URAVNENIYA-be6241-BASICS", "topic_uid": "TOP-KVADRATNYE-URAVNENIYA-be6241", "title": "Освоить базовые понятия: Квадратные уравнения"}
+{"uid": "OBJ-TOP-KVADRATNYE-URAVNENIYA-be6241-APPLY", "topic_uid": "TOP-KVADRATNYE-URAVNENIYA-be6241", "title": "Применять методы к задачам: Квадратные уравнения"}
+{"uid": "OBJ-TOP-FUNKCII-I-GRAFIKI-5653e1-BASICS", "topic_uid": "TOP-FUNKCII-I-GRAFIKI-5653e1", "title": "Освоить базовые понятия: Функции и графики"}
+{"uid": "OBJ-TOP-FUNKCII-I-GRAFIKI-5653e1-APPLY", "topic_uid": "TOP-FUNKCII-I-GRAFIKI-5653e1", "title": "Применять методы к задачам: Функции и графики"}
+{"uid": "OBJ-TOP-SISTEMY-URAVNENII-1ce602-BASICS", "topic_uid": "TOP-SISTEMY-URAVNENII-1ce602", "title": "Освоить базовые понятия: Системы уравнений"}
+{"uid": "OBJ-TOP-SISTEMY-URAVNENII-1ce602-APPLY", "topic_uid": "TOP-SISTEMY-URAVNENII-1ce602", "title": "Применять методы к задачам: Системы уравнений"}
+{"uid": "OBJ-TOP-NERAVENSTVA-111373-BASICS", "topic_uid": "TOP-NERAVENSTVA-111373", "title": "Освоить базовые понятия: Неравенства"}
+{"uid": "OBJ-TOP-NERAVENSTVA-111373-APPLY", "topic_uid": "TOP-NERAVENSTVA-111373", "title": "Применять методы к задачам: Неравенства"}
+{"uid": "OBJ-TOP-OSNOVNYE-GEOMETRICHESKIE-c63634-BASICS", "topic_uid": "TOP-OSNOVNYE-GEOMETRICHESKIE-c63634", "title": "Освоить базовые понятия: Основные геометрические фигуры"}
+{"uid": "OBJ-TOP-OSNOVNYE-GEOMETRICHESKIE-c63634-APPLY", "topic_uid": "TOP-OSNOVNYE-GEOMETRICHESKIE-c63634", "title": "Применять методы к задачам: Основные геометрические фигуры"}
+{"uid": "OBJ-TOP-PLOSCHAD-I-PERIMETR-FIGU-ecabb8-BASICS", "topic_uid": "TOP-PLOSCHAD-I-PERIMETR-FIGU-ecabb8", "title": "Освоить базовые понятия: Площадь и периметр фигур"}
+{"uid": "OBJ-TOP-PLOSCHAD-I-PERIMETR-FIGU-ecabb8-APPLY", "topic_uid": "TOP-PLOSCHAD-I-PERIMETR-FIGU-ecabb8", "title": "Применять методы к задачам: Площадь и периметр фигур"}
+{"uid": "OBJ-TOP-TEOREMA-PIFAGORA-61f5a7-BASICS", "topic_uid": "TOP-TEOREMA-PIFAGORA-61f5a7", "title": "Освоить базовые понятия: Теорема Пифагора"}
+{"uid": "OBJ-TOP-TEOREMA-PIFAGORA-61f5a7-APPLY", "topic_uid": "TOP-TEOREMA-PIFAGORA-61f5a7", "title": "Применять методы к задачам: Теорема Пифагора"}
+{"uid": "OBJ-TOP-SIMMETRIYA-V-GEOMETRII-0edaf5-BASICS", "topic_uid": "TOP-SIMMETRIYA-V-GEOMETRII-0edaf5", "title": "Освоить базовые понятия: Симметрия в геометрии"}
+{"uid": "OBJ-TOP-SIMMETRIYA-V-GEOMETRII-0edaf5-APPLY", "topic_uid": "TOP-SIMMETRIYA-V-GEOMETRII-0edaf5", "title": "Применять методы к задачам: Симметрия в геометрии"}
+{"uid": "OBJ-TOP-GEOMETRICHESKIE-PREOBRAZ-0b6d0f-BASICS", "topic_uid": "TOP-GEOMETRICHESKIE-PREOBRAZ-0b6d0f", "title": "Освоить базовые понятия: Геометрические преобразования"}
+{"uid": "OBJ-TOP-GEOMETRICHESKIE-PREOBRAZ-0b6d0f-APPLY", "topic_uid": "TOP-GEOMETRICHESKIE-PREOBRAZ-0b6d0f", "title": "Применять методы к задачам: Геометрические преобразования"}
+{"uid": "OBJ-TOP-KOORDINATNAYA-GEOMETRIYA-14006d-BASICS", "topic_uid": "TOP-KOORDINATNAYA-GEOMETRIYA-14006d", "title": "Освоить базовые понятия: Координатная геометрия"}
+{"uid": "OBJ-TOP-KOORDINATNAYA-GEOMETRIYA-14006d-APPLY", "topic_uid": "TOP-KOORDINATNAYA-GEOMETRIYA-14006d", "title": "Применять методы к задачам: Координатная геометрия"}
+{"uid": "OBJ-TOP-OSNOVNYE-TRIGONOMETRICHE-ac296b-BASICS", "topic_uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-ac296b", "title": "Освоить базовые понятия: Основные тригонометрические функции"}
+{"uid": "OBJ-TOP-OSNOVNYE-TRIGONOMETRICHE-ac296b-APPLY", "topic_uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-ac296b", "title": "Применять методы к задачам: Основные тригонометрические функции"}
+{"uid": "OBJ-TOP-TRIGONOMETRICHESKIE-TOZH-997e1e-BASICS", "topic_uid": "TOP-TRIGONOMETRICHESKIE-TOZH-997e1e", "title": "Освоить базовые понятия: Тригонометрические тождества"}
+{"uid": "OBJ-TOP-TRIGONOMETRICHESKIE-TOZH-997e1e-APPLY", "topic_uid": "TOP-TRIGONOMETRICHESKIE-TOZH-997e1e", "title": "Применять методы к задачам: Тригонометрические тождества"}
+{"uid": "OBJ-TOP-UGLY-I-IH-IZMERENIE-7a9a4b-BASICS", "topic_uid": "TOP-UGLY-I-IH-IZMERENIE-7a9a4b", "title": "Освоить базовые понятия: Углы и их измерение"}
+{"uid": "OBJ-TOP-UGLY-I-IH-IZMERENIE-7a9a4b-APPLY", "topic_uid": "TOP-UGLY-I-IH-IZMERENIE-7a9a4b", "title": "Применять методы к задачам: Углы и их измерение"}
+{"uid": "OBJ-TOP-OBRATNYE-TRIGONOMETRICHE-fb9e31-BASICS", "topic_uid": "TOP-OBRATNYE-TRIGONOMETRICHE-fb9e31", "title": "Освоить базовые понятия: Обратные тригонометрические функции"}
+{"uid": "OBJ-TOP-OBRATNYE-TRIGONOMETRICHE-fb9e31-APPLY", "topic_uid": "TOP-OBRATNYE-TRIGONOMETRICHE-fb9e31", "title": "Применять методы к задачам: Обратные тригонометрические функции"}
+{"uid": "OBJ-TOP-TRIGONOMETRICHESKIE-URAV-749fa1-BASICS", "topic_uid": "TOP-TRIGONOMETRICHESKIE-URAV-749fa1", "title": "Освоить базовые понятия: Тригонометрические уравнения"}
+{"uid": "OBJ-TOP-TRIGONOMETRICHESKIE-URAV-749fa1-APPLY", "topic_uid": "TOP-TRIGONOMETRICHESKIE-URAV-749fa1", "title": "Применять методы к задачам: Тригонометрические уравнения"}
+{"uid": "OBJ-TOP-PRIMENENIE-TRIGONOMETRII-df1457-BASICS", "topic_uid": "TOP-PRIMENENIE-TRIGONOMETRII-df1457", "title": "Освоить базовые понятия: Применение тригонометрии в геометрии"}
+{"uid": "OBJ-TOP-PRIMENENIE-TRIGONOMETRII-df1457-APPLY", "topic_uid": "TOP-PRIMENENIE-TRIGONOMETRII-df1457", "title": "Применять методы к задачам: Применение тригонометрии в геометрии"}
+{"uid": "OBJ-TOP-PREDELY-POSLEDOVATELNOST-55a703-BASICS", "topic_uid": "TOP-PREDELY-POSLEDOVATELNOST-55a703", "title": "Освоить базовые понятия: Пределы последовательностей"}
+{"uid": "OBJ-TOP-PREDELY-POSLEDOVATELNOST-55a703-APPLY", "topic_uid": "TOP-PREDELY-POSLEDOVATELNOST-55a703", "title": "Применять методы к задачам: Пределы последовательностей"}
+{"uid": "OBJ-TOP-PREDELY-FUNKCII-660f27-BASICS", "topic_uid": "TOP-PREDELY-FUNKCII-660f27", "title": "Освоить базовые понятия: Пределы функций"}
+{"uid": "OBJ-TOP-PREDELY-FUNKCII-660f27-APPLY", "topic_uid": "TOP-PREDELY-FUNKCII-660f27", "title": "Применять методы к задачам: Пределы функций"}
+{"uid": "OBJ-TOP-NEPRERYVNOST-FUNKCII-6fb573-BASICS", "topic_uid": "TOP-NEPRERYVNOST-FUNKCII-6fb573", "title": "Освоить базовые понятия: Непрерывность функций"}
+{"uid": "OBJ-TOP-NEPRERYVNOST-FUNKCII-6fb573-APPLY", "topic_uid": "TOP-NEPRERYVNOST-FUNKCII-6fb573", "title": "Применять методы к задачам: Непрерывность функций"}
+{"uid": "OBJ-TOP-PROIZVODNYE-I-DIFFERENCI-5da5bd-BASICS", "topic_uid": "TOP-PROIZVODNYE-I-DIFFERENCI-5da5bd", "title": "Освоить базовые понятия: Производные и дифференцирование"}
+{"uid": "OBJ-TOP-PROIZVODNYE-I-DIFFERENCI-5da5bd-APPLY", "topic_uid": "TOP-PROIZVODNYE-I-DIFFERENCI-5da5bd", "title": "Применять методы к задачам: Производные и дифференцирование"}
+{"uid": "OBJ-TOP-INTEGRALY-I-INTEGRIROVAN-5af8be-BASICS", "topic_uid": "TOP-INTEGRALY-I-INTEGRIROVAN-5af8be", "title": "Освоить базовые понятия: Интегралы и интегрирование"}
+{"uid": "OBJ-TOP-INTEGRALY-I-INTEGRIROVAN-5af8be-APPLY", "topic_uid": "TOP-INTEGRALY-I-INTEGRIROVAN-5af8be", "title": "Применять методы к задачам: Интегралы и интегрирование"}
+{"uid": "OBJ-TOP-RYADY-I-POSLEDOVATELNOST-85a22e-BASICS", "topic_uid": "TOP-RYADY-I-POSLEDOVATELNOST-85a22e", "title": "Освоить базовые понятия: Ряды и последовательности"}
+{"uid": "OBJ-TOP-RYADY-I-POSLEDOVATELNOST-85a22e-APPLY", "topic_uid": "TOP-RYADY-I-POSLEDOVATELNOST-85a22e", "title": "Применять методы к задачам: Ряды и последовательности"}
+{"uid": "OBJ-TOP-OSNOVY-STATISTIKI-bfe8f4-BASICS", "topic_uid": "TOP-OSNOVY-STATISTIKI-bfe8f4", "title": "Освоить базовые понятия: Основы статистики"}
+{"uid": "OBJ-TOP-OSNOVY-STATISTIKI-bfe8f4-APPLY", "topic_uid": "TOP-OSNOVY-STATISTIKI-bfe8f4", "title": "Применять методы к задачам: Основы статистики"}
+{"uid": "OBJ-TOP-VEROYATNOSTNYE-RASPREDEL-78a46d-BASICS", "topic_uid": "TOP-VEROYATNOSTNYE-RASPREDEL-78a46d", "title": "Освоить базовые понятия: Вероятностные распределения"}
+{"uid": "OBJ-TOP-VEROYATNOSTNYE-RASPREDEL-78a46d-APPLY", "topic_uid": "TOP-VEROYATNOSTNYE-RASPREDEL-78a46d", "title": "Применять методы к задачам: Вероятностные распределения"}
+{"uid": "OBJ-TOP-METODY-OPISATELNOI-STATI-9c4eb0-BASICS", "topic_uid": "TOP-METODY-OPISATELNOI-STATI-9c4eb0", "title": "Освоить базовые понятия: Методы описательной статистики"}
+{"uid": "OBJ-TOP-METODY-OPISATELNOI-STATI-9c4eb0-APPLY", "topic_uid": "TOP-METODY-OPISATELNOI-STATI-9c4eb0", "title": "Применять методы к задачам: Методы описательной статистики"}
+{"uid": "OBJ-TOP-PROVERKA-GIPOTEZ-b2a738-BASICS", "topic_uid": "TOP-PROVERKA-GIPOTEZ-b2a738", "title": "Освоить базовые понятия: Проверка гипотез"}
+{"uid": "OBJ-TOP-PROVERKA-GIPOTEZ-b2a738-APPLY", "topic_uid": "TOP-PROVERKA-GIPOTEZ-b2a738", "title": "Применять методы к задачам: Проверка гипотез"}
+{"uid": "OBJ-TOP-KORRELYACIYA-I-REGRESSIY-1a6dcc-BASICS", "topic_uid": "TOP-KORRELYACIYA-I-REGRESSIY-1a6dcc", "title": "Освоить базовые понятия: Корреляция и регрессия"}
+{"uid": "OBJ-TOP-KORRELYACIYA-I-REGRESSIY-1a6dcc-APPLY", "topic_uid": "TOP-KORRELYACIYA-I-REGRESSIY-1a6dcc", "title": "Применять методы к задачам: Корреляция и регрессия"}
+{"uid": "OBJ-TOP-PRIMENENIE-TEORII-VEROYA-49ff02-BASICS", "topic_uid": "TOP-PRIMENENIE-TEORII-VEROYA-49ff02", "title": "Освоить базовые понятия: Применение теории вероятностей"}
+{"uid": "OBJ-TOP-PRIMENENIE-TEORII-VEROYA-49ff02-APPLY", "topic_uid": "TOP-PRIMENENIE-TEORII-VEROYA-49ff02", "title": "Применять методы к задачам: Применение теории вероятностей"}

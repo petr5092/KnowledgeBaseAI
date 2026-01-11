@@ -8,3 +8,8 @@
 {"uid": "SEC-TRIGONOMETRIYA-c62a0d", "subject_uid": "SUB-MATH", "title": "Тригонометрия", "description": ""}
 {"uid": "SEC-MATEMATICHESKII-ANALIZ-216bc5", "subject_uid": "SUB-MATH", "title": "Математический анализ", "description": ""}
 {"uid": "SEC-STATISTIKA-I-TEORIYA-VER-3e6e6a", "subject_uid": "SUB-MATH", "title": "Статистика и теория вероятностей", "description": ""}
+{"uid": "SEC-ALGEBRA-493cac", "subject_uid": "MATH", "title": "Алгебра", "description": ""}
+{"uid": "SEC-GEOMETRIYA-b682a6", "subject_uid": "MATH", "title": "Геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-819263", "subject_uid": "MATH", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-605a00", "subject_uid": "MATH", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-STATISTIKA-I-TEORIYA-VER-312d38", "subject_uid": "MATH", "title": "Статистика и теория вероятностей", "description": ""}
