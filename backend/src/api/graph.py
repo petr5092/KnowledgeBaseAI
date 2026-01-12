@@ -47,7 +47,7 @@ async def get_node(uid: str) -> Dict:
     data = get_node_details(uid)
     if not data:
         raise HTTPException(status_code=404, detail="Node not found")
-    return data
+    return {"items": [data], "meta": {}}
 
 @router.get("/viewport")
 async def viewport(center_uid: str, depth: int = 1) -> Dict:
@@ -63,7 +63,7 @@ async def viewport(center_uid: str, depth: int = 1) -> Dict:
       - depth: фактическая глубина обхода
     """
     ns, es = neighbors(center_uid, depth=depth)
-    return {"nodes": ns, "edges": es, "center_uid": center_uid, "depth": depth}
+    return {"items": ns, "meta": {"edges": es, "center_uid": center_uid, "depth": depth}}
 
 class ChatInput(BaseModel):
     question: str = Field(..., description="Вопрос пользователя о связи между узлами.")
@@ -151,7 +151,8 @@ async def chat(payload: ChatInput) -> Dict:
 
     usage = resp.usage or None
     answer = resp.choices[0].message.content if resp.choices else ""
-    return {"answer": answer, "usage": (usage.model_dump() if hasattr(usage, 'model_dump') else None), "context": ctx}
+    item = {"answer": answer, "usage": (usage.model_dump() if hasattr(usage, 'model_dump') else None), "context": ctx}
+    return {"items": [item], "meta": {}}
 
 class RoadmapInput(BaseModel):
     subject_uid: Optional[str] = Field(None, description="UID предмета (например, 'MATH-EGE'). Если None — поиск глобально (не рекомендуется).")
@@ -202,7 +203,7 @@ async def roadmap(payload: RoadmapInput) -> Dict:
       - items: список объектов {uid, title, mastered, missing_prereqs, priority}
     """
     items = plan_route(payload.subject_uid, payload.progress, limit=payload.limit)
-    return {"items": items}
+    return {"items": items, "meta": {}}
 
 class AdaptiveQuestionsInput(BaseModel):
     subject_uid: Optional[str] = Field(None, description="UID предмета.")
@@ -266,4 +267,4 @@ async def adaptive_questions(payload: AdaptiveQuestionsInput) -> Dict:
         difficulty_max=payload.difficulty_max,
         exclude_uids=set(payload.exclude),
     )
-    return {"questions": examples}
+    return {"items": examples, "meta": {}}

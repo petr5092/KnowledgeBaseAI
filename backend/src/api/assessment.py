@@ -138,7 +138,7 @@ async def start(payload: StartRequest) -> Dict:
         "stability_window": 4,
         "d_history": [],
     }
-    return {"assessment_session_id": sid, "question": first_q}
+    return {"items": [first_q], "meta": {"assessment_session_id": sid}}
 
 def _evaluate(answer: AnswerDTO) -> float:
     if answer is None:
@@ -199,14 +199,17 @@ async def next_question(payload: NextRequest):
     done_by_max = len(sess["asked"]) >= sess["max_questions"]
     def _stream():
         yield "event: ack\n"
-        yield "data: {\"accepted\":true}\n\n"
+        yield "data: {\"items\":[{\"accepted\":true}],\"meta\":{}}\n\n"
         if done_by_min or done_by_max:
             res = {
-                "result": {
-                    "topic_uid": sess["topic_uid"],
-                    "level": "intermediate" if sess["good"] >= sess["bad"] else "basic",
-                    "mastery": {"score": round(min(1.0, sess['good'] / max(1, len(sess['asked']))), 3)},
-                }
+                "items": [
+                    {
+                        "topic_uid": sess["topic_uid"],
+                        "level": "intermediate" if sess["good"] >= sess["bad"] else "basic",
+                        "mastery": {"score": round(min(1.0, sess['good'] / max(1, len(sess['asked']))), 3)},
+                    }
+                ],
+                "meta": {}
             }
             import json
             yield "event: done\n"
@@ -215,5 +218,5 @@ async def next_question(payload: NextRequest):
         q = _next_question(sess)
         import json
         yield "event: question\n"
-        yield "data: " + json.dumps(q, ensure_ascii=False) + "\n\n"
+        yield "data: " + json.dumps({"items":[q], "meta": {}}, ensure_ascii=False) + "\n\n"
     return StreamingResponse(_stream(), media_type="text/event-stream")

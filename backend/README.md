@@ -74,7 +74,28 @@ All `/v1/admin/*` routes require an **admin** access token:
 
 ### Graph / user-facing
 
-See `src/api/*` routers for the full list. Key endpoints are documented in the root README.
+See `src/api/*` routers for the full list.
+
+### StudyNinja Integration
+- Responses follow `{ "items": [...], "meta": {...} }` format.
+- Reasoning:
+  - `POST /v1/reasoning/gaps`
+  - `POST /v1/reasoning/next-best-topic`
+  - `POST /v1/reasoning/roadmap`
+  - `POST /v1/reasoning/mastery/update`
+- Graph:
+  - `GET /v1/graph/node/{uid}`
+  - `GET /v1/graph/viewport`
+- Assessment:
+  - `POST /v1/graph/adaptive_questions`
+- Proposals (admin):
+  - `/v1/proposals/*`
+
+### Proposal Gate
+- All imports and LLM generation go through Proposal → Integrity Gate → Commit → Outbox.
+
+### Vector
+- Indexer subscribes to `graph_committed` and updates Qdrant collection.
 
 ## Configuration
 

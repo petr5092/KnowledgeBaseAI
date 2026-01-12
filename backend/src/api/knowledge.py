@@ -41,7 +41,6 @@ def _age_to_class(age: Optional[int]) -> int:
 
 @router.post(
     "/topics/available",
-    response_model=TopicsAvailableResponse,
     responses={400: {"model": ApiError}},
 )
 async def topics_available(payload: TopicsAvailableRequest) -> Dict:
@@ -95,4 +94,4 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
                     "prereq_topic_uids": [],
                 }
             )
-    return {"subject_uid": payload.subject_uid, "resolved_user_class": resolved, "topics": topics}
+    return {"items": topics, "meta": {"subject_uid": payload.subject_uid, "resolved_user_class": resolved}}

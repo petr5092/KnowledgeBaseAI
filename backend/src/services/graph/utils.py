@@ -96,41 +96,60 @@ def sync_from_jsonl() -> Dict:
     topic_objectives = load_jsonl(get_path('topic_objectives.jsonl'))
     topic_prereqs = load_jsonl(get_path('topic_prereqs.jsonl'))
     content_units = load_jsonl(get_path('content_units.jsonl'))
-    repo = Neo4jRepo()
-    with repo.driver.session() as session:
-        ensure_constraints(session)
-    ensure_weight_defaults_repo(repo)
-    repo.write_unwind("UNWIND $rows AS r MERGE (n:Subject {uid:r.uid}) SET n.title=r.title, n.description=COALESCE(r.description,'')", subjects, 500)
-    repo.write_unwind("UNWIND $rows AS r MERGE (n:Section {uid:r.uid}) SET n.title=r.title, n.description=COALESCE(r.description,'')", sections, 500)
-    repo.write_unwind("UNWIND $rows AS r MERGE (n:Topic {uid:r.uid}) SET n.title=r.title, n.description=COALESCE(r.description,'')", topics, 500)
-    repo.write_unwind("UNWIND $rows AS r MERGE (n:Skill {uid:r.uid}) SET n.title=r.title, n.definition=COALESCE(r.definition,'')", skills, 500)
-    repo.write_unwind("UNWIND $rows AS r MERGE (n:Method {uid:r.uid}) SET n.title=r.title, n.method_text=COALESCE(r.method_text,''), n.applicability_types=COALESCE(r.applicability_types,[])", methods, 500)
-    unit_rows = [{"uid": (u.get("uid") or f"UNIT-{u.get('topic_uid')}-{abs(hash((u.get('type') or '')+(u.get('branch') or '')))%100000}"), "topic_uid": u.get("topic_uid"), "branch": u.get("branch"), "type": u.get("type"), "payload": json.dumps(u.get("payload", {}), ensure_ascii=False), "complexity": float(u.get("complexity", 0.0) or 0.0)} for u in content_units if u.get("topic_uid")]
-    repo.write_unwind("UNWIND $rows AS r MERGE (n:ContentUnit {uid:r.uid}) SET n.branch=r.branch, n.type=r.type, n.payload=r.payload, n.complexity=r.complexity", unit_rows, 500)
-    repo.write_unwind("UNWIND $rows AS r MATCH (a:Subject {uid:r.subject_uid}), (b:Section {uid:r.uid}) MERGE (a)-[:CONTAINS]->(b)", [sec for sec in sections if sec.get('subject_uid')], 500)
-    repo.write_unwind("UNWIND $rows AS r MATCH (a:Section {uid:r.section_uid}), (b:Topic {uid:r.uid}) MERGE (a)-[:CONTAINS]->(b)", [t for t in topics if t.get('section_uid')], 500)
-    repo.write_unwind("UNWIND $rows AS r MATCH (a:Subject {uid:r.subject_uid}), (b:Skill {uid:r.uid}) MERGE (a)-[:HAS_SKILL]->(b)", [sk for sk in skills if sk.get('subject_uid')], 500)
-    repo.write_unwind("UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (s:Skill {uid:r.skill_uid}) MERGE (t)-[rel:USES_SKILL]->(s) SET rel.weight=COALESCE(r.weight,'linked'), rel.confidence=COALESCE(r.confidence,0.9)", [ts for ts in topic_skills if ts.get('topic_uid') and ts.get('skill_uid')], 500)
-    pr_rows = []
+    from src.schemas.proposal import Operation, OpType
+    from src.services.proposal_service import create_draft_proposal
+    from src.db.pg import ensure_tables, get_conn
+    ops: list[Operation] = []
+    for s in subjects:
+        ops.append(Operation(op_id="N-"+(s.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=s.get("uid"), properties_delta={"type":"Subject","uid":s.get("uid"),"title":s.get("title"),"description":s.get("description")}))
+    for sec in sections:
+        ops.append(Operation(op_id="N-"+(sec.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=sec.get("uid"), properties_delta={"type":"Section","uid":sec.get("uid"),"title":sec.get("title"),"description":sec.get("description")}))
+    for t in topics:
+        ops.append(Operation(op_id="N-"+(t.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=t.get("uid"), properties_delta={"type":"Topic","uid":t.get("uid"),"title":t.get("title"),"description":t.get("description")}))
+    for sk in skills:
+        ops.append(Operation(op_id="N-"+(sk.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=sk.get("uid"), properties_delta={"type":"Skill","uid":sk.get("uid"),"title":sk.get("title"),"definition":sk.get("definition"),"applicability_types":sk.get("applicability_types")}))
+    for m in methods:
+        ops.append(Operation(op_id="N-"+(m.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=m.get("uid"), properties_delta={"type":"Method","uid":m.get("uid"),"title":m.get("title"),"method_text":m.get("method_text"),"applicability_types":m.get("applicability_types")}))
+    unit_rows = [{"uid": (u.get("uid") or f"UNIT-{u.get('topic_uid')}-{abs(hash((u.get('type') or '')+(u.get('branch') or '')))%100000}"), "topic_uid": u.get("topic_uid"), "type": u.get("type"), "payload": json.dumps(u.get("payload", {}), ensure_ascii=False), "complexity": float(u.get("complexity", 0.0) or 0.0)} for u in content_units if u.get("topic_uid")]
+    for u in unit_rows:
+        ops.append(Operation(op_id="N-"+(u.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=u.get("uid"), properties_delta={"type":"ContentUnit","uid":u.get("uid"),"type":u.get("type"),"payload":u.get("payload"),"complexity":u.get("complexity")}))
+    for sec in [s for s in sections if s.get("subject_uid")]:
+        ops.append(Operation(op_id="E-"+(sec.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(sec.get("uid") or ""), properties_delta={"type":"CONTAINS","from_uid":sec.get("subject_uid"),"to_uid":sec.get("uid")}))
+    for t in [x for x in topics if x.get("section_uid")]:
+        ops.append(Operation(op_id="E-"+(t.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(t.get("uid") or ""), properties_delta={"type":"CONTAINS","from_uid":t.get("section_uid"),"to_uid":t.get("uid")}))
+    for ts in [x for x in topic_skills if x.get("topic_uid") and x.get("skill_uid")]:
+        ops.append(Operation(op_id="E-"+(ts.get("topic_uid") or "")+"-"+(ts.get("skill_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(ts.get("topic_uid") or "")+"-"+(ts.get("skill_uid") or ""), properties_delta={"type":"USES_SKILL","from_uid":ts.get("topic_uid"),"to_uid":ts.get("skill_uid"),"weight":ts.get("weight","linked"),"confidence":ts.get("confidence",0.9)}))
     for pr in topic_prereqs:
         tu = pr.get('topic_uid') or pr.get('target_uid')
         pu = pr.get('prereq_uid')
-        if not tu or not pu:
-            continue
-        pr_rows.append({'topic_uid': tu, 'prereq_uid': pu, 'weight': pr.get('weight', 1.0), 'confidence': pr.get('confidence', 0.9)})
-    repo.write_unwind("UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (p:Topic {uid:r.prereq_uid}) MERGE (t)-[rel:PREREQ]->(p) SET rel.weight=COALESCE(r.weight,1.0), rel.confidence=COALESCE(r.confidence,0.9)", pr_rows, 500)
-    repo.write_unwind("UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (u:ContentUnit {uid:r.uid}) WHERE r.branch='learning' MERGE (t)-[:HAS_LEARNING_PATH]->(u)", unit_rows, 500)
-    repo.write_unwind("UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (u:ContentUnit {uid:r.uid}) WHERE r.branch='consolidation' MERGE (t)-[:HAS_PRACTICE_PATH]->(u)", unit_rows, 500)
-    repo.write_unwind("UNWIND $rows AS r MATCH (t:Topic {uid:r.topic_uid}), (u:ContentUnit {uid:r.uid}) WHERE r.branch='repetition' MERGE (t)-[:HAS_MASTERY_PATH]->(u)", unit_rows, 500)
-    repo.write_unwind("UNWIND $rows AS r MATCH (a:Skill {uid:r.skill_uid}), (b:Method {uid:r.method_uid}) MERGE (a)-[rel:LINKED]->(b) SET rel.weight=COALESCE(r.weight,'linked'), rel.confidence=COALESCE(r.confidence,0.9)", [sm for sm in skill_methods if sm.get('skill_uid') and sm.get('method_uid')], 500)
+        if tu and pu:
+            ops.append(Operation(op_id="E-"+tu+"-"+pu, op_type=OpType.MERGE_REL, target_id="E-"+tu+"-"+pu, properties_delta={"type":"PREREQ","from_uid":tu,"to_uid":pu,"weight":pr.get("weight",1.0),"confidence":pr.get("confidence",0.9)}))
+    for u in unit_rows:
+        ops.append(Operation(op_id="E-"+(u.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(u.get("uid") or ""), properties_delta={"type":"HAS_UNIT","from_uid":u.get("topic_uid"),"to_uid":u.get("uid")}))
+    for sm in [x for x in skill_methods if x.get("skill_uid") and x.get("method_uid")]:
+        ops.append(Operation(op_id="E-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), properties_delta={"type":"LINKED","from_uid":sm.get("skill_uid"),"to_uid":sm.get("method_uid"),"weight":sm.get("weight","linked"),"confidence":sm.get("confidence",0.9)}))
     goals_rows = [{"uid": g.get('uid') or f"GOAL-{g.get('topic_uid')}-{abs(hash(g.get('title','')))%100000}", "title": g.get('title'), "topic_uid": g.get('topic_uid')} for g in topic_goals]
-    repo.write_unwind("UNWIND $rows AS r MERGE (n:Goal {uid:r.uid}) SET n.title=r.title", goals_rows, 500)
-    repo.write_unwind("UNWIND $rows AS r MATCH (a:Topic {uid:r.topic_uid}), (b:Goal {uid:r.uid}) MERGE (a)-[:TARGETS]->(b)", [g for g in goals_rows if g.get('topic_uid')], 500)
+    for g in goals_rows:
+        ops.append(Operation(op_id="N-"+(g.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=g.get("uid"), properties_delta={"type":"Goal","uid":g.get("uid"),"title":g.get("title")}))
+        if g.get("topic_uid"):
+            ops.append(Operation(op_id="E-"+(g.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(g.get("uid") or ""), properties_delta={"type":"TARGETS","from_uid":g.get("uid"),"to_uid":g.get("topic_uid")}))
     objs_rows = [{"uid": o.get('uid') or f"OBJ-{o.get('topic_uid')}-{abs(hash(o.get('title','')))%100000}", "title": o.get('title'), "topic_uid": o.get('topic_uid')} for o in topic_objectives]
-    repo.write_unwind("UNWIND $rows AS r MERGE (n:Objective {uid:r.uid}) SET n.title=r.title", objs_rows, 500)
-    repo.write_unwind("UNWIND $rows AS r MATCH (a:Topic {uid:r.topic_uid}), (b:Objective {uid:r.uid}) MERGE (a)-[:TARGETS]->(b)", [o for o in objs_rows if o.get('topic_uid')], 500)
-    repo.close()
-    return {'subjects': len(subjects), 'sections': len(sections), 'topics': len(topics), 'skills': len(skills), 'methods': len(methods), 'topic_skills': len(topic_skills), 'skill_methods': len(skill_methods), 'goals': len(topic_goals), 'objectives': len(topic_objectives), 'prereqs': len(topic_prereqs), 'content_units': len(content_units)}
+    for o in objs_rows:
+        ops.append(Operation(op_id="N-"+(o.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=o.get("uid"), properties_delta={"type":"Objective","uid":o.get("uid"),"title":o.get("title")}))
+        t_uid = o.get("topic_uid")
+        if t_uid:
+            for ts in [x for x in topic_skills if x.get("topic_uid")==t_uid]:
+                ops.append(Operation(op_id="E-"+(o.get("uid") or "")+"-"+(ts.get("skill_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(o.get("uid") or "")+"-"+(ts.get("skill_uid") or ""), properties_delta={"type":"MEASURES","from_uid":o.get("uid"),"to_uid":ts.get("skill_uid")}))
+    ensure_tables()
+    p = create_draft_proposal("public", 0, ops)
+    conn = get_conn(); conn.autocommit=True
+    with conn.cursor() as cur:
+        import json
+        cur.execute("INSERT INTO proposals (proposal_id, tenant_id, base_graph_version, proposal_checksum, status, operations_json) VALUES (%s,%s,%s,%s,%s,%s)", (p.proposal_id, p.tenant_id, p.base_graph_version, p.proposal_checksum, "DRAFT", json.dumps([o.model_dump() for o in ops])))
+    conn.close()
+    from src.workers.commit import commit_proposal
+    res = commit_proposal(p.proposal_id)
+    return {"ok": bool(res.get("ok")), "proposal_id": p.proposal_id, "ops": len(ops)}
 
 def build_graph_from_neo4j(subject_filter: str | None = None) -> Dict:
     repo = Neo4jRepo()
@@ -154,16 +173,16 @@ def build_graph_from_neo4j(subject_filter: str | None = None) -> Dict:
              collect(t.uid) AS topic_uids,
              collect({id:t.uid, label:t.title, type:'topic'}) AS topics,
              collect({id:sec.uid+'->'+t.uid, source:sec.uid, target:t.uid, rel:'contains'}) AS topic_edges
-        MATCH (t:Topic)-[:TARGETS]->(g)
+        MATCH (g:Goal)-[:TARGETS]->(t:Topic)
         WHERE t.uid IN topic_uids
         WITH subj_uids, subjects, sections, topics, sec_edges, topic_edges,
              collect({id:g.uid, label:g.title, type:CASE WHEN 'Objective' IN labels(g) THEN 'objective' ELSE 'goal' END}) AS target_nodes,
              collect({id:t.uid+'->'+g.uid, source:t.uid, target:g.uid, rel:'targets'}) AS target_edges
-        MATCH (s:Subject)-[:HAS_SKILL]->(sk:Skill)
+        MATCH (s:Subject)-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t2:Topic)-[:USES_SKILL]->(sk:Skill)
         WHERE s.uid IN subj_uids
         WITH subj_uids, subjects, sections, topics, target_nodes, sec_edges, topic_edges, target_edges,
-             collect({id:sk.uid, label:sk.title, type:'skill'}) AS skills,
-             collect({id:s.uid+'->'+sk.uid, source:s.uid, target:sk.uid, rel:'has_skill'}) AS skill_edges
+             collect(DISTINCT {id:sk.uid, label:sk.title, type:'skill'}) AS skills,
+             collect(DISTINCT {id:t2.uid+'->'+sk.uid, source:t2.uid, target:sk.uid, rel:'uses_skill'}) AS skill_edges
         MATCH (sk:Skill)-[r:LINKED]->(m:Method)
         WITH subjects, sections, topics, target_nodes, skills, sec_edges, topic_edges, target_edges, skill_edges,
              collect({id:m.uid, label:m.title, type:'method'}) AS methods,
@@ -206,8 +225,8 @@ def analyze_knowledge(subject_uid: str | None = None) -> Dict:
         metrics['objectives'] = session.run("MATCH (n:Objective) RETURN count(n) AS c").single()['c']
         orphan_sections = [r['uid'] for r in session.run("MATCH (sec:Section) WHERE NOT EXISTS{ (:Subject)-[:CONTAINS]->(sec) } RETURN sec.uid AS uid")]
         orphan_topics = [r['uid'] for r in session.run("MATCH (t:Topic) WHERE NOT EXISTS{ (:Section)-[:CONTAINS]->(t) } RETURN t.uid AS uid")]
-        topics_without_targets = [r['uid'] for r in session.run("MATCH (t:Topic) WHERE NOT EXISTS{ (t)-[:TARGETS]->() } RETURN t.uid AS uid")]
-        skills_without_subject = [r['uid'] for r in session.run("MATCH (sk:Skill) WHERE NOT EXISTS{ (:Subject)-[:HAS_SKILL]->(sk) } RETURN sk.uid AS uid")]
+        topics_without_targets = [r['uid'] for r in session.run("MATCH (t:Topic) WHERE NOT EXISTS{ (:Goal)-[:TARGETS]->(t) } RETURN t.uid AS uid")]
+        skills_without_subject = [r['uid'] for r in session.run("MATCH (sk:Skill) WHERE NOT EXISTS{ (:Topic)-[:USES_SKILL]->(sk) } RETURN sk.uid AS uid")]
         skills_without_methods = [r['uid'] for r in session.run("MATCH (sk:Skill) WHERE NOT EXISTS{ (sk)-[:LINKED]->(:Method) } RETURN sk.uid AS uid")]
         methods_without_links = [r['uid'] for r in session.run("MATCH (m:Method) WHERE NOT EXISTS{ (:Skill)-[:LINKED]->(m) } RETURN m.uid AS uid")]
         metrics['orphan_sections'] = orphan_sections
@@ -460,7 +479,7 @@ def list_items(kind: str, subject_uid: str | None = None, section_uid: str | Non
             rows = repo.read("MATCH (t:Topic) RETURN t.uid AS uid, t.title AS title ORDER BY t.title")
     elif kind == 'skills':
         if subject_uid:
-            rows = repo.read("MATCH (sub:Subject {uid:$su})-[:HAS_SKILL]->(sk:Skill) RETURN sk.uid AS uid, sk.title AS title ORDER BY sk.title", {"su": subject_uid})
+            rows = repo.read("MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic)-[:USES_SKILL]->(sk:Skill) RETURN DISTINCT sk.uid AS uid, sk.title AS title ORDER BY sk.title", {"su": subject_uid})
         else:
             rows = repo.read("MATCH (sk:Skill) RETURN sk.uid AS uid, sk.title AS title ORDER BY sk.title")
     elif kind == 'methods':
@@ -484,8 +503,8 @@ def get_node_details(uid: str) -> Dict:
         if wrows:
             details["static_weight"] = wrows[0]['sw']
             details["dynamic_weight"] = wrows[0]['dw']
-        g = repo.read("MATCH (t:Topic {uid:$uid})-[:TARGETS]->(g) RETURN g.uid AS uid, g.title AS title, labels(g)[0] AS label", {"uid": uid})
-        details["targets"] = [{"uid": r['uid'], "title": r['title'], "type": ('objective' if r['label'] == 'Objective' else 'goal')} for r in g]
+        g = repo.read("MATCH (g:Goal)-[:TARGETS]->(t:Topic {uid:$uid}) RETURN g.uid AS uid, g.title AS title, labels(g)[0] AS label", {"uid": uid})
+        details["targets"] = [{"uid": r['uid'], "title": r['title'], "type": 'goal'} for r in g]
         pr = repo.read("MATCH (t:Topic {uid:$uid})-[:PREREQ]->(p:Topic) RETURN p.uid AS uid, p.title AS title", {"uid": uid})
         details["prereqs"] = pr
         m = repo.read("MATCH (t:Topic {uid:$uid})-[:USES_SKILL]->(sk:Skill)-[:LINKED]->(m:Method) RETURN DISTINCT m.uid AS uid, m.title AS title", {"uid": uid})
@@ -503,7 +522,7 @@ def get_node_details(uid: str) -> Dict:
         details["topics"] = t
     elif typ == 'Subject':
         sec = repo.read("MATCH (s:Subject {uid:$uid})-[:CONTAINS]->(sec:Section) RETURN sec.uid AS uid, sec.title AS title", {"uid": uid})
-        sk = repo.read("MATCH (s:Subject {uid:$uid})-[:HAS_SKILL]->(sk:Skill) RETURN sk.uid AS uid, sk.title AS title", {"uid": uid})
+        sk = repo.read("MATCH (s:Subject {uid:$uid})-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic)-[:USES_SKILL]->(sk:Skill) RETURN DISTINCT sk.uid AS uid, sk.title AS title", {"uid": uid})
         details["sections"] = sec
         details["skills"] = sk
     repo.close()
@@ -656,4 +675,3 @@ def link_skill_to_best(skill_uid: str, method_candidates: List[str]) -> Dict:
             break
     driver.close()
     return {"skill": skill_uid, "linked": created}
-
