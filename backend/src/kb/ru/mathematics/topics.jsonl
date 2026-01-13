@@ -1,0 +1,108 @@
+{"uid": "TOP-CHISLOVYE-MNOZHESTVA-2093bf", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-ALGEB-d866e9", "title": "Числовые множества", "description": ""}
+{"uid": "TOP-PEREMENNYE-I-VYRAZHENIYA-4c931a", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-ALGEB-d866e9", "title": "Переменные и выражения", "description": ""}
+{"uid": "TOP-URAVNENIYA-I-NERAVENSTVA-661533", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-ALGEB-d866e9", "title": "Уравнения и неравенства", "description": ""}
+{"uid": "TOP-FUNKCII-I-GRAFIKI-4e196b", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-ALGEB-d866e9", "title": "Функции и графики", "description": ""}
+{"uid": "TOP-LINEINYE-URAVNENIYA-6fb916", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-f1b6dd", "title": "Линейные уравнения", "description": ""}
+{"uid": "TOP-KVADRATNYE-URAVNENIYA-0ac66e", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-f1b6dd", "title": "Квадратные уравнения", "description": ""}
+{"uid": "TOP-NERAVENSTVA-PERVOI-STEPE-d3a12b", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-f1b6dd", "title": "Неравенства первой степени", "description": ""}
+{"uid": "TOP-SISTEMY-URAVNENII-1bb255", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-f1b6dd", "title": "Системы уравнений", "description": ""}
+{"uid": "TOP-OPREDELENIE-FUNKCII-8c17fa", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-cddc15", "title": "Определение функции", "description": ""}
+{"uid": "TOP-GRAFIKI-FUNKCII-7c073f", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-cddc15", "title": "Графики функций", "description": ""}
+{"uid": "TOP-PREOBRAZOVANIYA-GRAFIKOV-49e303", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-cddc15", "title": "Преобразования графиков", "description": ""}
+{"uid": "TOP-ANALIZ-SVOISTV-FUNKCII-3e6989", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-cddc15", "title": "Анализ свойств функций", "description": ""}
+{"uid": "TOP-TOCHKI-LINII-I-PLOSKOSTI-e99883", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-9baf86", "title": "Точки, линии и плоскости", "description": ""}
+{"uid": "TOP-UGLY-I-IH-IZMERENIE-803c5b", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-9baf86", "title": "Углы и их измерение", "description": ""}
+{"uid": "TOP-FIGURY-I-IH-SVOISTVA-039acb", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-9baf86", "title": "Фигуры и их свойства", "description": ""}
+{"uid": "TOP-PLOSCHAD-I-OBEM-GEOMETRI-71c981", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-9baf86", "title": "Площадь и объем геометрических фигур", "description": ""}
+{"uid": "TOP-OSNOVNYE-PONYATIYA-PLOSK-442bca", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-b2e669", "title": "Основные понятия плоской геометрии", "description": ""}
+{"uid": "TOP-SVOISTVA-TREUGOLNIKOV-96936c", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-b2e669", "title": "Свойства треугольников", "description": ""}
+{"uid": "TOP-PARALLELNYE-I-PERPENDIKU-40a9cf", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-b2e669", "title": "Параллельные и перпендикулярные прямые", "description": ""}
+{"uid": "TOP-PLOSCHAD-FIGUR-0d34c9", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-b2e669", "title": "Площадь фигур", "description": ""}
+{"uid": "TOP-OPREDELENIE-I-SVOISTVA-M-35da43", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-209199", "title": "Определение и свойства многогранников", "description": ""}
+{"uid": "TOP-PARALLELNYE-I-PERPENDIKU-8d04b2", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-209199", "title": "Параллельные и перпендикулярные прямые в пространстве", "description": ""}
+{"uid": "TOP-OBEM-I-PLOSCHAD-POVERHNO-b5fcfa", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-209199", "title": "Объем и площадь поверхности тел вращения", "description": ""}
+{"uid": "TOP-SECHENIYA-MNOGOGRANNIKOV-f65e95", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-209199", "title": "Сечения многогранников", "description": ""}
+{"uid": "TOP-OPREDELENIE-TRIGONOMETRI-0a7f2e", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-d52901", "title": "Определение тригонометрических функций", "description": ""}
+{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-507f8f", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-d52901", "title": "Основные тригонометрические тождества", "description": ""}
+{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-0311c4", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-d52901", "title": "Графики тригонометрических функций", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-593b4e", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-d52901", "title": "Применение тригонометрии в задачах", "description": ""}
+{"uid": "TOP-OPREDELENIE-TRIGONOMETRI-36a7c2", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-8f6b1c", "title": "Определение тригонометрических функций", "description": ""}
+{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-7e41d4", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-8f6b1c", "title": "Графики тригонометрических функций", "description": ""}
+{"uid": "TOP-SVOISTVA-TRIGONOMETRICHE-fea480", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-8f6b1c", "title": "Свойства тригонометрических функций", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRIC-3e0893", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-8f6b1c", "title": "Применение тригонометрических функций в задачах", "description": ""}
+{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-c77588", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-7ff8cd", "title": "Основные тригонометрические функции", "description": ""}
+{"uid": "TOP-SINUS-I-KOSINUS-V-PRYAMO-02c849", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-7ff8cd", "title": "Синус и косинус в прямоугольном треугольнике", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-URAV-43d5a5", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-7ff8cd", "title": "Тригонометрические уравнения и их решения", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-29c196", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-7ff8cd", "title": "Применение тригонометрии для нахождения углов и сторон", "description": ""}
+{"uid": "TOP-VVEDENIE-V-ALGEBRU-117073", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-ALGEB-f9e5ea", "title": "Введение в алгебру", "description": ""}
+{"uid": "TOP-PEREMENNYE-I-KONSTANTY-294bf0", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-ALGEB-f9e5ea", "title": "Переменные и константы", "description": ""}
+{"uid": "TOP-ALGEBRAICHESKIE-VYRAZHEN-d0ceac", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-ALGEB-f9e5ea", "title": "Алгебраические выражения", "description": ""}
+{"uid": "TOP-URAVNENIYA-I-NERAVENSTVA-9e8520", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-ALGEB-f9e5ea", "title": "Уравнения и неравенства", "description": ""}
+{"uid": "TOP-LINEINYE-URAVNENIYA-4c2464", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-4880f4", "title": "Линейные уравнения", "description": ""}
+{"uid": "TOP-KVADRATNYE-URAVNENIYA-878b01", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-4880f4", "title": "Квадратные уравнения", "description": ""}
+{"uid": "TOP-NERAVENSTVA-PERVOI-STEPE-c8f7ed", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-4880f4", "title": "Неравенства первой степени", "description": ""}
+{"uid": "TOP-SISTEMY-URAVNENII-516dc8", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-4880f4", "title": "Системы уравнений", "description": ""}
+{"uid": "TOP-OPREDELENIE-FUNKCII-7fbf66", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-649c6b", "title": "Определение функции", "description": ""}
+{"uid": "TOP-GRAFIKI-LINEINYH-FUNKCII-4971f9", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-649c6b", "title": "Графики линейных функций", "description": ""}
+{"uid": "TOP-GRAFIKI-KVADRATICHNYH-FU-54ac00", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-649c6b", "title": "Графики квадратичных функций", "description": ""}
+{"uid": "TOP-PREOBRAZOVANIYA-GRAFIKOV-68a8d5", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-649c6b", "title": "Преобразования графиков функций", "description": ""}
+{"uid": "TOP-TOCHKI-I-PRYAMYE-8b6948", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-7abfa6", "title": "Точки и прямые", "description": ""}
+{"uid": "TOP-UGLY-I-IH-IZMERENIE-d90172", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-7abfa6", "title": "Углы и их измерение", "description": ""}
+{"uid": "TOP-PLOSKOSTI-I-MNOGOGRANNIK-0cc39a", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-7abfa6", "title": "Плоскости и многогранники", "description": ""}
+{"uid": "TOP-PARALLELNOST-I-PERPENDIK-8aad8d", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-7abfa6", "title": "Параллельность и перпендикулярность", "description": ""}
+{"uid": "TOP-OSNOVNYE-PONYATIYA-PLOSK-43f77f", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-bfec6f", "title": "Основные понятия плоской геометрии", "description": ""}
+{"uid": "TOP-TREUGOLNIKI-I-IH-SVOISTV-7e0d40", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-bfec6f", "title": "Треугольники и их свойства", "description": ""}
+{"uid": "TOP-CHETYREHUGOLNIKI-I-IH-KL-3745ed", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-bfec6f", "title": "Четырехугольники и их классификация", "description": ""}
+{"uid": "TOP-PARALLELNYE-PRYAMYE-I-UG-9990dd", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-bfec6f", "title": "Параллельные прямые и углы", "description": ""}
+{"uid": "TOP-OSNOVNYE-PONYATIYA-PROST-503b58", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-08f09f", "title": "Основные понятия пространственной геометрии", "description": ""}
+{"uid": "TOP-PARALLELNOST-I-PERPENDIK-0fabd1", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-08f09f", "title": "Параллельность и перпендикулярность в пространстве", "description": ""}
+{"uid": "TOP-OBEM-I-PLOSCHAD-POVERHNO-997e2c", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-08f09f", "title": "Объем и площадь поверхности трехмерных фигур", "description": ""}
+{"uid": "TOP-SECHENIYA-I-PROEKCII-PRO-0c9925", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-08f09f", "title": "Сечения и проекции пространственных фигур", "description": ""}
+{"uid": "TOP-OPREDELENIE-TRIGONOMETRI-2730cd", "section_uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-daef9f", "title": "Определение тригонометрических функций", "description": ""}
+{"uid": "TOP-SVOISTVA-TRIGONOMETRICHE-dfd962", "section_uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-daef9f", "title": "Свойства тригонометрических функций", "description": ""}
+{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-b3a3f5", "section_uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-daef9f", "title": "Графики тригонометрических функций", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-3990ce", "section_uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-daef9f", "title": "Применение тригонометрии в решении треугольников", "description": ""}
+{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-f4c63b", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-cc3c7b", "title": "Основные тригонометрические функции", "description": ""}
+{"uid": "TOP-SVOISTVA-TRIGONOMETRICHE-a32e2b", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-cc3c7b", "title": "Свойства тригонометрических функций", "description": ""}
+{"uid": "TOP-METODY-RESHENIYA-TRIGONO-2786d3", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-cc3c7b", "title": "Методы решения тригонометрических уравнений", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRIC-47978b", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-cc3c7b", "title": "Применение тригонометрических уравнений в задачах", "description": ""}
+{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-8812c1", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-6a5d5c", "title": "Основные тригонометрические функции", "description": ""}
+{"uid": "TOP-SINUSY-I-KOSINUSY-UGLOV--ac9ceb", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-6a5d5c", "title": "Синусы и косинусы углов в треугольниках", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-URAV-719f33", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-6a5d5c", "title": "Тригонометрические уравнения и их решения", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-d12a48", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-6a5d5c", "title": "Применение тригонометрии для нахождения площадей фигур", "description": ""}
+{"uid": "TOP-SLOZHENIE-I-VYCHITANIE-e43301", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-CHIS-072441", "title": "Сложение и вычитание", "description": "", "user_class_min": 6, "user_class_max": 8, "difficulty_band": "basic"}
+{"uid": "TOP-UMNOZHENIE-I-DELENIE-104944", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-CHIS-072441", "title": "Умножение и деление", "description": "", "user_class_min": 6, "user_class_max": 8, "difficulty_band": "basic"}
+{"uid": "TOP-RABOTA-S-DROBYAMI-4df0a9", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-CHIS-072441", "title": "Работа с дробями", "description": "", "user_class_min": 6, "user_class_max": 8, "difficulty_band": "basic"}
+{"uid": "TOP-PROCENTY-I-PROPORCII-0bdf21", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-CHIS-072441", "title": "Проценты и пропорции", "description": "", "user_class_min": 6, "user_class_max": 8, "difficulty_band": "basic"}
+{"uid": "TOP-LINEINYE-URAVNENIYA-ca3d28", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-9addc7", "title": "Линейные уравнения", "description": "", "user_class_min": 7, "user_class_max": 10, "difficulty_band": "standard"}
+{"uid": "TOP-KVADRATNYE-URAVNENIYA-be46cc", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-9addc7", "title": "Квадратные уравнения", "description": "", "user_class_min": 7, "user_class_max": 10, "difficulty_band": "standard"}
+{"uid": "TOP-NERAVENSTVA-PERVOI-STEPE-824249", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-9addc7", "title": "Неравенства первой степени", "description": "", "user_class_min": 7, "user_class_max": 10, "difficulty_band": "standard"}
+{"uid": "TOP-SISTEMY-URAVNENII-b524eb", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-9addc7", "title": "Системы уравнений", "description": "", "user_class_min": 7, "user_class_max": 10, "difficulty_band": "standard"}
+{"uid": "TOP-OPREDELENIE-FUNKCII-27f717", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-73d290", "title": "Определение функции", "description": "", "user_class_min": 8, "user_class_max": 10, "difficulty_band": "core"}
+{"uid": "TOP-GRAFIKI-FUNKCII-1d26eb", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-73d290", "title": "Графики функций", "description": "", "user_class_min": 8, "user_class_max": 10, "difficulty_band": "core"}
+{"uid": "TOP-SVOISTVA-FUNKCII-3a7634", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-73d290", "title": "Свойства функций", "description": "", "user_class_min": 8, "user_class_max": 10, "difficulty_band": "core"}
+{"uid": "TOP-PREOBRAZOVANIYA-GRAFIKOV-200ca7", "section_uid": "SUBSEC-FUNKCII-I-GRAFIKI-73d290", "title": "Преобразования графиков", "description": "", "user_class_min": 8, "user_class_max": 10, "difficulty_band": "core"}
+{"uid": "TOP-TOCHKI-LINII-I-PLOSKOSTI-e37935", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-d682af", "title": "Точки, линии и плоскости", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-UGLY-I-IH-IZMERENIE-fc287e", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-d682af", "title": "Углы и их измерение", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-FIGURY-I-IH-SVOISTVA-4c0631", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-d682af", "title": "Фигуры и их свойства", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-PLOSCHAD-I-OBEM-GEOMETRI-a0184b", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-d682af", "title": "Площадь и объем геометрических фигур", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-OSNOVNYE-PONYATIYA-PLOSK-d97929", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-d89e8c", "title": "Основные понятия плоской геометрии", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-PARALLELNYE-I-PERPENDIKU-a782a5", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-d89e8c", "title": "Параллельные и перпендикулярные прямые", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-TREUGOLNIKI-I-IH-SVOISTV-5362b5", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-d89e8c", "title": "Треугольники и их свойства", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-PLOSCHAD-FIGUR-V-PLOSKOI-0da3a9", "section_uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-d89e8c", "title": "Площадь фигур в плоской геометрии", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-OPREDELENIE-I-SVOISTVA-M-d6a78b", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-c59660", "title": "Определение и свойства многогранников", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-PARALLELNYE-I-PERPENDIKU-695532", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-c59660", "title": "Параллельные и перпендикулярные прямые в пространстве", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-OBEM-I-PLOSCHAD-POVERHNO-dbe787", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-c59660", "title": "Объем и площадь поверхности тел вращения", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-SECHENIYA-MNOGOGRANNIKOV-644258", "section_uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-c59660", "title": "Сечения многогранников и их свойства", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-OPREDELENIE-TRIGONOMETRI-42f55e", "section_uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-56eb3a", "title": "Определение тригонометрических функций", "description": "", "user_class_min": 8, "user_class_max": 10, "difficulty_band": "core"}
+{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-8ea5a7", "section_uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-56eb3a", "title": "Основные тригонометрические тождества", "description": "", "user_class_min": 8, "user_class_max": 10, "difficulty_band": "core"}
+{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-f12f58", "section_uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-56eb3a", "title": "Графики тригонометрических функций", "description": "", "user_class_min": 8, "user_class_max": 10, "difficulty_band": "core"}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-bbb2c9", "section_uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-56eb3a", "title": "Применение тригонометрии в решении треугольников", "description": "", "user_class_min": 8, "user_class_max": 10, "difficulty_band": "core"}
+{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-cbe656", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-bce3d3", "title": "Основные тригонометрические функции", "description": "", "user_class_min": 8, "user_class_max": 11, "difficulty_band": "advanced"}
+{"uid": "TOP-SVOISTVA-TRIGONOMETRICHE-323b3c", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-bce3d3", "title": "Свойства тригонометрических функций", "description": "", "user_class_min": 8, "user_class_max": 11, "difficulty_band": "advanced"}
+{"uid": "TOP-METODY-RESHENIYA-TRIGONO-c75f98", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-bce3d3", "title": "Методы решения тригонометрических уравнений", "description": "", "user_class_min": 8, "user_class_max": 11, "difficulty_band": "advanced"}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRIC-c43e49", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-bce3d3", "title": "Применение тригонометрических уравнений в задачах", "description": "", "user_class_min": 8, "user_class_max": 11, "difficulty_band": "advanced"}
+{"uid": "TOP-OSNOVY-TRIGONOMETRICHESK-2b8089", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-4a34b9", "title": "Основы тригонометрических функций", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-TREUGOLNIKI-I-IH-SVOISTV-0c7128", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-4a34b9", "title": "Треугольники и их свойства", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-PLOSCHAD-TREUGOLNIKA-CHE-898c33", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-4a34b9", "title": "Площадь треугольника через тригонометрию", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-b49de5", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-4a34b9", "title": "Применение тригонометрии в решении задач на окружности", "description": "", "user_class_min": 6, "user_class_max": 9, "difficulty_band": "core"}

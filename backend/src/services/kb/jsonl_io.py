@@ -40,6 +40,15 @@ def rewrite_jsonl(filepath: str, records: List[Dict]) -> None:
 def get_path(name: str) -> str:
     return os.path.join(KB_DIR, name)
 
+def get_subject_dir(subject_slug: str, language: str) -> str:
+    base = os.path.join(KB_DIR, language.lower(), subject_slug.lower())
+    os.makedirs(base, exist_ok=True)
+    return base
+
+def get_path_in(base_dir: str, name: str) -> str:
+    os.makedirs(base_dir, exist_ok=True)
+    return os.path.join(base_dir, name)
+
 def _translit_en(s: str) -> str:
     mapping = {
         'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'i','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'c','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',
@@ -97,7 +106,7 @@ def normalize_skill_topics_to_topic_skills() -> Dict:
     return {'added': added}
 
 def normalize_kb() -> Dict:
-    files = ['subjects.jsonl','sections.jsonl','topics.jsonl','skills.jsonl','methods.jsonl','skill_methods.jsonl','skill_topics.jsonl','topic_skills.jsonl','examples.jsonl','example_skills.jsonl','errors.jsonl','error_skills.jsonl','error_examples.jsonl','topic_goals.jsonl','topic_objectives.jsonl','lesson_steps.jsonl','theories.jsonl']
+    files = ['subjects.jsonl','sections.jsonl','subsections.jsonl','topics.jsonl','skills.jsonl','methods.jsonl','skill_methods.jsonl','skill_topics.jsonl','topic_skills.jsonl','content_units.jsonl','examples.jsonl','example_skills.jsonl','errors.jsonl','error_skills.jsonl','error_examples.jsonl','topic_goals.jsonl','topic_objectives.jsonl']
     stats: Dict[str, Dict] = {}
     for name in files:
         path = get_path(name)
@@ -106,3 +115,12 @@ def normalize_kb() -> Dict:
         stats[name] = {'count': len(items)}
     return {'ok': True, 'stats': stats}
 
+def normalize_kb_dir(base_dir: str) -> Dict:
+    files = ['subjects.jsonl','sections.jsonl','subsections.jsonl','topics.jsonl','skills.jsonl','methods.jsonl','skill_methods.jsonl','skill_topics.jsonl','topic_skills.jsonl','content_units.jsonl','examples.jsonl','example_skills.jsonl','errors.jsonl','error_skills.jsonl','error_examples.jsonl','topic_goals.jsonl','topic_objectives.jsonl']
+    stats: Dict[str, Dict] = {}
+    for name in files:
+        path = get_path_in(base_dir, name)
+        items = load_jsonl(path)
+        rewrite_jsonl(path, items)
+        stats[name] = {'count': len(items)}
+    return {'ok': True, 'stats': stats}

@@ -9,7 +9,7 @@ def mark_entities_updated(tenant_id: str, targets: List[str], collection: str = 
 
 def consume_graph_committed() -> Dict:
     r = get_redis()
-    raw = r.rpop("events:graph_committed")
+    raw = r.lpop("events:graph_committed")
     if not raw:
         return {"processed": 0}
     import json

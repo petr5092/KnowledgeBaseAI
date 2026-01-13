@@ -28,7 +28,8 @@ def index_entities(tenant_id: str, uids: List[str], collection: str | None = Non
         vec = prov.embed_text(text)
         if len(vec) != d:
             vec = (vec[:d] if len(vec) >= d else (vec + [0.0] * (d - len(vec))))
-        client.upsert(collection_name=name, points=[PointStruct(id=uid, vector=vec, payload={"tenant_id": tenant_id, "uid": uid, "type": typ, "text": text})])
+        import uuid
+        pid = uuid.uuid4()
+        client.upsert(collection_name=name, points=[PointStruct(id=pid, vector=vec, payload={"tenant_id": tenant_id, "uid": uid, "type": typ, "text": text})])
         n += 1
     return {"processed": n}
-

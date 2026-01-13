@@ -8,11 +8,20 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
     items: List[Dict] = []
     s = drv.session()
     if subject_uid:
+        tid_rows = s.run("MATCH (sub:Subject {uid:$su}) RETURN sub.tenant_id AS tid ORDER BY coalesce(sub.created_at,'') DESC", {"su": subject_uid}).data()
+        tid = next((r.get("tid") for r in tid_rows if r.get("tid")), None)
+        if not tid:
+            tid_rows2 = s.run("MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(sec:Section) RETURN sec.tenant_id AS tid LIMIT 1", {"su": subject_uid}).data()
+            tid = tid_rows2[0]["tid"] if tid_rows2 and tid_rows2[0].get("tid") else None
         rows = s.run(
-            "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) "
+            "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(sec:Section)-[:CONTAINS]->(t:Topic) "
+            "WHERE sub.tenant_id = $tid "
+            "AND sec.tenant_id = sub.tenant_id "
+            "AND t.tenant_id = sub.tenant_id "
+            "AND NOT t.uid STARTS WITH 'TOP-' "
             "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
             "RETURN t.uid AS uid, t.title AS title, collect(pre.uid) AS prereqs",
-            {"su": subject_uid}
+            {"su": subject_uid, "tid": tid}
         ).data()
     else:
         rows = s.run(
@@ -21,6 +30,8 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
         ).data()
     for r in rows:
         tuid = r["uid"]
+        if tuid.startswith("TOP-"):
+            continue
         mastered = float(progress.get(tuid, 0.0) or 0.0)
         missing = 0
         for pre in (r.get("prereqs") or []):
@@ -52,6 +63,8 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
                 ...
         for r in more:
             tuid = r["uid"]
+            if tuid.startswith("TOP-"):
+                continue
             if any(it["uid"] == tuid for it in items):
                 continue
             mastered = float(progress.get(tuid, 0.0) or 0.0)

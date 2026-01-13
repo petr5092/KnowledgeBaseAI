@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from starlette.responses import StreamingResponse
 from src.services.graph.neo4j_repo import Neo4jRepo
 from src.config.settings import settings
-from src.api.common import ApiError
+from src.api.common import ApiError, StandardResponse
 from src.services.questions import select_examples_for_topics
 
 router = APIRouter(prefix="/v1/assessment", tags=["Интеграция с LMS"])
@@ -113,7 +113,7 @@ def _select_question(topic_uid: str, difficulty_min: int, difficulty_max: int) -
 
 @router.post(
     "/start",
-    response_model=StartResponse,
+    response_model=StandardResponse,
     responses={400: {"model": ApiError}, 404: {"model": ApiError}},
 )
 async def start(payload: StartRequest) -> Dict:

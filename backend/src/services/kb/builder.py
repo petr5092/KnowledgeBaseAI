@@ -4,7 +4,7 @@ import requests
 import asyncio
 from typing import Dict, List, Tuple, Optional
 from src.config.settings import settings
-from .jsonl_io import load_jsonl, append_jsonl, rewrite_jsonl, get_path, tokens, make_uid, normalize_skill_topics_to_topic_skills, normalize_kb
+from .jsonl_io import load_jsonl, append_jsonl, rewrite_jsonl, get_path, get_subject_dir, get_path_in, normalize_kb_dir, tokens, make_uid, normalize_skill_topics_to_topic_skills, normalize_kb
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -155,9 +155,19 @@ def add_section(subject_uid: str, title: str, description: str = '', uid: Option
     append_jsonl(get_path('sections.jsonl'), {'uid': uid, 'subject_uid': subject_uid, 'title': title, 'description': description})
     return {'uid': uid}
 
+def add_subsection(section_uid: str, title: str, description: str = '', uid: Optional[str] = None) -> Dict:
+    uid = uid or make_uid('SUBSEC', title)
+    append_jsonl(get_path('subsections.jsonl'), {'uid': uid, 'section_uid': section_uid, 'title': title, 'description': description})
+    return {'uid': uid}
+
 def add_topic(section_uid: str, title: str, description: str = '', uid: Optional[str] = None) -> Dict:
     uid = uid or make_uid('TOP', title)
     append_jsonl(get_path('topics.jsonl'), {'uid': uid, 'section_uid': section_uid, 'title': title, 'description': description})
+    return {'uid': uid}
+
+def add_topic_to_subsection(subsection_uid: str, title: str, description: str = '', uid: Optional[str] = None) -> Dict:
+    uid = uid or make_uid('TOP', title)
+    append_jsonl(get_path('topics.jsonl'), {'uid': uid, 'section_uid': subsection_uid, 'title': title, 'description': description})
     return {'uid': uid}
 
 def add_skill(subject_uid: str, title: str, definition: str = '', uid: Optional[str] = None) -> Dict:
@@ -224,12 +234,28 @@ def add_topic_objective(topic_uid: str, title: str, uid: Optional[str] = None) -
     return {'uid': uid}
 
 def add_lesson_step(topic_uid: str, role: str, text: str) -> Dict:
-    append_jsonl(get_path('lesson_steps.jsonl'), {'topic_uid': topic_uid, 'role': role, 'text': text})
-    return {'ok': True}
+    uid = make_uid('UNIT', f"{topic_uid}-lesson_step")
+    payload = {'role': role, 'text': text}
+    append_jsonl(get_path('content_units.jsonl'), {'uid': uid, 'topic_uid': topic_uid, 'branch': 'lesson', 'type': 'lesson_step', 'payload': payload, 'complexity': 0.1})
+    return {'uid': uid}
 
 def add_theory(topic_uid: str, text: str) -> Dict:
-    append_jsonl(get_path('theories.jsonl'), {'topic_uid': topic_uid, 'text': text})
-    return {'ok': True}
+    uid = make_uid('UNIT', f"{topic_uid}-theory")
+    payload = {'text': text}
+    append_jsonl(get_path('content_units.jsonl'), {'uid': uid, 'topic_uid': topic_uid, 'branch': 'theory', 'type': 'theory', 'payload': payload, 'complexity': 0.2})
+    return {'uid': uid}
+
+def add_concept_unit(topic_uid: str, text: str) -> Dict:
+    uid = make_uid('UNIT', f"{topic_uid}-concept")
+    payload = {'text': text}
+    append_jsonl(get_path('content_units.jsonl'), {'uid': uid, 'topic_uid': topic_uid, 'branch': 'theory', 'type': 'concept', 'payload': payload, 'complexity': 0.2})
+    return {'uid': uid}
+
+def add_formula_unit(topic_uid: str, text: str) -> Dict:
+    uid = make_uid('UNIT', f"{topic_uid}-formula")
+    payload = {'text': text}
+    append_jsonl(get_path('content_units.jsonl'), {'uid': uid, 'topic_uid': topic_uid, 'branch': 'theory', 'type': 'formula', 'payload': payload, 'complexity': 0.3})
+    return {'uid': uid}
 
 def generate_theory_for_topic_openai(topic_uid: str, max_tokens: int = 600) -> Dict:
     topics = load_jsonl(get_path('topics.jsonl'))
@@ -253,8 +279,8 @@ def generate_theory_for_topic_openai(topic_uid: str, max_tokens: int = 600) -> D
     res = openai_chat(messages)
     if not res.get('ok'):
         return res
-    append_jsonl(get_path('theories.jsonl'), {'topic_uid': topic_uid, 'text': res.get('content', '')[:max_tokens*4]})
-    return {'ok': True}
+    text = res.get('content', '')[:max_tokens*4]
+    return add_theory(topic_uid, text)
 
 def generate_examples_for_topic_openai(topic_uid: str, count: int = 3, difficulty: int = 3) -> Dict:
     topics = load_jsonl(get_path('topics.jsonl'))
@@ -357,6 +383,51 @@ async def generate_topics_for_section_openai_async(section_title: str, language:
             continue
     return items
 
+def enrich_topic(subject_uid: str, topic_uid: str, title: str) -> Dict:
+    content_units = load_jsonl(get_path('content_units.jsonl'))
+    have_concept = any((u.get('topic_uid')==topic_uid and u.get('type')=='concept') for u in content_units)
+    have_formula = any((u.get('topic_uid')==topic_uid and u.get('type')=='formula') for u in content_units)
+    if not have_concept:
+        add_concept_unit(topic_uid, f"Ключевые понятия: {title}")
+    if not have_formula:
+        add_formula_unit(topic_uid, f"Ключевые формулы по теме: {title}")
+    add_lesson_step(topic_uid, 'tutor', f"Краткое объяснение: {title}")
+    examples = load_jsonl(get_path('examples.jsonl'))
+    if not any(e.get('topic_uid')==topic_uid for e in examples):
+        add_example(f"Пример: {title}", "Краткая постановка задачи", topic_uid, difficulty=3)
+    errors = load_jsonl(get_path('errors.jsonl'))
+    if not any((ex.get('title')==f"Типовые ошибки: {title}") for ex in errors):
+        err = add_error(f"Типовые ошибки: {title}", "Перечень типовых ошибок")
+        link_error_example(err['uid'], next((e.get('uid') for e in load_jsonl(get_path('examples.jsonl')) if e.get('topic_uid')==topic_uid), None) or "")
+    skills = load_jsonl(get_path('skills.jsonl'))
+    s_titles = {s.get('title') for s in skills}
+    s1 = f"Понимание {title}"
+    s2 = f"Применение {title}"
+    suids: List[str] = []
+    if s1 not in s_titles:
+        suids.append(add_skill(subject_uid, s1).get('uid'))
+    else:
+        suids.append(next(s.get('uid') for s in skills if s.get('title')==s1))
+    if s2 not in s_titles:
+        suids.append(add_skill(subject_uid, s2).get('uid'))
+    else:
+        suids.append(next(s.get('uid') for s in skills if s.get('title')==s2))
+    for su in suids:
+        link_topic_skill(topic_uid, su, weight='linked', confidence=0.9)
+    return {'ok': True}
+
+def enrich_all_topics() -> Dict:
+    topics = load_jsonl(get_path('topics.jsonl'))
+    subjects = load_jsonl(get_path('subjects.jsonl'))
+    subj_uid = next((s.get('uid') for s in subjects if (s.get('title') or '').strip().upper()=='MATH'), None) or (subjects[0].get('uid') if subjects else '')
+    for t in topics:
+        tu = t.get('uid')
+        title = t.get('title','')
+        if tu and title:
+            enrich_topic(subj_uid, tu, title)
+    normalize_kb()
+    return {'ok': True, 'topics': len(topics)}
+
 async def generate_skills_for_topic_openai_async(topic_title: str, language: str, count: int = 3) -> List[Dict]:
     messages = [
         {'role': 'system', 'content': 'Сгенерируй навыки темы, верни JSONL с полями title и definition.'},
@@ -394,6 +465,399 @@ async def generate_methods_for_skill_openai_async(skill_title: str, count: int =
         except Exception:
             continue
     return items
+
+async def generate_subsections_openai_async(section_title: str, language: str, count: int = 3) -> List[str]:
+    messages = [
+        {'role': 'system', 'content': 'Сгенерируй подразделы для раздела, верни JSONL с полем title.'},
+        {'role': 'user', 'content': json.dumps({'section': section_title, 'lang': language, 'count': count}, ensure_ascii=False)}
+    ]
+    res = await openai_chat_async(messages)
+    if not res.get('ok'):
+        return []
+    titles: List[str] = []
+    for l in [x for x in res.get('content', '').splitlines() if x.strip()]:
+        try:
+            obj = json.loads(l)
+            t = (obj.get('title') or '').strip()
+            if t:
+                titles.append(t)
+            if len(titles) >= count:
+                break
+        except Exception:
+            continue
+    return titles
+
+async def generate_topics_with_prereqs_openai_async(subsection_title: str, language: str, count: int = 10) -> List[Dict]:
+    messages = [
+        {'role': 'system', 'content': 'Сгенерируй темы подраздела, верни JSONL с полями title и prereqs (массив строк). Без циклов, только логические пререквизиты.'},
+        {'role': 'user', 'content': json.dumps({'subsection': subsection_title, 'lang': language, 'count': count}, ensure_ascii=False)}
+    ]
+    res = await openai_chat_async(messages)
+    if not res.get('ok'):
+        return []
+    items: List[Dict] = []
+    for l in [x for x in res.get('content', '').splitlines() if x.strip()]:
+        try:
+            obj = json.loads(l)
+            items.append({'title': obj.get('title',''), 'prereqs': obj.get('prereqs') or []})
+            if len(items) >= count:
+                break
+        except Exception:
+            continue
+    return items
+
+async def generate_subject_with_llm(subject_title: str, language: str, limits: Dict | None = None) -> Dict:
+    limits = limits or {}
+    sec_count = int(limits.get('sections', 8))
+    topics_per_sub = int(limits.get('topics_per_subsection', 10))
+    lang = language.lower()
+    slug = (subject_title or 'subject').strip().lower().replace(' ', '-')
+    base_dir = get_subject_dir(slug, lang)
+    subj_uid = make_uid('SUB', subject_title)
+    append_jsonl(get_path_in(base_dir, 'subjects.jsonl'), {'uid': subj_uid, 'title': subject_title, 'description': ''})
+    sections = await generate_sections_openai_async(subject_title, language, count=sec_count)
+    section_uids: List[str] = []
+    for sec_title in sections:
+        sec = add_section(subj_uid, sec_title)
+        append_jsonl(get_path_in(base_dir, 'sections.jsonl'), {'uid': sec['uid'], 'subject_uid': subj_uid, 'title': sec_title, 'description': ''})
+        section_uids.append(sec['uid'])
+        subs = await generate_subsections_openai_async(sec_title, language, count=3)
+        for sub_title in subs:
+            ss = add_subsection(sec['uid'], sub_title)
+            append_jsonl(get_path_in(base_dir, 'subsections.jsonl'), {'uid': ss['uid'], 'section_uid': sec['uid'], 'title': sub_title, 'description': ''})
+            topics = await generate_topics_with_prereqs_openai_async(sub_title, language, count=topics_per_sub)
+            title_to_uid: Dict[str, str] = {}
+            def _classify(sub_title: str, topic_title: str) -> Dict:
+                st = (sub_title or '').lower()
+                tt = (topic_title or '').lower()
+                def rng(a,b): return {'user_class_min':a,'user_class_max':b}
+                if 'логик' in st or 'logic' in st: d=rng(5,7); band='foundation'
+                elif 'множе' in st or 'set' in st: d=rng(6,8); band='foundation'
+                elif 'числ' in st or 'number' in st: d=rng(6,8); band='basic'
+                elif 'арифм' in st or 'arith' in st: d=rng(6,8); band='basic'
+                elif 'алгебр' in st or 'algebra' in st: d=rng(7,9); band='core'
+                elif 'функ' in st or 'function' in st: d=rng(8,10); band='core'
+                elif 'геом' in st or 'geometry' in st: d=rng(6,9); band='core'
+                elif 'координ' in st or 'analytic' in st: d=rng(8,11); band='advanced'
+                elif 'тригон' in st or 'trig' in st: d=rng(8,11); band='advanced'
+                elif 'комбин' in st or 'вероят' in st or 'prob' in st: d=rng(7,10); band='advanced'
+                elif 'стат' in st or 'stat' in st: d=rng(7,10); band='advanced'
+                elif 'линейн' in st or 'матриц' in st or 'вектор' in st or 'linear' in st: d=rng(9,11); band='advanced'
+                elif 'анализ' in st or 'предел' in st or 'производ' in st or 'интеграл' in st or 'calculus' in st: d=rng(10,11); band='advanced'
+                elif 'дискрет' in st or 'граф' in st or 'discrete' in st: d=rng(9,11); band='advanced'
+                else: d=rng(7,10); band='standard'
+                return {'user_class_min': d['user_class_min'], 'user_class_max': d['user_class_max'], 'difficulty_band': band}
+            for t in topics:
+                tt = add_topic_to_subsection(ss['uid'], t.get('title',''))
+                title_to_uid[t.get('title','')] = tt['uid']
+                cls = _classify(sub_title, t.get('title',''))
+                append_jsonl(get_path_in(base_dir, 'topics.jsonl'), {'uid': tt['uid'], 'section_uid': ss['uid'], 'title': t.get('title',''), 'description': '', 'user_class_min': cls['user_class_min'], 'user_class_max': cls['user_class_max'], 'difficulty_band': cls['difficulty_band']})
+            edges: List[Tuple[str,str]] = []
+            for t in topics:
+                tu = title_to_uid.get(t.get('title',''))
+                for pre in (t.get('prereqs') or []):
+                    pu = title_to_uid.get(pre)
+                    if tu and pu:
+                        edges.append((tu, pu))
+            # DAG check with pruning
+            adj: Dict[str, List[str]] = {}
+            for a, b in edges:
+                adj.setdefault(a, []).append(b)
+            visited: Dict[str, int] = {}
+            def _dfs(u: str) -> bool:
+                visited[u] = 1
+                for v in adj.get(u, []):
+                    if visited.get(v, 0) == 1:
+                        return False
+                    if visited.get(v, 0) == 0:
+                        if not _dfs(v):
+                            return False
+                visited[u] = 2
+                return True
+            good: List[Tuple[str,str]] = []
+            for a, b in edges:
+                for k in list(visited.keys()):
+                    visited[k] = 0
+                adj.setdefault(a, [])
+                if b not in adj[a]:
+                    adj[a].append(b)
+                ok = True
+                for node in title_to_uid.values():
+                    if visited.get(node, 0) == 0:
+                        if not _dfs(node):
+                            ok = False
+                            break
+                if ok:
+                    good.append((a, b))
+                adj[a].remove(b)
+            for a, b in good:
+                append_jsonl(get_path_in(base_dir, 'topic_prereqs.jsonl'), {'target_uid': a, 'prereq_uid': b, 'weight': 1.0})
+            # Enrichment via LLM (theory/examples) and simple scaffold for units/skills/methods/errors
+            for title, tuid in title_to_uid.items():
+                # Theory
+                th = generate_theory_for_topic_openai(tuid, max_tokens=600)
+                # Examples
+                generate_examples_for_topic_openai(tuid, count=3, difficulty=3)
+                # Concept/formula/lesson_step (scaffold without LLM texts)
+                add_concept_unit(tuid, f"Ключевые понятия: {title}")
+                add_formula_unit(tuid, f"Ключевые формулы по теме: {title}")
+                add_lesson_step(tuid, 'tutor', f"Краткое объяснение: {title}")
+                # Skills/methods (LLM)
+                sks = await generate_skills_for_topic_openai_async(title, language, count=2)
+                skill_uids: List[str] = []
+                for s in sks:
+                    su = add_skill(subj_uid, s.get('title',''), s.get('definition',''))
+                    skill_uids.append(su['uid'])
+                    append_jsonl(get_path_in(base_dir, 'skills.jsonl'), {'uid': su['uid'], 'subject_uid': subj_uid, 'title': s.get('title',''), 'definition': s.get('definition','')})
+                    append_jsonl(get_path_in(base_dir, 'topic_skills.jsonl'), {'topic_uid': tuid, 'skill_uid': su['uid'], 'weight': 'linked', 'confidence': 0.9})
+                    mets = await generate_methods_for_skill_openai_async(s.get('title',''), count=2)
+                    for m in mets:
+                        mu = add_method(m.get('title',''), m.get('method_text',''), [])
+                        append_jsonl(get_path_in(base_dir, 'methods.jsonl'), {'uid': mu['uid'], 'title': m.get('title',''), 'method_text': m.get('method_text',''), 'applicability_types': []})
+                        append_jsonl(get_path_in(base_dir, 'skill_methods.jsonl'), {'skill_uid': su['uid'], 'method_uid': mu['uid'], 'weight': 'linked', 'confidence': 0.9, 'is_auto_generated': True})
+                # Errors
+                err = add_error(f"Типовые ошибки: {title}", "Перечень типовых ошибок")
+                append_jsonl(get_path_in(base_dir, 'errors.jsonl'), {'uid': err['uid'], 'title': f"Типовые ошибки: {title}", 'error_text': "Перечень типовых ошибок", 'triggers': []})
+    normalize_kb_dir(base_dir)
+    return {'ok': True, 'base_dir': base_dir}
+
+MATHEMATICS_ONTOLOGY: Dict = {
+    'subject': 'MATH',
+    'sections': [
+        {'title': 'Математические основания', 'subsections': [
+            {'title': 'Логика', 'topics': [
+                {'title': 'Высказывания', 'prereqs': []},
+                {'title': 'Логические связки', 'prereqs': ['Высказывания']},
+                {'title': 'Таблицы истинности', 'prereqs': ['Логические связки']},
+                {'title': 'Логические законы', 'prereqs': ['Таблицы истинности']},
+                {'title': 'Кванторы', 'prereqs': ['Логические законы']},
+                {'title': 'Методы доказательства', 'prereqs': ['Кванторы']}
+            ]},
+            {'title': 'Теория множеств', 'topics': [
+                {'title': 'Понятие множества', 'prereqs': []},
+                {'title': 'Операции над множествами', 'prereqs': ['Понятие множества']},
+                {'title': 'Отношения', 'prereqs': ['Операции над множествами']},
+                {'title': 'Отображения', 'prereqs': ['Отношения']},
+                {'title': 'Эквивалентность и порядок', 'prereqs': ['Отношения']}
+            ]}
+        ]},
+        {'title': 'Числа и структуры', 'subsections': [
+            {'title': 'Числовые системы', 'topics': [
+                {'title': 'Натуральные числа', 'prereqs': []},
+                {'title': 'Целые числа', 'prereqs': ['Натуральные числа']},
+                {'title': 'Рациональные числа', 'prereqs': ['Целые числа']},
+                {'title': 'Действительные числа', 'prereqs': ['Рациональные числа']},
+                {'title': 'Комплексные числа', 'prereqs': ['Действительные числа']}
+            ]},
+            {'title': 'Арифметическая структура', 'topics': [
+                {'title': 'Операции и свойства', 'prereqs': ['Натуральные числа']},
+                {'title': 'Делимость', 'prereqs': ['Целые числа']},
+                {'title': 'Простые числа', 'prereqs': ['Делимость']},
+                {'title': 'НОД и НОК', 'prereqs': ['Делимость']}
+            ]}
+        ]},
+        {'title': 'Алгебра', 'subsections': [
+            {'title': 'Алгебраические выражения', 'topics': [
+                {'title': 'Переменные и выражения', 'prereqs': ['Операции и свойства']},
+                {'title': 'Степени', 'prereqs': ['Переменные и выражения']},
+                {'title': 'Корни', 'prereqs': ['Степени', 'Действительные числа']},
+                {'title': 'Многочлены', 'prereqs': ['Переменные и выражения']},
+                {'title': 'Факторизация', 'prereqs': ['Многочлены']}
+            ]},
+            {'title': 'Уравнения', 'topics': [
+                {'title': 'Линейные уравнения', 'prereqs': ['Переменные и выражения']},
+                {'title': 'Квадратные уравнения', 'prereqs': ['Многочлены']},
+                {'title': 'Дискриминант', 'prereqs': ['Квадратные уравнения']},
+                {'title': 'Рациональные уравнения', 'prereqs': ['Линейные уравнения']},
+                {'title': 'Иррациональные уравнения', 'prereqs': ['Корни']},
+                {'title': 'Системы уравнений', 'prereqs': ['Линейные уравнения']}
+            ]},
+            {'title': 'Неравенства', 'topics': [
+                {'title': 'Линейные неравенства', 'prereqs': ['Линейные уравнения']},
+                {'title': 'Квадратные неравенства', 'prereqs': ['Квадратные уравнения']},
+                {'title': 'Неравенства с модулем', 'prereqs': ['Действительные числа']},
+                {'title': 'Рациональные неравенства', 'prereqs': ['Рациональные уравнения']}
+            ]}
+        ]},
+        {'title': 'Функции', 'subsections': [
+            {'title': 'Общая теория функций', 'topics': [
+                {'title': 'Функция как отображение', 'prereqs': ['Отображения']},
+                {'title': 'Область определения', 'prereqs': ['Функция как отображение']},
+                {'title': 'График функции', 'prereqs': ['Координаты']},
+                {'title': 'Монотонность', 'prereqs': ['График функции']},
+                {'title': 'Обратная функция', 'prereqs': ['Функция как отображение']}
+            ]},
+            {'title': 'Классы функций', 'topics': [
+                {'title': 'Линейные функции', 'prereqs': ['Линейные уравнения']},
+                {'title': 'Степенные функции', 'prereqs': ['Степени']},
+                {'title': 'Рациональные функции', 'prereqs': ['Рациональные уравнения']},
+                {'title': 'Корневые функции', 'prereqs': ['Корни']},
+                {'title': 'Экспоненциальные функции', 'prereqs': ['Степени']},
+                {'title': 'Логарифмические функции', 'prereqs': ['Экспоненциальные функции']}
+            ]}
+        ]},
+        {'title': 'Геометрия', 'subsections': [
+            {'title': 'Евклидова геометрия', 'topics': [
+                {'title': 'Точка и прямая', 'prereqs': []},
+                {'title': 'Углы', 'prereqs': ['Точка и прямая']},
+                {'title': 'Треугольники', 'prereqs': ['Углы']},
+                {'title': 'Подобие', 'prereqs': ['Треугольники']},
+                {'title': 'Окружность', 'prereqs': ['Треугольники']},
+                {'title': 'Площади', 'prereqs': ['Многоугольники']}
+            ]},
+            {'title': 'Пространственная геометрия', 'topics': [
+                {'title': 'Прямая и плоскость', 'prereqs': ['Евклидова геометрия']},
+                {'title': 'Многогранники', 'prereqs': ['Прямая и плоскость']},
+                {'title': 'Тела вращения', 'prereqs': ['Многогранники']},
+                {'title': 'Объёмы', 'prereqs': ['Площади']}
+            ]}
+        ]},
+        {'title': 'Аналитическая геометрия', 'subsections': [
+            {'title': 'Координатный метод', 'topics': [
+                {'title': 'Декартовы координаты', 'prereqs': ['Действительные числа']},
+                {'title': 'Векторы', 'prereqs': ['Координаты']},
+                {'title': 'Скалярное произведение', 'prereqs': ['Векторы']}
+            ]},
+            {'title': 'Линии и поверхности', 'topics': [
+                {'title': 'Уравнение прямой', 'prereqs': ['Координаты']},
+                {'title': 'Уравнение окружности', 'prereqs': ['Координаты']},
+                {'title': 'Кривые второго порядка', 'prereqs': ['Квадратные уравнения']},
+                {'title': 'Плоскость в пространстве', 'prereqs': ['Векторы']}
+            ]}
+        ]},
+        {'title': 'Тригонометрия', 'subsections': [
+            {'title': 'Основы', 'topics': [
+                {'title': 'Радианная мера', 'prereqs': ['Действительные числа']},
+                {'title': 'Тригонометрические функции', 'prereqs': ['Радианная мера']},
+                {'title': 'Единичная окружность', 'prereqs': ['Тригонометрические функции']}
+            ]},
+            {'title': 'Тождества и уравнения', 'topics': [
+                {'title': 'Тригонометрические тождества', 'prereqs': ['Тригонометрические функции']},
+                {'title': 'Тригонометрические уравнения', 'prereqs': ['Тождества']},
+                {'title': 'Тригонометрические неравенства', 'prereqs': ['Тригонометрические уравнения']}
+            ]}
+        ]},
+        {'title': 'Комбинаторика и вероятность', 'subsections': [
+            {'title': 'Комбинаторика', 'topics': [
+                {'title': 'Правила подсчёта', 'prereqs': ['Натуральные числа']},
+                {'title': 'Перестановки', 'prereqs': ['Правила подсчёта']},
+                {'title': 'Сочетания', 'prereqs': ['Перестановки']},
+                {'title': 'Размещения', 'prereqs': ['Перестановки']}
+            ]},
+            {'title': 'Вероятность', 'topics': [
+                {'title': 'Случайные события', 'prereqs': ['Комбинаторика']},
+                {'title': 'Вероятность', 'prereqs': ['Случайные события']},
+                {'title': 'Условная вероятность', 'prereqs': ['Вероятность']},
+                {'title': 'Формула Байеса', 'prereqs': ['Условная вероятность']}
+            ]}
+        ]},
+        {'title': 'Статистика', 'subsections': [
+            {'title': 'Основы статистики', 'topics': [
+                {'title': 'Выборка', 'prereqs': ['Рациональные числа']},
+                {'title': 'Средние характеристики', 'prereqs': ['Выборка']},
+                {'title': 'Разброс', 'prereqs': ['Средние характеристики']},
+                {'title': 'Корреляция', 'prereqs': ['Разброс']}
+            ]}
+        ]},
+        {'title': 'Линейная алгебра', 'subsections': [
+            {'title': 'Матрицы', 'topics': [
+                {'title': 'Матрицы', 'prereqs': ['Системы уравнений']},
+                {'title': 'Определители', 'prereqs': ['Матрицы']},
+                {'title': 'Обратная матрица', 'prereqs': ['Определители']}
+            ]},
+            {'title': 'Векторные пространства', 'topics': [
+                {'title': 'Линейная комбинация', 'prereqs': ['Векторы']},
+                {'title': 'Базис', 'prereqs': ['Линейная комбинация']},
+                {'title': 'Размерность', 'prereqs': ['Базис']}
+            ]}
+        ]},
+        {'title': 'Математический анализ', 'subsections': [
+            {'title': 'Предел', 'topics': [
+                {'title': 'Предел последовательности', 'prereqs': ['Действительные числа']},
+                {'title': 'Предел функции', 'prereqs': ['Предел последовательности']}
+            ]},
+            {'title': 'Производная', 'topics': [
+                {'title': 'Производная', 'prereqs': ['Предел функции']},
+                {'title': 'Правила дифференцирования', 'prereqs': ['Производная']},
+                {'title': 'Исследование функций', 'prereqs': ['Производная']}
+            ]},
+            {'title': 'Интеграл', 'topics': [
+                {'title': 'Первообразная', 'prereqs': ['Производная']},
+                {'title': 'Определённый интеграл', 'prereqs': ['Предел функции']},
+                {'title': 'Применения интеграла', 'prereqs': ['Определённый интеграл']}
+            ]}
+        ]},
+        {'title': 'Дискретная математика', 'subsections': [
+            {'title': 'Булева логика', 'topics': [
+                {'title': 'Булевы функции', 'prereqs': ['Логика']},
+                {'title': 'Законы булевой алгебры', 'prereqs': ['Булевы функции']}
+            ]},
+            {'title': 'Теория графов', 'topics': [
+                {'title': 'Графы', 'prereqs': ['Множества']},
+                {'title': 'Пути и циклы', 'prereqs': ['Графы']},
+                {'title': 'Деревья', 'prereqs': ['Пути и циклы']}
+            ]}
+        ]}
+    ]
+}
+
+def build_mathematics_ontology() -> Dict:
+    subj = add_subject(MATHEMATICS_ONTOLOGY['subject'])
+    subject_uid = subj['uid']
+    topic_map: Dict[str, str] = {}
+    sections_defs = MATHEMATICS_ONTOLOGY.get('sections', [])
+    sec_uids: List[str] = []
+    for sec in sections_defs:
+        s = add_section(subject_uid, sec.get('title',''))
+        sec_uids.append(s['uid'])
+        for sub in sec.get('subsections', []):
+            ss = add_subsection(s['uid'], sub.get('title',''))
+            for t in sub.get('topics', []):
+                tt = add_topic_to_subsection(ss['uid'], t.get('title',''))
+                topic_map[t.get('title','')] = tt['uid']
+    edges: List[Tuple[str,str]] = []
+    for sec in sections_defs:
+        for sub in sec.get('subsections', []):
+            for t in sub.get('topics', []):
+                tu = topic_map.get(t.get('title',''))
+                for pre_title in t.get('prereqs', []):
+                    pu = topic_map.get(pre_title)
+                    if tu and pu:
+                        edges.append((tu, pu))
+    adj: Dict[str, List[str]] = {}
+    for a, b in edges:
+        adj.setdefault(a, []).append(b)
+    visited: Dict[str, int] = {}
+    def _dfs(u: str) -> bool:
+        visited[u] = 1
+        for v in adj.get(u, []):
+            if visited.get(v, 0) == 1:
+                return False
+            if visited.get(v, 0) == 0:
+                if not _dfs(v):
+                    return False
+        visited[u] = 2
+        return True
+    good_edges: List[Tuple[str,str]] = []
+    for a, b in edges:
+        for k in list(visited.keys()):
+            visited[k] = 0
+        adj.setdefault(a, [])
+        if b not in adj[a]:
+            adj[a].append(b)
+        ok = True
+        for node in topic_map.values():
+            if visited.get(node, 0) == 0:
+                if not _dfs(node):
+                    ok = False
+                    break
+        if ok:
+            good_edges.append((a, b))
+        adj[a].remove(b)
+    for a, b in good_edges:
+        link_topic_prereq(a, b, 1.0)
+    normalize_kb()
+    return {'ok': True, 'subject_uid': subject_uid, 'sections': len(sec_uids), 'topics': len(topic_map), 'prereqs': len(good_edges)}
 
 async def generate_examples_for_topic_openai_async(topic_title: str, count: int = 3, difficulty: int = 3) -> List[Dict]:
     messages = [

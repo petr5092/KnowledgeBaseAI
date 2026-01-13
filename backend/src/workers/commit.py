@@ -10,7 +10,6 @@ from src.services.rebase import rebase_check, RebaseResult
 from src.services.integrity import integrity_check_subgraph, check_prereq_cycles, check_dangling_skills, check_skill_based_on_rules
 from src.services.graph.neo4j_repo import get_driver
 from src.events.publisher import publish_graph_committed
-from src.services.graph.neo4j_writer import merge_node, update_node, merge_rel, update_rel
 from src.core.correlation import get_correlation_id
 from datetime import datetime
 import os, time
@@ -88,25 +87,46 @@ def _apply_ops_tx(tx, tenant_id: str, ops: List[Dict[str, Any]]) -> None:
             if not uid:
                 uid = "N-" + __import__("uuid").uuid4().hex[:16]
             props = dict(pd)
-            merge_node(tx, tenant_id, typ, uid, props, op.get("evidence") or {})
+            p = dict(props)
+            p["uid"] = uid
+            p["tenant_id"] = tenant_id
+            p.setdefault("lifecycle_status", "ACTIVE")
+            p.setdefault("created_at", datetime.utcnow().isoformat())
+            tx.run(f"MERGE (n:{typ} {{uid:$uid, tenant_id:$tenant_id}}) SET n += $props", uid=uid, tenant_id=tenant_id, props=p)
         elif t == "UPDATE_NODE":
             uid = str(op.get("target_id") or "")
             props = dict(pd)
-            update_node(tx, tenant_id, uid, props)
+            tx.run("MATCH (n {uid:$uid, tenant_id:$tenant_id}) SET n += $props", uid=uid, tenant_id=tenant_id, props=props or {})
         elif t in ("CREATE_REL", "MERGE_REL"):
             typ = str(pd.get("type") or "LINKED")
             fu = str(pd.get("from_uid") or "")
             tu = str(pd.get("to_uid") or "")
             rid = pd.get("uid") or f"E-{__import__('uuid').uuid4().hex[:16]}"
             props = dict(pd)
-            merge_rel(tx, tenant_id, typ, fu, tu, rid, props, op.get("evidence") or {})
+            q = (
+                f"MATCH (a {{uid:$fu, tenant_id:$tid}}), (b {{uid:$tu, tenant_id:$tid}}) "
+                f"MERGE (a)-[r:{typ} {{uid:$rid}}]->(b) "
+                "SET r += $props"
+            )
+            p = dict(props or {})
+            p["uid"] = rid
+            tx.run(q, fu=fu, tu=tu, rid=rid, props=p, tid=tenant_id)
         elif t == "UPDATE_REL":
             typ = str(pd.get("type") or "")
             fu = str(pd.get("from_uid") or "")
             tu = str(pd.get("to_uid") or "")
             rid = str(pd.get("uid") or "")
             props = dict(pd)
-            update_rel(tx, tenant_id, typ or None, fu, tu, rid, props, op.get("evidence") or {})
+            if typ:
+                tx.run(
+                    f"MATCH (a {{uid:$fu, tenant_id:$tid}})-[r:{typ} {{uid:$rid}}]->(b {{uid:$tu, tenant_id:$tid}}) SET r += $props",
+                    fu=fu, tu=tu, rid=rid, props=props or {}, tid=tenant_id
+                )
+            else:
+                tx.run(
+                    "MATCH (a {uid:$fu, tenant_id:$tid})-[r {uid:$rid}]->(b {uid:$tu, tenant_id:$tid}) SET r += $props",
+                    fu=fu, tu=tu, rid=rid, props=props or {}, tid=tenant_id
+                )
 
 def commit_proposal(proposal_id: str) -> Dict:
     p = _load_proposal(proposal_id)
