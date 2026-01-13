@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 from src.core.canonical import canonical_hash_from_json, normalize_text
 from src.schemas.proposal import Operation, Proposal
 
-EVIDENCE_REQUIRED_OPS = {"CREATE_NODE", "CREATE_REL", "MERGE_NODE", "MERGE_REL"}
+EVIDENCE_REQUIRED_OPS = {"CREATE_NODE", "CREATE_REL"}
 
 def validate_operations(ops: List[Operation]) -> None:
     for op in ops:

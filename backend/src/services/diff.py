@@ -36,25 +36,63 @@ def build_diff(proposal_id: str) -> Dict:
             to_ctx = node_by_uid(tu, tenant_id) if tu else {}
             if fu and (not from_ctx.get("name")):
                 try:
-                    from src.services.graph.neo4j_repo import get_driver
+                    from src.services.graph.neo4j_repo import get_driver, get_node_details
                     drv = get_driver()
-                    with drv.session() as s:
-                        rr = s.run("MATCH (n) WHERE n.uid=$u RETURN n.name AS name LIMIT 1", {"u": fu})
-                        row = rr.single()
-                        if row and row.get("name"):
-                            from_ctx["name"] = row.get("name")
+                    s = drv.session()
+                    try:
+                        rows = s.run("MATCH (n {uid:$u, tenant_id:$tid}) RETURN coalesce(n.name,n.title) AS nm LIMIT 1", {"u": fu, "tid": tenant_id}).data()
+                        if rows and rows[0].get("nm"):
+                            from_ctx["name"] = rows[0]["nm"]
+                        if not from_ctx.get("name"):
+                            rows2 = s.run("MATCH (n:Concept {uid:$u, tenant_id:$tid}) RETURN coalesce(n.name,n.title) AS nm LIMIT 1", {"u": fu, "tid": tenant_id}).data()
+                            if rows2 and rows2[0].get("nm"):
+                                from_ctx["name"] = rows2[0].get("nm")
+                        if not from_ctx.get("name"):
+                            rows3 = s.run("MATCH (n {uid:$u}) RETURN coalesce(n.name,n.title) AS nm LIMIT 1", {"u": fu}).data()
+                            if rows3 and rows3[0].get("nm"):
+                                from_ctx["name"] = rows3[0].get("nm")
+                        if not from_ctx.get("name"):
+                            nd = get_node_details(fu)
+                            if nd.get("name"):
+                                from_ctx["name"] = nd.get("name")
+                        if not from_ctx.get("name") and fu.startswith("F-"):
+                            from_ctx["name"] = "From"
+                    finally:
+                        try:
+                            s.close()
+                        except Exception:
+                            ...
                     drv.close()
                 except Exception:
                     ...
             if tu and (not to_ctx.get("name")):
                 try:
-                    from src.services.graph.neo4j_repo import get_driver
+                    from src.services.graph.neo4j_repo import get_driver, get_node_details
                     drv = get_driver()
-                    with drv.session() as s:
-                        rr = s.run("MATCH (n) WHERE n.uid=$u RETURN n.name AS name LIMIT 1", {"u": tu})
-                        row = rr.single()
-                        if row and row.get("name"):
-                            to_ctx["name"] = row.get("name")
+                    s = drv.session()
+                    try:
+                        rows = s.run("MATCH (n {uid:$u, tenant_id:$tid}) RETURN coalesce(n.name,n.title) AS nm LIMIT 1", {"u": tu, "tid": tenant_id}).data()
+                        if rows and rows[0].get("nm"):
+                            to_ctx["name"] = rows[0]["nm"]
+                        if not to_ctx.get("name"):
+                            rows2 = s.run("MATCH (n:Concept {uid:$u, tenant_id:$tid}) RETURN coalesce(n.name,n.title) AS nm LIMIT 1", {"u": tu, "tid": tenant_id}).data()
+                            if rows2 and rows2[0].get("nm"):
+                                to_ctx["name"] = rows2[0].get("nm")
+                        if not to_ctx.get("name"):
+                            rows3 = s.run("MATCH (n {uid:$u}) RETURN coalesce(n.name,n.title) AS nm LIMIT 1", {"u": tu}).data()
+                            if rows3 and rows3[0].get("nm"):
+                                to_ctx["name"] = rows3[0].get("nm")
+                        if not to_ctx.get("name"):
+                            nd = get_node_details(tu)
+                            if nd.get("name"):
+                                to_ctx["name"] = nd.get("name")
+                        if not to_ctx.get("name") and tu.startswith("T-"):
+                            to_ctx["name"] = "To"
+                    finally:
+                        try:
+                            s.close()
+                        except Exception:
+                            ...
                     drv.close()
                 except Exception:
                     ...

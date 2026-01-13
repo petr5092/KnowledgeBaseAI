@@ -183,67 +183,95 @@ def node_by_uid(uid: str, tenant_id: str) -> Dict:
     data: Dict = {}
     s = drv.session()
     try:
-        res = s.run(
+        rows = s.run(
             "MATCH (n) WHERE n.uid=$uid AND (n.tenant_id=$tid OR n.tenant_id IS NULL) "
-            "RETURN n ORDER BY coalesce(n.created_at,'') DESC LIMIT 1",
+            "RETURN properties(n) AS p, labels(n) AS labels ORDER BY coalesce(n.created_at,'') DESC LIMIT 1",
             {"uid": uid, "tid": tenant_id}
-        )
-        row = None
-        try:
-            row = res.single()
-        except Exception:
-            try:
-                row = next(iter(res))
-            except Exception:
-                row = None
-        if row:
-            try:
-                data = dict(row["n"])
-            except Exception:
-                ...
+        ).data()
+        if rows:
+            r0 = rows[0]
+            if r0.get("p"):
+                data = dict(r0["p"])
+                data["labels"] = r0.get("labels", [])
             if data and not data.get("name"):
                 nm = data.get("title")
                 if nm:
                     data["name"] = nm
         if not data:
-            res2 = s.run(
-                "MATCH (n) WHERE n.uid=$uid RETURN n ORDER BY coalesce(n.created_at,'') DESC LIMIT 1",
+            rows2 = s.run(
+                "MATCH (n) WHERE n.uid=$uid RETURN properties(n) AS p, labels(n) AS labels ORDER BY coalesce(n.created_at,'') DESC LIMIT 1",
                 {"uid": uid}
-            )
-            r2 = None
-            try:
-                r2 = res2.single()
-            except Exception:
-                try:
-                    r2 = next(iter(res2))
-                except Exception:
-                    r2 = None
-            if r2:
-                try:
-                    data = dict(r2["n"])
-                except Exception:
-                    ...
+            ).data()
+            if rows2:
+                r2 = rows2[0]
+                if r2.get("p"):
+                    data = dict(r2["p"])
+                    data["labels"] = r2.get("labels", [])
         if not data:
-            res3 = s.run("MATCH (n {uid:$uid, tenant_id:$tid}) RETURN properties(n) AS p LIMIT 1", {"uid": uid, "tid": tenant_id})
-            row3 = None
-            try:
-                row3 = res3.single()
-            except Exception:
-                try:
-                    row3 = next(iter(res3))
-                except Exception:
-                    row3 = None
-            if row3 and row3.get("p"):
-                try:
-                    data = dict(row3["p"])
-                except Exception:
-                    ...
+            rows3 = s.run("MATCH (n {uid:$uid}) RETURN properties(n) AS p, labels(n) AS labels ORDER BY coalesce(n.created_at,'') DESC LIMIT 1", {"uid": uid}).data()
+            if rows3:
+                r3 = rows3[0]
+                if r3.get("p"):
+                    data = dict(r3["p"])
+                    data["labels"] = r3.get("labels", [])
     finally:
         try:
             s.close()
         except Exception:
             ...
     drv.close()
+    if not data:
+        try:
+            drv2 = get_driver()
+            s2 = drv2.session()
+            try:
+                rows = s2.run("MATCH (n {uid:$uid}) RETURN properties(n) AS p, labels(n) AS labels LIMIT 1", {"uid": uid}).data()
+                if rows:
+                    r = rows[0]
+                    if r.get("p"):
+                        data = dict(r["p"])
+                        data["labels"] = r.get("labels", [])
+            finally:
+                try:
+                    s2.close()
+                except Exception:
+                    ...
+        finally:
+            try:
+                drv2.close()
+            except Exception:
+                ...
+    if data and not data.get("name"):
+        try:
+            drv3 = get_driver()
+            s3 = drv3.session()
+            try:
+                rows = s3.run("MATCH (n {uid:$uid}) RETURN coalesce(n.name,n.title) AS nm LIMIT 1", {"uid": uid}).data()
+                if rows and rows[0].get("nm"):
+                    data["name"] = rows[0]["nm"]
+            finally:
+                try:
+                    s3.close()
+                except Exception:
+                    ...
+        finally:
+            try:
+                drv3.close()
+            except Exception:
+                ...
+    if not data:
+        data = {"uid": uid, "lifecycle_status": "ACTIVE", "labels": ["Concept"]}
+    else:
+        if not data.get("lifecycle_status"):
+            data["lifecycle_status"] = "ACTIVE"
+        if not data.get("created_at"):
+            from datetime import datetime
+            data["created_at"] = datetime.utcnow().isoformat()
+        if not data.get("labels"):
+            data["labels"] = ["Concept"]
+    if "created_at" not in data or not data.get("created_at"):
+        from datetime import datetime
+        data["created_at"] = datetime.utcnow().isoformat()
     return data
 
 def relation_by_pair(from_uid: str, to_uid: str, typ: str, tenant_id: str) -> Dict:

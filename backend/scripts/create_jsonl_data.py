@@ -46,6 +46,5 @@ if __name__ == "__main__":
     write_jsonl('errors.jsonl', [])
     write_jsonl('skill_methods.jsonl', [])
     write_jsonl('skill_topics.jsonl', [])
-    write_jsonl('theories.jsonl', [])
-    write_jsonl('lesson_steps.jsonl', [])
+    write_jsonl('content_units.jsonl', [])
     write_jsonl('example_skills.jsonl', [])

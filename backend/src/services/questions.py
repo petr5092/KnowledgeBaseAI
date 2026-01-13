@@ -50,8 +50,8 @@ def select_examples_for_topics(
             rows = repo.read(
                 (
                     "UNWIND $t AS tuid "
-                    "MATCH (t:Topic {uid:tuid})-[:HAS_QUESTION]->(q:Question) "
-                    "RETURN q.uid AS uid, q.title AS title, q.statement AS statement, q.difficulty AS difficulty, t.uid AS topic_uid"
+                    "MATCH (t:Topic {uid:tuid})-[:HAS_EXAMPLE]->(ex:Example) "
+                    "RETURN ex.uid AS uid, ex.title AS title, ex.statement AS statement, ex.difficulty_level AS difficulty, t.uid AS topic_uid"
                 ),
                 {"t": topic_uids}
             )

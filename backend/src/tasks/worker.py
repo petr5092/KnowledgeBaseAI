@@ -119,5 +119,11 @@ async def kb_rebuild_job(ctx, job_id: str, auto_publish: bool = False):
 
 class WorkerSettings:
     redis_settings = RedisSettings(host='redis', port=6379)
-    functions = [magic_fill_job, kb_rebuild_job, kb_validate_job]
+    functions = [magic_fill_job, kb_rebuild_job, kb_validate_job, vector_consume_job]
 
+async def vector_consume_job(ctx):
+    try:
+        from src.workers.vector_sync import consume_graph_committed
+        return consume_graph_committed()
+    except Exception:
+        return {"processed": 0}

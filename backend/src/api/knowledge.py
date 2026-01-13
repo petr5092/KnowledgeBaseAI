@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from src.services.graph.neo4j_repo import Neo4jRepo
 from src.config.settings import settings
-from src.api.common import ApiError
+from src.api.common import ApiError, StandardResponse
 from src.services.questions import all_topic_uids_from_examples
 
 router = APIRouter(prefix="/v1/knowledge", tags=["Интеграция с LMS"])
@@ -13,7 +13,8 @@ class UserContext(BaseModel):
     age: Optional[int] = None
 
 class TopicsAvailableRequest(BaseModel):
-    subject_uid: str
+    subject_uid: Optional[str] = None
+    subject_title: Optional[str] = None
     user_context: UserContext
 
 class TopicItem(BaseModel):
@@ -41,13 +42,22 @@ def _age_to_class(age: Optional[int]) -> int:
 
 @router.post(
     "/topics/available",
-    response_model=TopicsAvailableResponse,
     responses={400: {"model": ApiError}},
+    response_model=StandardResponse,
 )
 async def topics_available(payload: TopicsAvailableRequest) -> Dict:
     uc = payload.user_context or UserContext()
     resolved = int(uc.user_class) if uc.user_class is not None else _age_to_class(uc.age)
     topics: List[Dict] = []
+    su = payload.subject_uid
+    if not su and (payload.subject_title or "").strip():
+        try:
+            repo = Neo4jRepo()
+            r = repo.read("MATCH (sub:Subject) WHERE toUpper(sub.title)=toUpper($t) RETURN sub.uid AS uid LIMIT 1", {"t": payload.subject_title})
+            su = r[0]["uid"] if r else None
+            repo.close()
+        except Exception:
+            su = None
     if settings.neo4j_uri and settings.neo4j_user and settings.neo4j_password.get_secret_value():
         try:
             repo = Neo4jRepo()
@@ -59,7 +69,7 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
                     "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
                     "       collect(pre.uid) AS prereq_topic_uids"
                 ),
-                {"su": payload.subject_uid},
+                {"su": su},
             )
             for r in rows:
                 mn = r.get("user_class_min")
@@ -95,4 +105,4 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
                     "prereq_topic_uids": [],
                 }
             )
-    return {"subject_uid": payload.subject_uid, "resolved_user_class": resolved, "topics": topics}
+    return {"items": topics, "meta": {"subject_uid": su or payload.subject_uid, "resolved_user_class": resolved}}

@@ -10,6 +10,7 @@ from src.workers.commit import commit_proposal
 from src.db.pg import get_proposal, set_proposal_status, list_proposals
 from src.services.diff import build_diff
 from src.services.impact import impact_subgraph_for_proposal
+from src.api.common import StandardResponse
 
 router = APIRouter(prefix="/v1/proposals", tags=["Управление контентом"], dependencies=[Security(HTTPBearer())])
 
@@ -35,7 +36,7 @@ class CommitResponse(BaseModel):
     "",
     summary="Создать черновик заявки",
     description="Создает новую заявку на изменение графа. Проверяет структуру и фиксирует checksum, но не применяет изменения.",
-    response_model=CreateProposalResponse,
+    response_model=StandardResponse,
 )
 async def create_proposal(payload: Dict, tenant_id: str = Depends(require_tenant), x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
@@ -69,7 +70,7 @@ async def create_proposal(payload: Dict, tenant_id: str = Depends(require_tenant
                 ),
             )
         conn.close()
-        return {"proposal_id": p.proposal_id, "proposal_checksum": p.proposal_checksum, "status": ProposalStatus.DRAFT.value}
+        return {"items": [{"proposal_id": p.proposal_id, "proposal_checksum": p.proposal_checksum, "status": ProposalStatus.DRAFT.value}], "meta": {}}
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception:
@@ -79,7 +80,7 @@ async def create_proposal(payload: Dict, tenant_id: str = Depends(require_tenant
     "/{proposal_id}/commit",
     summary="Commit Proposal",
     description="Applies the proposal to the Neo4j graph. This operation is atomic and updates the graph version.",
-    response_model=CommitResponse,
+    response_model=StandardResponse,
 )
 async def commit(proposal_id: str, tenant_id: str = Depends(require_tenant), x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
@@ -98,7 +99,7 @@ async def commit(proposal_id: str, tenant_id: str = Depends(require_tenant), x_t
         status = res.get("status") or "FAILED"
         code = 409 if status == "CONFLICT" else 400
         raise HTTPException(status_code=code, detail=res)
-    return res
+    return {"items": [res], "meta": {}}
 
 @router.get(
     "/{proposal_id}",
@@ -116,7 +117,7 @@ async def get(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Dic
     p = get_proposal(proposal_id)
     if not p or p["tenant_id"] != tenant_id:
         raise HTTPException(status_code=404, detail="proposal not found")
-    return p
+    return {"items": [p], "meta": {}}
 
 @router.get(
     "",
@@ -135,13 +136,13 @@ async def list(status: str | None = None, limit: int = 20, offset: int = 0, tena
       - limit, offset: параметры пагинации
     """
     items = list_proposals(tenant_id, status, limit, offset)
-    return {"items": items, "limit": limit, "offset": offset}
+    return {"items": items, "meta": {"limit": limit, "offset": offset}}
 
 @router.post(
     "/{proposal_id}/approve",
     summary="Одобрить заявку",
     description="Помечает заявку как APPROVED и пытается применить изменения к графу.",
-    response_model=CommitResponse,
+    response_model=StandardResponse,
 )
 async def approve(proposal_id: str, tenant_id: str = Depends(require_tenant), x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
@@ -160,7 +161,7 @@ async def approve(proposal_id: str, tenant_id: str = Depends(require_tenant), x_
         status = res.get("status") or "FAILED"
         code = 409 if status == "CONFLICT" else 400
         raise HTTPException(status_code=code, detail=res)
-    return res
+    return {"items": [res], "meta": {}}
 
 @router.post(
     "/{proposal_id}/reject",
@@ -180,7 +181,7 @@ async def reject(proposal_id: str, tenant_id: str = Depends(require_tenant), x_t
     if not p or p["tenant_id"] != tenant_id:
         raise HTTPException(status_code=404, detail="proposal not found")
     set_proposal_status(proposal_id, ProposalStatus.REJECTED.value)
-    return {"ok": True, "status": ProposalStatus.REJECTED.value}
+    return {"items": [{"ok": True, "status": ProposalStatus.REJECTED.value}], "meta": {}}
 
 @router.get(
     "/{proposal_id}/diff",
@@ -198,7 +199,7 @@ async def diff(proposal_id: str, tenant_id: str = Depends(require_tenant)) -> Di
     p = get_proposal(proposal_id)
     if not p or p["tenant_id"] != tenant_id:
         raise HTTPException(status_code=404, detail="proposal not found")
-    return build_diff(proposal_id)
+    return {"items": [build_diff(proposal_id)], "meta": {}}
 
 @router.get(
     "/{proposal_id}/impact",
@@ -218,4 +219,5 @@ async def impact(proposal_id: str, depth: int = 1, types: str | None = None, max
     if not p or p["tenant_id"] != tenant_id:
         raise HTTPException(status_code=404, detail="proposal not found")
     type_list = [t for t in (types or "").split(",") if t]
-    return impact_subgraph_for_proposal(proposal_id, depth=depth, types=type_list or None, max_nodes=max_nodes, max_edges=max_edges)
+    res = impact_subgraph_for_proposal(proposal_id, depth=depth, types=type_list or None, max_nodes=max_nodes, max_edges=max_edges)
+    return res

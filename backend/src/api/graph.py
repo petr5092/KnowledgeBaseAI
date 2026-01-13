@@ -5,7 +5,7 @@ from src.services.graph.neo4j_repo import relation_context, neighbors, get_node_
 from src.config.settings import settings
 from src.services.roadmap_planner import plan_route
 from src.services.questions import select_examples_for_topics, all_topic_uids_from_examples
-from src.api.common import ApiError
+from src.api.common import ApiError, StandardResponse
 
 router = APIRouter(prefix="/v1/graph", tags=["Интеграция с LMS"])
 
@@ -42,14 +42,14 @@ class ViewportResponse(BaseModel):
         }
     }
 
-@router.get("/node/{uid}")
+@router.get("/node/{uid}", response_model=StandardResponse)
 async def get_node(uid: str) -> Dict:
     data = get_node_details(uid)
     if not data:
         raise HTTPException(status_code=404, detail="Node not found")
-    return data
+    return {"items": [data], "meta": {}}
 
-@router.get("/viewport")
+@router.get("/viewport", response_model=StandardResponse)
 async def viewport(center_uid: str, depth: int = 1) -> Dict:
     """
     Принимает:
@@ -63,7 +63,7 @@ async def viewport(center_uid: str, depth: int = 1) -> Dict:
       - depth: фактическая глубина обхода
     """
     ns, es = neighbors(center_uid, depth=depth)
-    return {"nodes": ns, "edges": es, "center_uid": center_uid, "depth": depth}
+    return {"items": ns, "meta": {"edges": es, "center_uid": center_uid, "depth": depth}}
 
 class ChatInput(BaseModel):
     question: str = Field(..., description="Вопрос пользователя о связи между узлами.")
@@ -151,7 +151,8 @@ async def chat(payload: ChatInput) -> Dict:
 
     usage = resp.usage or None
     answer = resp.choices[0].message.content if resp.choices else ""
-    return {"answer": answer, "usage": (usage.model_dump() if hasattr(usage, 'model_dump') else None), "context": ctx}
+    item = {"answer": answer, "usage": (usage.model_dump() if hasattr(usage, 'model_dump') else None), "context": ctx}
+    return {"items": [item], "meta": {}}
 
 class RoadmapInput(BaseModel):
     subject_uid: Optional[str] = Field(None, description="UID предмета (например, 'MATH-EGE'). Если None — поиск глобально (не рекомендуется).")
@@ -184,7 +185,7 @@ class RoadmapResponse(BaseModel):
     "/roadmap",
     summary="Построить адаптивную дорожную карту",
     description="Возвращает персональную последовательность тем на основе текущего прогресса и зависимостей графа (PREREQ).",
-    response_model=RoadmapResponse,
+    response_model=StandardResponse,
     responses={
         400: {"model": ApiError, "description": "Некорректные параметры запроса"},
         404: {"model": ApiError, "description": "Предмет не найден"},
@@ -202,7 +203,7 @@ async def roadmap(payload: RoadmapInput) -> Dict:
       - items: список объектов {uid, title, mastered, missing_prereqs, priority}
     """
     items = plan_route(payload.subject_uid, payload.progress, limit=payload.limit)
-    return {"items": items}
+    return {"items": items, "meta": {}}
 
 class AdaptiveQuestionsInput(BaseModel):
     subject_uid: Optional[str] = Field(None, description="UID предмета.")
@@ -238,7 +239,7 @@ class AdaptiveQuestionsResponse(BaseModel):
     "/adaptive_questions",
     summary="Адаптивные вопросы",
     description="Подбирает наиболее релевантные вопросы для «зоны ближайшего развития» ученика.",
-    response_model=AdaptiveQuestionsResponse,
+    response_model=StandardResponse,
     responses={
         400: {"model": ApiError, "description": "Некорректные параметры запроса"},
         500: {"model": ApiError, "description": "Внутренняя ошибка сервера"},
@@ -266,4 +267,4 @@ async def adaptive_questions(payload: AdaptiveQuestionsInput) -> Dict:
         difficulty_max=payload.difficulty_max,
         exclude_uids=set(payload.exclude),
     )
-    return {"questions": examples}
+    return {"items": examples, "meta": {}}

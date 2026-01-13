@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 class ApiError(BaseModel):
     code: str = Field(..., description="Код ошибки, пригодный для автоматической обработки (например, 'invalid_parameters', 'not_found', 'internal_error').")
@@ -23,3 +23,7 @@ class ApiError(BaseModel):
             ]
         }
     }
+
+class StandardResponse(BaseModel):
+    items: List[Any]
+    meta: Dict[str, Any] = {}

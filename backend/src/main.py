@@ -24,7 +24,9 @@ from src.api.levels import router as levels_router
 from src.api.maintenance import router as maintenance_router
 from src.api.proposals import router as proposals_router
 from src.api.knowledge import router as knowledge_router
+from src.api.kb import router as kb_router
 from src.api.assessment import router as assessment_router
+from src.api.reasoning import router as reasoning_router
 try:
     from src.api.graphql import router as graphql_router
 except Exception:
@@ -95,6 +97,7 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory="src/static"), name="static")
+app.include_router(kb_router)
 
 @app.get("/redoc", include_in_schema=False)
 async def redoc_html():
@@ -232,3 +235,4 @@ app.include_router(auth_router)
 app.include_router(validation_router)
 app.include_router(knowledge_router)
 app.include_router(assessment_router)
+app.include_router(reasoning_router)

@@ -6,6 +6,7 @@ from src.services.jobs.rebuild import start_rebuild_async, get_job_status
 from src.services.graph.utils import recompute_relationship_weights
 from src.workers.integrity_async import process_once
 from src.workers.outbox_publisher import process_once as outbox_publish_once
+from src.api.common import StandardResponse
 
 router = APIRouter(prefix="/v1/maintenance", tags=["Обслуживание"], dependencies=[Security(HTTPBearer())])
 
@@ -25,7 +26,7 @@ class ProcessedResponse(BaseModel):
     ok: bool
     processed: int
 
-@router.post("/kb/rebuild_async", summary="Асинхронная пересборка KB", description="Запускает задачу пересборки базы знаний (ARQ/Redis), возвращает job_id и WebSocket для прогресса.", response_model=JobQueuedResponse)
+@router.post("/kb/rebuild_async", summary="Асинхронная пересборка KB", description="Запускает задачу пересборки базы знаний (ARQ/Redis), возвращает job_id и WebSocket для прогресса.", response_model=StandardResponse)
 async def kb_rebuild_async(x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
     Принимает:
@@ -42,11 +43,12 @@ async def kb_rebuild_async(x_tenant_id: str = Header(..., alias="X-Tenant-ID")) 
         redis = await ArqRedis.create(RedisSettings(host='redis', port=6379))
         await redis.enqueue_job('kb_rebuild_job', job_id)
         await redis.close()
-        return {"job_id": job_id, "queued": True, "ws": f"/ws/progress?job_id={job_id}"}
+        return {"items": [{"job_id": job_id, "queued": True, "ws": f"/ws/progress?job_id={job_id}"}], "meta": {}}
     except Exception:
-        return start_rebuild_async()
+        r = start_rebuild_async()
+        return {"items": [r], "meta": {}}
 
-@router.post("/kb/pipeline_async", summary="Асинхронный конвейер KB", description="Запускает конвейер пересборки, опционально публикует результаты после валидации.", response_model=JobQueuedResponse)
+@router.post("/kb/pipeline_async", summary="Асинхронный конвейер KB", description="Запускает конвейер пересборки, опционально публикует результаты после валидации.", response_model=StandardResponse)
 async def kb_pipeline_async(auto_publish: bool = False, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
     Принимает:
@@ -64,11 +66,12 @@ async def kb_pipeline_async(auto_publish: bool = False, x_tenant_id: str = Heade
         redis = await ArqRedis.create(RedisSettings(host='redis', port=6379))
         await redis.enqueue_job('kb_rebuild_job', job_id, auto_publish)
         await redis.close()
-        return {"job_id": job_id, "queued": True, "ws": f"/ws/progress?job_id={job_id}", "auto_publish": auto_publish}
+        return {"items": [{"job_id": job_id, "queued": True, "ws": f"/ws/progress?job_id={job_id}", "auto_publish": auto_publish}], "meta": {}}
     except Exception:
-        return start_rebuild_async()
+        r = start_rebuild_async()
+        return {"items": [r], "meta": {}}
 
-@router.get("/kb/rebuild_status", summary="Статус пересборки", description="Возвращает статус задачи пересборки по job_id.")
+@router.get("/kb/rebuild_status", summary="Статус пересборки", description="Возвращает статус задачи пересборки по job_id.", response_model=StandardResponse)
 async def kb_rebuild_status(job_id: str) -> Dict:
     """
     Принимает:
@@ -87,14 +90,14 @@ async def kb_rebuild_status(job_id: str) -> Dict:
                 import json
                 if isinstance(raw, (bytes, bytearray)):
                     raw = raw.decode("utf-8")
-                return json.loads(raw)
+                return {"items": [json.loads(raw)], "meta": {}}
             except Exception:
-                return {"ok": False, "status": "error", "error": "invalid redis payload"}
+                return {"items": [{"ok": False, "status": "error", "error": "invalid redis payload"}], "meta": {}}
     except Exception:
         pass
-    return get_job_status(job_id)
+    return {"items": [get_job_status(job_id)], "meta": {}}
 
-@router.get("/kb/rebuild_state", summary="Текущее состояние пересборки", description="Возвращает текущее состояние пересборки (из Redis) или из резервного источника.")
+@router.get("/kb/rebuild_state", summary="Текущее состояние пересборки", description="Возвращает текущее состояние пересборки (из Redis) или из резервного источника.", response_model=StandardResponse)
 async def kb_rebuild_state(job_id: str) -> Dict:
     """
     Принимает:
@@ -112,12 +115,12 @@ async def kb_rebuild_state(job_id: str) -> Dict:
             import json
             if isinstance(raw, (bytes, bytearray)):
                 raw = raw.decode("utf-8")
-            return json.loads(raw)
+            return {"items": [json.loads(raw)], "meta": {}}
     except Exception:
         pass
-    return get_job_status(job_id)
+    return {"items": [get_job_status(job_id)], "meta": {}}
 
-@router.get("/kb/validate_state", summary="Состояние валидации", description="Возвращает состояние результата валидации по job_id.")
+@router.get("/kb/validate_state", summary="Состояние валидации", description="Возвращает состояние результата валидации по job_id.", response_model=StandardResponse)
 async def kb_validate_state(job_id: str) -> Dict:
     """
     Принимает:
@@ -135,12 +138,12 @@ async def kb_validate_state(job_id: str) -> Dict:
             import json
             if isinstance(raw, (bytes, bytearray)):
                 raw = raw.decode("utf-8")
-            return json.loads(raw)
+            return {"items": [json.loads(raw)], "meta": {}}
     except Exception:
         pass
-    return {"status": "unknown"}
+    return {"items": [{"status": "unknown"}], "meta": {}}
 
-@router.post("/kb/validate_async", summary="Асинхронная валидация", description="Ставит задачу валидации графа в очередь.", response_model=JobQueuedResponse)
+@router.post("/kb/validate_async", summary="Асинхронная валидация", description="Ставит задачу валидации графа в очередь.", response_model=StandardResponse)
 async def kb_validate_async(job_id: str, subject_uid: str | None = None, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
     Принимает:
@@ -157,11 +160,11 @@ async def kb_validate_async(job_id: str, subject_uid: str | None = None, x_tenan
         redis = await ArqRedis.create(RedisSettings(host='redis', port=6379))
         await redis.enqueue_job('kb_validate_job', job_id, subject_uid)
         await redis.close()
-        return {"job_id": job_id, "queued": True, "ws": f"/ws/progress?job_id={job_id}"}
+        return {"items": [{"job_id": job_id, "queued": True, "ws": f"/ws/progress?job_id={job_id}"}], "meta": {}}
     except Exception:
-        return {"job_id": job_id, "queued": False}
+        return {"items": [{"job_id": job_id, "queued": False}], "meta": {}}
 
-@router.post("/kb/publish", summary="Публикация валидированного графа", description="Публикует результат пересборки, если валидация прошла успешно.", response_model=PublishResponse)
+@router.post("/kb/publish", summary="Публикация валидированного графа", description="Публикует результат пересборки, если валидация прошла успешно.", response_model=StandardResponse)
 async def kb_publish(job_id: str, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
     Принимает:
@@ -190,13 +193,13 @@ async def kb_publish(job_id: str, x_tenant_id: str = Header(..., alias="X-Tenant
         meta = {"job_id": job_id, "published_at": int(__import__('time').time())}
         await r.set("kb:published:current", json.dumps(meta, ensure_ascii=False))
         await r.close()
-        return {"ok": True, **meta}
+        return {"items": [{"ok": True, **meta}], "meta": {}}
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/kb/published", summary="Текущая опубликованная версия", description="Возвращает метаданные последней опубликованной версии графа.")
+@router.get("/kb/published", summary="Текущая опубликованная версия", description="Возвращает метаданные последней опубликованной версии графа.", response_model=StandardResponse)
 async def kb_published() -> Dict:
     """
     Принимает:
@@ -212,15 +215,15 @@ async def kb_published() -> Dict:
         raw = await r.get("kb:published:current")
         await r.close()
         if not raw:
-            return {"status": "none"}
+            return {"items": [], "meta": {"status": "none"}}
         import json
         if isinstance(raw, (bytes, bytearray)):
             raw = raw.decode("utf-8")
-        return json.loads(raw)
+        return {"items": [json.loads(raw)], "meta": {}}
     except Exception:
-        return {"status": "unknown"}
+        return {"items": [{"status": "unknown"}], "meta": {}}
 
-@router.post("/recompute_links", summary="Пересчет весов связей", description="Пересчитывает статические веса отношений в графе.", response_model=Dict[str, Dict])
+@router.post("/recompute_links", summary="Пересчет весов связей", description="Пересчитывает статические веса отношений в графе.", response_model=StandardResponse)
 async def recompute_links(x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
     Принимает:
@@ -231,9 +234,9 @@ async def recompute_links(x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -
       - stats: объект статистики пересчета
     """
     stats = recompute_relationship_weights()
-    return {"ok": True, "stats": stats}
+    return {"items": [{"ok": True, "stats": stats}], "meta": {}}
 
-@router.post("/proposals/run_integrity_async", summary="Асинхронная проверка целостности заявок", description="Запускает проверку заявок на целостность в фоне.", response_model=ProcessedResponse)
+@router.post("/proposals/run_integrity_async", summary="Асинхронная проверка целостности заявок", description="Запускает проверку заявок на целостность в фоне.", response_model=StandardResponse)
 async def run_integrity_async(limit: int = 20, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
     Принимает:
@@ -245,11 +248,11 @@ async def run_integrity_async(limit: int = 20, x_tenant_id: str = Header(..., al
     """
     try:
         res = process_once(limit=limit)
-        return {"ok": True, "processed": res.get("processed", 0)}
+        return {"items": [{"ok": True, "processed": res.get("processed", 0)}], "meta": {}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/events/publish_outbox", summary="Публикация событий из Outbox", description="Публикует накопленные события из Outbox.", response_model=ProcessedResponse)
+@router.post("/events/publish_outbox", summary="Публикация событий из Outbox", description="Публикует накопленные события из Outbox.", response_model=StandardResponse)
 async def publish_outbox(limit: int = 100, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
     Принимает:
@@ -261,6 +264,6 @@ async def publish_outbox(limit: int = 100, x_tenant_id: str = Header(..., alias=
     """
     try:
         res = outbox_publish_once(limit=limit)
-        return {"ok": True, "processed": res.get("processed", 0)}
+        return {"items": [{"ok": True, "processed": res.get("processed", 0)}], "meta": {}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

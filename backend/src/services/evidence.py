@@ -6,7 +6,10 @@ from src.config.settings import settings
 def get_chunk_text(chunk_id: str) -> Optional[str]:
     client = QdrantClient(url=str(settings.qdrant_url))
     flt = Filter(must=[FieldCondition(key="chunk_id", match=MatchValue(value=chunk_id))])
-    pts, _ = client.scroll(collection_name="kb_chunks", scroll_filter=flt, with_payload=True, limit=1)
+    try:
+        pts, _ = client.scroll(collection_name="kb_chunks", scroll_filter=flt, with_payload=True, limit=1)
+    except Exception:
+        return None
     if not pts:
         return None
     payload = pts[0].payload or {}

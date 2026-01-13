@@ -13,3 +13,96 @@
 {"uid": "SEC-TRIGONOMETRIYA-819263", "subject_uid": "MATH", "title": "Тригонометрия", "description": ""}
 {"uid": "SEC-MATEMATICHESKII-ANALIZ-605a00", "subject_uid": "MATH", "title": "Математический анализ", "description": ""}
 {"uid": "SEC-STATISTIKA-I-TEORIYA-VER-312d38", "subject_uid": "MATH", "title": "Статистика и теория вероятностей", "description": ""}
+{"uid": "SEC-MATEMATICHESKIE-OSNOVANI-5a7ffe", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Математические основания", "description": ""}
+{"uid": "SEC-CHISLA-I-STRUKTURY-1e1241", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Числа и структуры", "description": ""}
+{"uid": "SEC-ALGEBRA-22618e", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Алгебра", "description": ""}
+{"uid": "SEC-FUNKCII-3a40c4", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Функции", "description": ""}
+{"uid": "SEC-GEOMETRIYA-39e20d", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Геометрия", "description": ""}
+{"uid": "SEC-ANALITICHESKAYA-GEOMETRI-1b8746", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Аналитическая геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-e02704", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-KOMBINATORIKA-I-VEROYATN-d84478", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Комбинаторика и вероятность", "description": ""}
+{"uid": "SEC-STATISTIKA-9ca48e", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Статистика", "description": ""}
+{"uid": "SEC-LINEINAYA-ALGEBRA-93e35c", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-9b8fa9", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-b7e6c5", "subject_uid": "SUB-MATEMATIKA-61a746", "title": "Дискретная математика", "description": ""}
+{"uid": "SEC-MATEMATICHESKIE-OSNOVANI-f79a04", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Математические основания", "description": ""}
+{"uid": "SEC-CHISLA-I-STRUKTURY-b775cf", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Числа и структуры", "description": ""}
+{"uid": "SEC-ALGEBRA-77b6eb", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Алгебра", "description": ""}
+{"uid": "SEC-FUNKCII-f080e9", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Функции", "description": ""}
+{"uid": "SEC-GEOMETRIYA-13b377", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Геометрия", "description": ""}
+{"uid": "SEC-ANALITICHESKAYA-GEOMETRI-388206", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Аналитическая геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-d91d7d", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-KOMBINATORIKA-I-VEROYATN-6edf03", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Комбинаторика и вероятность", "description": ""}
+{"uid": "SEC-STATISTIKA-5d7917", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Статистика", "description": ""}
+{"uid": "SEC-LINEINAYA-ALGEBRA-2422ce", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-fcac80", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-e65af1", "subject_uid": "SUB-MATEMATIKA-a79845", "title": "Дискретная математика", "description": ""}
+{"uid": "SEC-MATEMATICHESKIE-OSNOVANI-671973", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Математические основания", "description": ""}
+{"uid": "SEC-CHISLA-I-STRUKTURY-24b612", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Числа и структуры", "description": ""}
+{"uid": "SEC-ALGEBRA-2e7d67", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Алгебра", "description": ""}
+{"uid": "SEC-FUNKCII-e060f5", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Функции", "description": ""}
+{"uid": "SEC-GEOMETRIYA-b900bb", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Геометрия", "description": ""}
+{"uid": "SEC-ANALITICHESKAYA-GEOMETRI-cf41e3", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Аналитическая геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-b31783", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-KOMBINATORIKA-I-VEROYATN-8727dd", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Комбинаторика и вероятность", "description": ""}
+{"uid": "SEC-STATISTIKA-6f22c4", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Статистика", "description": ""}
+{"uid": "SEC-LINEINAYA-ALGEBRA-c6cf6c", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-862670", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-cf492b", "subject_uid": "SUB-MATEMATIKA-6f0cfe", "title": "Дискретная математика", "description": ""}
+{"uid": "SEC-MATEMATICHESKIE-OSNOVANI-3b1399", "subject_uid": "SUB-MATH-b1f1b2", "title": "Математические основания", "description": ""}
+{"uid": "SEC-CHISLA-I-STRUKTURY-b6bf46", "subject_uid": "SUB-MATH-b1f1b2", "title": "Числа и структуры", "description": ""}
+{"uid": "SEC-ALGEBRA-ed2bd3", "subject_uid": "SUB-MATH-b1f1b2", "title": "Алгебра", "description": ""}
+{"uid": "SEC-FUNKCII-31fbf7", "subject_uid": "SUB-MATH-b1f1b2", "title": "Функции", "description": ""}
+{"uid": "SEC-GEOMETRIYA-33d4a9", "subject_uid": "SUB-MATH-b1f1b2", "title": "Геометрия", "description": ""}
+{"uid": "SEC-ANALITICHESKAYA-GEOMETRI-0bb23f", "subject_uid": "SUB-MATH-b1f1b2", "title": "Аналитическая геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-a78602", "subject_uid": "SUB-MATH-b1f1b2", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-KOMBINATORIKA-I-VEROYATN-f1c7d9", "subject_uid": "SUB-MATH-b1f1b2", "title": "Комбинаторика и вероятность", "description": ""}
+{"uid": "SEC-STATISTIKA-b267b2", "subject_uid": "SUB-MATH-b1f1b2", "title": "Статистика", "description": ""}
+{"uid": "SEC-LINEINAYA-ALGEBRA-495004", "subject_uid": "SUB-MATH-b1f1b2", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-31ed3a", "subject_uid": "SUB-MATH-b1f1b2", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-c0ba47", "subject_uid": "SUB-MATH-b1f1b2", "title": "Дискретная математика", "description": ""}
+{"uid": "SEC-MATEMATICHESKIE-OSNOVANI-757fdb", "subject_uid": "SUB-MATH-1f66f3", "title": "Математические основания", "description": ""}
+{"uid": "SEC-CHISLA-I-STRUKTURY-ceb182", "subject_uid": "SUB-MATH-1f66f3", "title": "Числа и структуры", "description": ""}
+{"uid": "SEC-ALGEBRA-fd67fb", "subject_uid": "SUB-MATH-1f66f3", "title": "Алгебра", "description": ""}
+{"uid": "SEC-FUNKCII-b458b6", "subject_uid": "SUB-MATH-1f66f3", "title": "Функции", "description": ""}
+{"uid": "SEC-GEOMETRIYA-09521e", "subject_uid": "SUB-MATH-1f66f3", "title": "Геометрия", "description": ""}
+{"uid": "SEC-ANALITICHESKAYA-GEOMETRI-c7ef2f", "subject_uid": "SUB-MATH-1f66f3", "title": "Аналитическая геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-c78b52", "subject_uid": "SUB-MATH-1f66f3", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-KOMBINATORIKA-I-VEROYATN-8aaa60", "subject_uid": "SUB-MATH-1f66f3", "title": "Комбинаторика и вероятность", "description": ""}
+{"uid": "SEC-STATISTIKA-5c2d8b", "subject_uid": "SUB-MATH-1f66f3", "title": "Статистика", "description": ""}
+{"uid": "SEC-LINEINAYA-ALGEBRA-cb152f", "subject_uid": "SUB-MATH-1f66f3", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-d78a29", "subject_uid": "SUB-MATH-1f66f3", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-ef2559", "subject_uid": "SUB-MATH-1f66f3", "title": "Дискретная математика", "description": ""}
+{"uid": "SEC-MATEMATICHESKIE-OSNOVANI-09c4a0", "subject_uid": "SUB-MATH-05333a", "title": "Математические основания", "description": ""}
+{"uid": "SEC-CHISLA-I-STRUKTURY-90538d", "subject_uid": "SUB-MATH-05333a", "title": "Числа и структуры", "description": ""}
+{"uid": "SEC-ALGEBRA-3555d8", "subject_uid": "SUB-MATH-05333a", "title": "Алгебра", "description": ""}
+{"uid": "SEC-FUNKCII-d1f4e2", "subject_uid": "SUB-MATH-05333a", "title": "Функции", "description": ""}
+{"uid": "SEC-GEOMETRIYA-27edad", "subject_uid": "SUB-MATH-05333a", "title": "Геометрия", "description": ""}
+{"uid": "SEC-ANALITICHESKAYA-GEOMETRI-321d3c", "subject_uid": "SUB-MATH-05333a", "title": "Аналитическая геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-cdeb16", "subject_uid": "SUB-MATH-05333a", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-KOMBINATORIKA-I-VEROYATN-6bb931", "subject_uid": "SUB-MATH-05333a", "title": "Комбинаторика и вероятность", "description": ""}
+{"uid": "SEC-STATISTIKA-825b26", "subject_uid": "SUB-MATH-05333a", "title": "Статистика", "description": ""}
+{"uid": "SEC-LINEINAYA-ALGEBRA-cd29a9", "subject_uid": "SUB-MATH-05333a", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-707395", "subject_uid": "SUB-MATH-05333a", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-391e4a", "subject_uid": "SUB-MATH-05333a", "title": "Дискретная математика", "description": ""}
+{"uid": "SEC-MATEMATICHESKIE-OSNOVANI-185257", "subject_uid": "SUB-MATH-8b8b42", "title": "Математические основания", "description": ""}
+{"uid": "SEC-CHISLA-I-STRUKTURY-09ce80", "subject_uid": "SUB-MATH-8b8b42", "title": "Числа и структуры", "description": ""}
+{"uid": "SEC-ALGEBRA-6a7b0b", "subject_uid": "SUB-MATH-8b8b42", "title": "Алгебра", "description": ""}
+{"uid": "SEC-FUNKCII-bf13ec", "subject_uid": "SUB-MATH-8b8b42", "title": "Функции", "description": ""}
+{"uid": "SEC-GEOMETRIYA-480d44", "subject_uid": "SUB-MATH-8b8b42", "title": "Геометрия", "description": ""}
+{"uid": "SEC-ANALITICHESKAYA-GEOMETRI-d90753", "subject_uid": "SUB-MATH-8b8b42", "title": "Аналитическая геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-a81050", "subject_uid": "SUB-MATH-8b8b42", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-KOMBINATORIKA-I-VEROYATN-3ebe2a", "subject_uid": "SUB-MATH-8b8b42", "title": "Комбинаторика и вероятность", "description": ""}
+{"uid": "SEC-STATISTIKA-604f7b", "subject_uid": "SUB-MATH-8b8b42", "title": "Статистика", "description": ""}
+{"uid": "SEC-LINEINAYA-ALGEBRA-4b6bad", "subject_uid": "SUB-MATH-8b8b42", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-f848d1", "subject_uid": "SUB-MATH-8b8b42", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-7861f9", "subject_uid": "SUB-MATH-8b8b42", "title": "Дискретная математика", "description": ""}
+{"uid": "SEC-ALGEBRA-f08f9b", "subject_uid": "SUB-MATHEMATICS-5902da", "title": "Алгебра", "description": ""}
+{"uid": "SEC-GEOMETRIYA-a4e95a", "subject_uid": "SUB-MATHEMATICS-5902da", "title": "Геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-edcaf1", "subject_uid": "SUB-MATHEMATICS-5902da", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-ALGEBRA-9b74f6", "subject_uid": "SUB-MATHEMATICS-e1f035", "title": "Алгебра", "description": ""}
+{"uid": "SEC-GEOMETRIYA-0f2751", "subject_uid": "SUB-MATHEMATICS-e1f035", "title": "Геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-821a2d", "subject_uid": "SUB-MATHEMATICS-e1f035", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-ALGEBRA-91e98a", "subject_uid": "SUB-MATHEMATICS-889283", "title": "Алгебра", "description": ""}
+{"uid": "SEC-GEOMETRIYA-fad028", "subject_uid": "SUB-MATHEMATICS-889283", "title": "Геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-caba16", "subject_uid": "SUB-MATHEMATICS-889283", "title": "Тригонометрия", "description": ""}
