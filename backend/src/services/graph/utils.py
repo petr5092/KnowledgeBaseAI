@@ -89,7 +89,6 @@ def sync_from_jsonl() -> Dict:
     subsections = load_jsonl(get_path('subsections.jsonl'))
     topics = load_jsonl(get_path('topics.jsonl'))
     skills = load_jsonl(get_path('skills.jsonl'))
-    skills = load_jsonl(get_path('skills.jsonl'))
     methods = load_jsonl(get_path('methods.jsonl'))
     skill_methods = load_jsonl(get_path('skill_methods.jsonl'))
     normalize_skill_topics_to_topic_skills()
@@ -166,16 +165,16 @@ def sync_from_jsonl() -> Dict:
     conn.close()
     from src.workers.commit import commit_proposal
     res = commit_proposal(p.proposal_id)
-    return {"ok": bool(res.get("ok")), "proposal_id": p.proposal_id, "ops": len(ops)}
+    return {"ok": bool(res.get("ok")), "proposal_id": p.proposal_id, "ops": len(ops), "commit_result": res}
 
 def sync_from_jsonl_dir(base_dir: str) -> Dict:
     subjects = load_jsonl(get_path_in(base_dir, 'subjects.jsonl'))
     sections = load_jsonl(get_path_in(base_dir, 'sections.jsonl'))
     subsections = load_jsonl(get_path_in(base_dir, 'subsections.jsonl'))
     topics = load_jsonl(get_path_in(base_dir, 'topics.jsonl'))
-    skills = load_jsonl(get_path_in(base_dir, 'skills.jsonl'))
-    methods = load_jsonl(get_path_in(base_dir, 'methods.jsonl'))
-    skill_methods = load_jsonl(get_path_in(base_dir, 'skill_methods.jsonl'))
+    skills_all = load_jsonl(get_path_in(base_dir, 'skills.jsonl'))
+    methods_all = load_jsonl(get_path_in(base_dir, 'methods.jsonl'))
+    skill_methods_all = load_jsonl(get_path_in(base_dir, 'skill_methods.jsonl'))
     normalize_skill_topics_to_topic_skills()
     topic_skills = load_jsonl(get_path_in(base_dir, 'topic_skills.jsonl'))
     topic_goals = load_jsonl(get_path_in(base_dir, 'topic_goals.jsonl'))
@@ -225,6 +224,154 @@ def sync_from_jsonl_dir(base_dir: str) -> Dict:
         if tu:
             ops.append(Operation(op_id="E-"+tu+"-"+ex_uid, op_type=OpType.MERGE_REL, target_id="E-"+tu+"-"+ex_uid, properties_delta={"type":"HAS_EXAMPLE","from_uid":tu,"to_uid":ex_uid}))
     for es in [x for x in example_skills if x.get("example_uid") and x.get("skill_uid")]:
+        ops.append(Operation(op_id="E-"+(es.get("example_uid") or "")+"-"+(es.get("skill_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(es.get("example_uid") or "")+"-"+(es.get("skill_uid") or ""), properties_delta={"type":"LINKED","from_uid":es.get("example_uid"),"to_uid":es.get("skill_uid"),"role":es.get("role","target")}))
+    for sm in [x for x in skill_methods if x.get("skill_uid") and x.get("method_uid")]:
+        ops.append(Operation(op_id="E-L-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-L-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), properties_delta={"type":"LINKED","from_uid":sm.get("skill_uid"),"to_uid":sm.get("method_uid"),"weight":sm.get("weight","linked"),"confidence":sm.get("confidence",0.9)}))
+        ops.append(Operation(op_id="E-B-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-B-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), properties_delta={"type":"BASED_ON","from_uid":sm.get("skill_uid"),"to_uid":sm.get("method_uid"),"confidence":sm.get("confidence",0.9)}))
+    ensure_tables()
+    p = create_draft_proposal("public", 0, ops)
+    conn = get_conn(); conn.autocommit=True
+    with conn.cursor() as cur:
+        from json import dumps
+        cur.execute("INSERT INTO proposals (proposal_id, tenant_id, base_graph_version, proposal_checksum, status, operations_json) VALUES (%s,%s,%s,%s,%s,%s)", (p.proposal_id, p.tenant_id, p.base_graph_version, p.proposal_checksum, "DRAFT", dumps([o.model_dump() for o in ops])))
+    conn.close()
+    from src.workers.commit import commit_proposal
+    res = commit_proposal(p.proposal_id)
+    return {"ok": bool(res.get("ok")), "proposal_id": p.proposal_id, "ops": len(ops)}
+
+def sync_from_jsonl_dir_sections(base_dir: str, section_uids: List[str]) -> Dict:
+    subjects = load_jsonl(get_path_in(base_dir, 'subjects.jsonl'))
+    sections = [s for s in load_jsonl(get_path_in(base_dir, 'sections.jsonl')) if s.get('uid') in set(section_uids)]
+    subsections = [ss for ss in load_jsonl(get_path_in(base_dir, 'subsections.jsonl')) if ss.get('section_uid') in {s.get('uid') for s in sections}]
+    topics = [t for t in load_jsonl(get_path_in(base_dir, 'topics.jsonl')) if t.get('section_uid') in {ss.get('uid') for ss in subsections}]
+    skills = load_jsonl(get_path_in(base_dir, 'skills.jsonl'))
+    methods = load_jsonl(get_path_in(base_dir, 'methods.jsonl'))
+    skill_methods = load_jsonl(get_path_in(base_dir, 'skill_methods.jsonl'))
+    normalize_skill_topics_to_topic_skills()
+    topic_skills = [x for x in load_jsonl(get_path_in(base_dir, 'topic_skills.jsonl')) if x.get('topic_uid') in {t.get('uid') for t in topics}]
+    skill_uids = {x.get('skill_uid') for x in topic_skills if x.get('skill_uid')}
+    skills = [s for s in skills_all if s.get('uid') in skill_uids]
+    skill_methods = [sm for sm in skill_methods_all if sm.get('skill_uid') in skill_uids]
+    method_uids = {sm.get('method_uid') for sm in skill_methods if sm.get('method_uid')}
+    methods = [m for m in methods_all if m.get('uid') in method_uids]
+    topic_goals = [g for g in load_jsonl(get_path_in(base_dir, 'topic_goals.jsonl')) if g.get('topic_uid') in {t.get('uid') for t in topics}]
+    topic_objectives = [o for o in load_jsonl(get_path_in(base_dir, 'topic_objectives.jsonl')) if o.get('topic_uid') in {t.get('uid') for t in topics}]
+    topic_prereqs = [pr for pr in load_jsonl(get_path_in(base_dir, 'topic_prereqs.jsonl')) if (pr.get('target_uid') or pr.get('topic_uid')) in {t.get('uid') for t in topics}]
+    content_units = load_jsonl(get_path_in(base_dir, 'content_units.jsonl'))
+    examples = [e for e in load_jsonl(get_path_in(base_dir, 'examples.jsonl')) if e.get('topic_uid') in {t.get('uid') for t in topics}]
+    example_skills = [es for es in load_jsonl(get_path_in(base_dir, 'example_skills.jsonl')) if es.get('example_uid') in {e.get('uid') for e in examples}]
+    from src.schemas.proposal import Operation, OpType
+    from src.services.proposal_service import create_draft_proposal
+    from src.db.pg import ensure_tables, get_conn
+    ops: list[Operation] = []
+    for s in subjects:
+        ops.append(Operation(op_id="N-"+(s.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=s.get("uid"), properties_delta={"type":"Subject","uid":s.get("uid"),"title":s.get("title"),"description":s.get("description")}))
+    for sec in sections:
+        ops.append(Operation(op_id="N-"+(sec.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=sec.get("uid"), properties_delta={"type":"Section","uid":sec.get("uid"),"title":sec.get("title"),"description":sec.get("description")}))
+    for sub in subsections:
+        ops.append(Operation(op_id="N-"+(sub.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=sub.get("uid"), properties_delta={"type":"Subsection","uid":sub.get("uid"),"title":sub.get("title"),"description":sub.get("description")}))
+    for t in topics:
+        ops.append(Operation(op_id="N-"+(t.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=t.get("uid"), properties_delta={"type":"Topic","uid":t.get("uid"),"title":t.get("title"),"description":t.get("description"),"user_class_min":t.get("user_class_min"),"user_class_max":t.get("user_class_max"),"difficulty_band":t.get("difficulty_band")}))
+    for sk in skills:
+        ops.append(Operation(op_id="N-"+(sk.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=sk.get("uid"), properties_delta={"type":"Skill","uid":sk.get("uid"),"title":sk.get("title"),"definition":sk.get("definition"),"applicability_types":sk.get("applicability_types")}))
+    for m in methods:
+        ops.append(Operation(op_id="N-"+(m.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=m.get("uid"), properties_delta={"type":"Method","uid":m.get("uid"),"title":m.get("title"),"method_text":m.get("method_text"),"applicability_types":m.get("applicability_types")}))
+    unit_rows = [{"uid": (u.get("uid") or f"UNIT-{u.get('topic_uid')}-{abs(hash((u.get('type') or '')+(u.get('branch') or '')))%100000}"), "topic_uid": u.get("topic_uid"), "type": u.get("type"), "payload": __import__('json').dumps(u.get("payload", {}), ensure_ascii=False), "complexity": float(u.get("complexity", 0.0) or 0.0)} for u in content_units if u.get("topic_uid") in {t.get("uid") for t in topics}]
+    for u in unit_rows:
+        ops.append(Operation(op_id="N-"+(u.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=u.get("uid"), properties_delta={"type":"ContentUnit","uid":u.get("uid"),"type":u.get("type"),"payload":u.get("payload"),"complexity":u.get("complexity")}))
+    for sec in sections:
+        ops.append(Operation(op_id="E-"+(sec.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(sec.get("uid") or ""), properties_delta={"type":"CONTAINS","from_uid":sec.get("subject_uid"),"to_uid":sec.get("uid")}))
+    for sub in subsections:
+        ops.append(Operation(op_id="E-"+(sub.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(sub.get("uid") or ""), properties_delta={"type":"CONTAINS","from_uid":sub.get("section_uid"),"to_uid":sub.get("uid")}))
+    for t in topics:
+        ops.append(Operation(op_id="E-"+(t.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(t.get("uid") or ""), properties_delta={"type":"CONTAINS","from_uid":t.get("section_uid"),"to_uid":t.get("uid")}))
+    for ts in topic_skills:
+        ops.append(Operation(op_id="E-"+(ts.get("topic_uid") or "")+"-"+(ts.get("skill_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(ts.get("topic_uid") or "")+"-"+(ts.get("skill_uid") or ""), properties_delta={"type":"USES_SKILL","from_uid":ts.get("topic_uid"),"to_uid":ts.get("skill_uid"),"weight":ts.get("weight","linked"),"confidence":ts.get("confidence",0.9)}))
+    for pr in topic_prereqs:
+        tu = pr.get('topic_uid') or pr.get('target_uid')
+        pu = pr.get('prereq_uid')
+        if tu and pu:
+            ops.append(Operation(op_id="E-"+tu+"-"+pu, op_type=OpType.MERGE_REL, target_id="E-"+tu+"-"+pu, properties_delta={"type":"PREREQ","from_uid":tu,"to_uid":pu,"weight":pr.get("weight",1.0),"confidence":pr.get("confidence",0.9)}))
+    for u in unit_rows:
+        ops.append(Operation(op_id="E-"+(u.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(u.get("uid") or ""), properties_delta={"type":"HAS_UNIT","from_uid":u.get("topic_uid"),"to_uid":u.get("uid")}))
+    for ex in examples:
+        ex_uid = ex.get("uid")
+        ops.append(Operation(op_id="N-"+ex_uid, op_type=OpType.MERGE_NODE, target_id=ex_uid, properties_delta={"type":"Example","uid":ex_uid,"title":ex.get("title"),"statement":ex.get("statement"),"difficulty_level":ex.get("difficulty")}))
+        tu = ex.get("topic_uid")
+        if tu:
+            ops.append(Operation(op_id="E-"+tu+"-"+ex_uid, op_type=OpType.MERGE_REL, target_id="E-"+tu+"-"+ex_uid, properties_delta={"type":"HAS_EXAMPLE","from_uid":tu,"to_uid":ex_uid}))
+    for es in example_skills:
+        ops.append(Operation(op_id="E-"+(es.get("example_uid") or "")+"-"+(es.get("skill_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(es.get("example_uid") or "")+"-"+(es.get("skill_uid") or ""), properties_delta={"type":"LINKED","from_uid":es.get("example_uid"),"to_uid":es.get("skill_uid"),"role":es.get("role","target")}))
+    for sm in [x for x in skill_methods if x.get("skill_uid") and x.get("method_uid")]:
+        ops.append(Operation(op_id="E-L-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-L-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), properties_delta={"type":"LINKED","from_uid":sm.get("skill_uid"),"to_uid":sm.get("method_uid"),"weight":sm.get("weight","linked"),"confidence":sm.get("confidence",0.9)}))
+        ops.append(Operation(op_id="E-B-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-B-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), properties_delta={"type":"BASED_ON","from_uid":sm.get("skill_uid"),"to_uid":sm.get("method_uid"),"confidence":sm.get("confidence",0.9)}))
+    ensure_tables()
+    p = create_draft_proposal("public", 0, ops)
+    conn = get_conn(); conn.autocommit=True
+    with conn.cursor() as cur:
+        from json import dumps
+        cur.execute("INSERT INTO proposals (proposal_id, tenant_id, base_graph_version, proposal_checksum, status, operations_json) VALUES (%s,%s,%s,%s,%s,%s)", (p.proposal_id, p.tenant_id, p.base_graph_version, p.proposal_checksum, "DRAFT", dumps([o.model_dump() for o in ops])))
+    conn.close()
+    from src.workers.commit import commit_proposal
+    res = commit_proposal(p.proposal_id)
+    return {"ok": bool(res.get("ok")), "proposal_id": p.proposal_id, "ops": len(ops)}
+
+def sync_from_jsonl_dir_subsections(base_dir: str, subsection_uids: List[str]) -> Dict:
+    subjects = load_jsonl(get_path_in(base_dir, 'subjects.jsonl'))
+    sections = load_jsonl(get_path_in(base_dir, 'sections.jsonl'))
+    subsections_all = load_jsonl(get_path_in(base_dir, 'subsections.jsonl'))
+    subsections = [ss for ss in subsections_all if ss.get('uid') in set(subsection_uids)]
+    topics = [t for t in load_jsonl(get_path_in(base_dir, 'topics.jsonl')) if t.get('section_uid') in {ss.get('uid') for ss in subsections}]
+    skills = load_jsonl(get_path_in(base_dir, 'skills.jsonl'))
+    methods = load_jsonl(get_path_in(base_dir, 'methods.jsonl'))
+    skill_methods = load_jsonl(get_path_in(base_dir, 'skill_methods.jsonl'))
+    normalize_skill_topics_to_topic_skills()
+    topic_skills = [x for x in load_jsonl(get_path_in(base_dir, 'topic_skills.jsonl')) if x.get('topic_uid') in {t.get('uid') for t in topics}]
+    topic_goals = [g for g in load_jsonl(get_path_in(base_dir, 'topic_goals.jsonl')) if g.get('topic_uid') in {t.get('uid') for t in topics}]
+    topic_objectives = [o for o in load_jsonl(get_path_in(base_dir, 'topic_objectives.jsonl')) if o.get('topic_uid') in {t.get('uid') for t in topics}]
+    topic_prereqs = [pr for pr in load_jsonl(get_path_in(base_dir, 'topic_prereqs.jsonl')) if (pr.get('target_uid') or pr.get('topic_uid')) in {t.get('uid') for t in topics}]
+    content_units = load_jsonl(get_path_in(base_dir, 'content_units.jsonl'))
+    examples = [e for e in load_jsonl(get_path_in(base_dir, 'examples.jsonl')) if e.get('topic_uid') in {t.get('uid') for t in topics}]
+    example_skills = [es for es in load_jsonl(get_path_in(base_dir, 'example_skills.jsonl')) if es.get('example_uid') in {e.get('uid') for e in examples}]
+    from src.schemas.proposal import Operation, OpType
+    from src.services.proposal_service import create_draft_proposal
+    from src.db.pg import ensure_tables, get_conn
+    ops: list[Operation] = []
+    for s in subjects:
+        ops.append(Operation(op_id="N-"+(s.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=s.get("uid"), properties_delta={"type":"Subject","uid":s.get("uid"),"title":s.get("title"),"description":s.get("description")}))
+    for ss in subsections:
+        sec_uid = ss.get("section_uid")
+        sec = next((x for x in sections if x.get("uid")==sec_uid), None)
+        if sec:
+            ops.append(Operation(op_id="N-"+(sec.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=sec.get("uid"), properties_delta={"type":"Section","uid":sec.get("uid"),"title":sec.get("title"),"description":sec.get("description")}))
+        ops.append(Operation(op_id="N-"+(ss.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=ss.get("uid"), properties_delta={"type":"Subsection","uid":ss.get("uid"),"title":ss.get("title"),"description":ss.get("description")}))
+        if sec:
+            ops.append(Operation(op_id="E-"+(ss.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(ss.get("uid") or ""), properties_delta={"type":"CONTAINS","from_uid":sec.get("uid"),"to_uid":ss.get("uid")}))
+    for t in topics:
+        ops.append(Operation(op_id="N-"+(t.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=t.get("uid"), properties_delta={"type":"Topic","uid":t.get("uid"),"title":t.get("title"),"description":t.get("description"),"user_class_min":t.get("user_class_min"),"user_class_max":t.get("user_class_max"),"difficulty_band":t.get("difficulty_band")}))
+        ops.append(Operation(op_id="E-"+(t.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(t.get("uid") or ""), properties_delta={"type":"CONTAINS","from_uid":t.get("section_uid"),"to_uid":t.get("uid")}))
+    for sk in skills:
+        ops.append(Operation(op_id="N-"+(sk.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=sk.get("uid"), properties_delta={"type":"Skill","uid":sk.get("uid"),"title":sk.get("title"),"definition":sk.get("definition"),"applicability_types":sk.get("applicability_types")}))
+    for m in methods:
+        ops.append(Operation(op_id="N-"+(m.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=m.get("uid"), properties_delta={"type":"Method","uid":m.get("uid"),"title":m.get("title"),"method_text":m.get("method_text"),"applicability_types":m.get("applicability_types")}))
+    unit_rows = [{"uid": (u.get("uid") or f"UNIT-{u.get('topic_uid')}-{abs(hash((u.get('type') or '')+(u.get('branch') or '')))%100000}"), "topic_uid": u.get("topic_uid"), "type": u.get("type"), "payload": __import__('json').dumps(u.get("payload", {}), ensure_ascii=False), "complexity": float(u.get("complexity", 0.0) or 0.0)} for u in content_units if u.get("topic_uid") in {t.get("uid") for t in topics}]
+    for u in unit_rows:
+        ops.append(Operation(op_id="N-"+(u.get("uid") or ""), op_type=OpType.MERGE_NODE, target_id=u.get("uid"), properties_delta={"type":"ContentUnit","uid":u.get("uid"),"type":u.get("type"),"payload":u.get("payload"),"complexity":u.get("complexity")}))
+        ops.append(Operation(op_id="E-"+(u.get("uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(u.get("uid") or ""), properties_delta={"type":"HAS_UNIT","from_uid":u.get("topic_uid"),"to_uid":u.get("uid")}))
+    for ts in topic_skills:
+        ops.append(Operation(op_id="E-"+(ts.get("topic_uid") or "")+"-"+(ts.get("skill_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(ts.get("topic_uid") or "")+"-"+(ts.get("skill_uid") or ""), properties_delta={"type":"USES_SKILL","from_uid":ts.get("topic_uid"),"to_uid":ts.get("skill_uid"),"weight":ts.get("weight","linked"),"confidence":ts.get("confidence",0.9)}))
+    for pr in topic_prereqs:
+        tu = pr.get('topic_uid') or pr.get('target_uid')
+        pu = pr.get('prereq_uid')
+        if tu and pu:
+            ops.append(Operation(op_id="E-"+tu+"-"+pu, op_type=OpType.MERGE_REL, target_id="E-"+tu+"-"+pu, properties_delta={"type":"PREREQ","from_uid":tu,"to_uid":pu,"weight":pr.get("weight",1.0),"confidence":pr.get("confidence",0.9)}))
+    for ex in examples:
+        ex_uid = ex.get("uid")
+        ops.append(Operation(op_id="N-"+ex_uid, op_type=OpType.MERGE_NODE, target_id=ex_uid, properties_delta={"type":"Example","uid":ex_uid,"title":ex.get("title"),"statement":ex.get("statement"),"difficulty_level":ex.get("difficulty")}))
+        tu = ex.get("topic_uid")
+        if tu:
+            ops.append(Operation(op_id="E-"+tu+"-"+ex_uid, op_type=OpType.MERGE_REL, target_id="E-"+tu+"-"+ex_uid, properties_delta={"type":"HAS_EXAMPLE","from_uid":tu,"to_uid":ex_uid}))
+    for es in example_skills:
         ops.append(Operation(op_id="E-"+(es.get("example_uid") or "")+"-"+(es.get("skill_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-"+(es.get("example_uid") or "")+"-"+(es.get("skill_uid") or ""), properties_delta={"type":"LINKED","from_uid":es.get("example_uid"),"to_uid":es.get("skill_uid"),"role":es.get("role","target")}))
     for sm in [x for x in skill_methods if x.get("skill_uid") and x.get("method_uid")]:
         ops.append(Operation(op_id="E-L-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), op_type=OpType.MERGE_REL, target_id="E-L-"+(sm.get("skill_uid") or "")+"-"+(sm.get("method_uid") or ""), properties_delta={"type":"LINKED","from_uid":sm.get("skill_uid"),"to_uid":sm.get("method_uid"),"weight":sm.get("weight","linked"),"confidence":sm.get("confidence",0.9)}))

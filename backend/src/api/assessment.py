@@ -69,8 +69,8 @@ def _topic_accessible(subject_uid: str, topic_uid: str, resolved_user_class: int
         repo = Neo4jRepo()
         row = repo.read(
             (
-                "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic {uid:$tu}) "
-                "RETURN t.user_class_min AS mn, t.user_class_max AS mx"
+                "MATCH (sub:Subject {uid:$su})-[:CONTAINS*]->(t:Topic {uid:$tu}) "
+                "RETURN t.user_class_min AS mn, t.user_class_max AS mx LIMIT 1"
             ),
             {"su": subject_uid, "tu": topic_uid},
         )

@@ -17,6 +17,14 @@ def get_driver():
 class Neo4jRepo:
     def __init__(self, uri: Optional[str] = None, user: Optional[str] = None, password: Optional[str] = None, max_retries: int = 3, backoff_sec: float = 0.8):
         self.uri = uri or settings.neo4j_uri
+        # Force localhost if neo4j hostname fails
+        if 'neo4j:7687' in self.uri:
+            import socket
+            try:
+                socket.gethostbyname('neo4j')
+            except:
+                self.uri = self.uri.replace('neo4j:7687', 'localhost:7687')
+        
         self.user = user or settings.neo4j_user
         self.password = password or settings.neo4j_password.get_secret_value()
         if not self.uri or not self.user or not self.password:

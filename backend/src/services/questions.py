@@ -6,7 +6,7 @@ from src.config.settings import settings
 from src.services.graph.neo4j_repo import Neo4jRepo
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-KB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(BASE_DIR))), 'kb')
+KB_DIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'kb')
 
 def load_jsonl(filename: str) -> List[Dict]:
     path = os.path.join(KB_DIR, filename)
@@ -50,8 +50,16 @@ def select_examples_for_topics(
             rows = repo.read(
                 (
                     "UNWIND $t AS tuid "
-                    "MATCH (t:Topic {uid:tuid})-[:HAS_EXAMPLE]->(ex:Example) "
-                    "RETURN ex.uid AS uid, ex.title AS title, ex.statement AS statement, ex.difficulty_level AS difficulty, t.uid AS topic_uid"
+                    "MATCH (t:Topic {uid:tuid}) "
+                    "OPTIONAL MATCH (t)-[:HAS_EXAMPLE]->(ex:Example) "
+                    "OPTIONAL MATCH (t)-[:HAS_QUESTION|:CONTAINS]->(q:Question) "
+                    "WITH t, ex, q "
+                    "WHERE ex IS NOT NULL OR q IS NOT NULL "
+                    "RETURN coalesce(q.uid, ex.uid) AS uid, "
+                    "       coalesce(q.title, ex.title) AS title, "
+                    "       coalesce(q.text, q.statement, ex.statement) AS statement, "
+                    "       coalesce(q.difficulty, ex.difficulty_level) AS difficulty, "
+                    "       t.uid AS topic_uid"
                 ),
                 {"t": topic_uids}
             )

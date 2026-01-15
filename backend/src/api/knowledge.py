@@ -65,13 +65,42 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
                 (
                     "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) "
                     "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "WITH t, collect(pre.uid) AS pre1 "
                     "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
                     "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
-                    "       collect(pre.uid) AS prereq_topic_uids"
+                    "       pre1 AS prereq_topic_uids "
+                    "UNION "
+                    "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "WITH t, collect(pre.uid) AS pre2 "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       pre2 AS prereq_topic_uids"
                 ),
                 {"su": su},
             )
-            for r in rows:
+            if not rows and (payload.subject_title or "").strip():
+                rows = repo.read(
+                    (
+                        "MATCH (sub:Subject) WHERE toUpper(sub.title)=toUpper($t) "
+                        "MATCH (sub)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) "
+                        "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                        "WITH t, collect(pre.uid) AS pre1 "
+                        "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                        "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                        "       pre1 AS prereq_topic_uids "
+                        "UNION "
+                        "MATCH (sub:Subject) WHERE toUpper(sub.title)=toUpper($t) "
+                        "MATCH (sub)-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic) "
+                        "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                        "WITH t, collect(pre.uid) AS pre2 "
+                        "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                        "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                        "       pre2 AS prereq_topic_uids"
+                    ),
+                    {"t": payload.subject_title},
+                )
+            for r in rows or []:
                 mn = r.get("user_class_min")
                 mx = r.get("user_class_max")
                 ok = True
@@ -93,6 +122,74 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
             repo.close()
         except Exception:
             topics = []
+    if not topics and su:
+        try:
+            repo = Neo4jRepo()
+            rows = repo.read(
+                (
+                    "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       collect(pre.uid) AS prereq_topic_uids "
+                    "UNION "
+                    "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       collect(pre.uid) AS prereq_topic_uids"
+                ),
+                {"su": su},
+            )
+            for r in rows or []:
+                topics.append(
+                    {
+                        "topic_uid": r.get("topic_uid"),
+                        "title": r.get("title"),
+                        "user_class_min": r.get("user_class_min"),
+                        "user_class_max": r.get("user_class_max"),
+                        "difficulty_band": r.get("difficulty_band") or "standard",
+                        "prereq_topic_uids": [p for p in (r.get("prereq_topic_uids") or []) if p],
+                    }
+                )
+            repo.close()
+        except Exception:
+            ...
+    if not topics and (payload.subject_title or "").strip():
+        try:
+            repo = Neo4jRepo()
+            rows = repo.read(
+                (
+                    "MATCH (sub:Subject) WHERE toUpper(sub.title)=toUpper($t) "
+                    "MATCH (sub)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       collect(pre.uid) AS prereq_topic_uids "
+                    "UNION "
+                    "MATCH (sub:Subject) WHERE toUpper(sub.title)=toUpper($t) "
+                    "MATCH (sub)-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       collect(pre.uid) AS prereq_topic_uids"
+                ),
+                {"t": payload.subject_title},
+            )
+            for r in rows or []:
+                topics.append(
+                    {
+                        "topic_uid": r.get("topic_uid"),
+                        "title": r.get("title"),
+                        "user_class_min": r.get("user_class_min"),
+                        "user_class_max": r.get("user_class_max"),
+                        "difficulty_band": r.get("difficulty_band") or "standard",
+                        "prereq_topic_uids": [p for p in (r.get("prereq_topic_uids") or []) if p],
+                    }
+                )
+            repo.close()
+        except Exception:
+            ...
     if not topics:
         for tu in all_topic_uids_from_examples():
             topics.append(

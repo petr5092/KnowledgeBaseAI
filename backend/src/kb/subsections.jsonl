@@ -200,3 +200,118 @@
 {"uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-56eb3a", "section_uid": "SEC-TRIGONOMETRIYA-caba16", "title": "Основные функции тригонометрии", "description": ""}
 {"uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-bce3d3", "section_uid": "SEC-TRIGONOMETRIYA-caba16", "title": "Тригонометрические уравнения", "description": ""}
 {"uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-4a34b9", "section_uid": "SEC-TRIGONOMETRIYA-caba16", "title": "Применение тригонометрии в геометрии", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-ALGEB-58aa15", "section_uid": "SEC-ALGEBRA-909e3b", "title": "Основные понятия алгебры", "description": ""}
+{"uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-002197", "section_uid": "SEC-ALGEBRA-909e3b", "title": "Уравнения и неравенства", "description": ""}
+{"uid": "SUBSEC-FUNKCII-I-GRAFIKI-dfff2a", "section_uid": "SEC-ALGEBRA-909e3b", "title": "Функции и графики", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-e971f6", "section_uid": "SEC-GEOMETRIYA-d996d6", "title": "Основные понятия геометрии", "description": ""}
+{"uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-a98ceb", "section_uid": "SEC-GEOMETRIYA-d996d6", "title": "Плоская геометрия", "description": ""}
+{"uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-0b5e7f", "section_uid": "SEC-GEOMETRIYA-d996d6", "title": "Пространственная геометрия", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-2c5b2a", "section_uid": "SEC-TRIGONOMETRIYA-912c6b", "title": "Основные функции тригонометрии", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-OPERACII-S-CHIS-64e5ad", "section_uid": "SEC-ALGEBRA-bff4f4", "title": "Основные операции с числами", "description": ""}
+{"uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-4c478e", "section_uid": "SEC-ALGEBRA-bff4f4", "title": "Уравнения и неравенства", "description": ""}
+{"uid": "SUBSEC-FUNKCII-I-GRAFIKI-5abb1f", "section_uid": "SEC-ALGEBRA-bff4f4", "title": "Функции и графики", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-41fd33", "section_uid": "SEC-GEOMETRIYA-d71044", "title": "Основные понятия геометрии", "description": ""}
+{"uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-2ca4f8", "section_uid": "SEC-GEOMETRIYA-d71044", "title": "Плоская геометрия", "description": ""}
+{"uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-384ff0", "section_uid": "SEC-GEOMETRIYA-d71044", "title": "Пространственная геометрия", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-92d3a9", "section_uid": "SEC-TRIGONOMETRIYA-49801e", "title": "Основные функции тригонометрии", "description": ""}
+{"uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-840c67", "section_uid": "SEC-TRIGONOMETRIYA-49801e", "title": "Тригонометрические уравнения", "description": ""}
+{"uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-992051", "section_uid": "SEC-TRIGONOMETRIYA-49801e", "title": "Применение тригонометрии в геометрии", "description": ""}
+{"uid": "SUBSEC-VVEDENIE-V-MATEMATICHESK-21403d", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-125b3e", "title": "Введение в математический анализ", "description": ""}
+{"uid": "SUBSEC-PREDELY-I-NEPRERYVNOST-c2f4fe", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-125b3e", "title": "Пределы и непрерывность", "description": ""}
+{"uid": "SUBSEC-PROIZVODNYE-I-DIFFERENCI-3b67a3", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-125b3e", "title": "Производные и дифференцирование", "description": ""}
+{"uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-c772ca", "section_uid": "SEC-LINEINAYA-ALGEBRA-741b4b", "title": "Векторы и операции с ними", "description": ""}
+{"uid": "SUBSEC-MATRICY-I-DETERMINANTY-327567", "section_uid": "SEC-LINEINAYA-ALGEBRA-741b4b", "title": "Матрицы и детерминанты", "description": ""}
+{"uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-9aacd3", "section_uid": "SEC-LINEINAYA-ALGEBRA-741b4b", "title": "Системы линейных уравнений", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-STATI-d53247", "section_uid": "SEC-STATISTIKA-I-TEORIYA-VER-e67a28", "title": "Основные понятия статистики", "description": ""}
+{"uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-5d5fe0", "section_uid": "SEC-STATISTIKA-I-TEORIYA-VER-e67a28", "title": "Вероятностные распределения", "description": ""}
+{"uid": "SUBSEC-METODY-STATISTICHESKOGO--43f6de", "section_uid": "SEC-STATISTIKA-I-TEORIYA-VER-e67a28", "title": "Методы статистического анализа", "description": ""}
+{"uid": "SUBSEC-KOMBINATORIKA-92c9fa", "section_uid": "SEC-DISKRETNAYA-MATEMATIKA-17aaeb", "title": "Комбинаторика", "description": ""}
+{"uid": "SUBSEC-TEORIYA-GRAFOV-af3ab2", "section_uid": "SEC-DISKRETNAYA-MATEMATIKA-17aaeb", "title": "Теория графов", "description": ""}
+{"uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-62b7d2", "section_uid": "SEC-DISKRETNAYA-MATEMATIKA-17aaeb", "title": "Логика и булева алгебра", "description": ""}
+{"uid": "SUBSEC-VVEDENIE-V-CHISLENNYE-ME-ec3933", "section_uid": "SEC-CHISLENNYE-METODY-df4a99", "title": "Введение в численные методы", "description": ""}
+{"uid": "SUBSEC-METODY-RESHENIYA-LINEINY-bd323d", "section_uid": "SEC-CHISLENNYE-METODY-df4a99", "title": "Методы решения линейных уравнений", "description": ""}
+{"uid": "SUBSEC-CHISLENNYE-METODY-INTEGR-2e53df", "section_uid": "SEC-CHISLENNYE-METODY-df4a99", "title": "Численные методы интегрирования", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-OPERACII-S-CHIS-9fe003", "section_uid": "SEC-ALGEBRA-2b1b8f", "title": "Основные операции с числами", "description": ""}
+{"uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-d0c706", "section_uid": "SEC-ALGEBRA-2b1b8f", "title": "Уравнения и неравенства", "description": ""}
+{"uid": "SUBSEC-FUNKCII-I-GRAFIKI-12960f", "section_uid": "SEC-ALGEBRA-2b1b8f", "title": "Функции и графики", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-73a8c2", "section_uid": "SEC-GEOMETRIYA-5d8f26", "title": "Основные понятия геометрии", "description": ""}
+{"uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-b5f0ef", "section_uid": "SEC-GEOMETRIYA-5d8f26", "title": "Фигуры и их свойства", "description": ""}
+{"uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-ce4288", "section_uid": "SEC-GEOMETRIYA-5d8f26", "title": "Геометрические преобразования", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-1e5312", "section_uid": "SEC-TRIGONOMETRIYA-2e803e", "title": "Основные функции тригонометрии", "description": ""}
+{"uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-ec78c5", "section_uid": "SEC-TRIGONOMETRIYA-2e803e", "title": "Тригонометрические уравнения", "description": ""}
+{"uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-f4803d", "section_uid": "SEC-TRIGONOMETRIYA-2e803e", "title": "Применение тригонометрии в геометрии", "description": ""}
+{"uid": "SUBSEC-LOGIKA-aed6df", "section_uid": "SEC-MATEMATICHESKIE-OSNOVANI-f0d1c9", "title": "Логика", "description": ""}
+{"uid": "SUBSEC-TEORIYA-MNOZHESTV-f89a82", "section_uid": "SEC-MATEMATICHESKIE-OSNOVANI-f0d1c9", "title": "Теория множеств", "description": ""}
+{"uid": "SUBSEC-CHISLOVYE-SISTEMY-ea8c25", "section_uid": "SEC-CHISLA-I-STRUKTURY-1d31c2", "title": "Числовые системы", "description": ""}
+{"uid": "SUBSEC-ARIFMETICHESKAYA-STRUKTU-0db7f7", "section_uid": "SEC-CHISLA-I-STRUKTURY-1d31c2", "title": "Арифметическая структура", "description": ""}
+{"uid": "SUBSEC-ALGEBRAICHESKIE-VYRAZHEN-fdca0a", "section_uid": "SEC-ALGEBRA-704b3b", "title": "Алгебраические выражения", "description": ""}
+{"uid": "SUBSEC-URAVNENIYA-875e06", "section_uid": "SEC-ALGEBRA-704b3b", "title": "Уравнения", "description": ""}
+{"uid": "SUBSEC-NERAVENSTVA-180280", "section_uid": "SEC-ALGEBRA-704b3b", "title": "Неравенства", "description": ""}
+{"uid": "SUBSEC-OBSCHAYA-TEORIYA-FUNKCII-30156b", "section_uid": "SEC-FUNKCII-ebfa2f", "title": "Общая теория функций", "description": ""}
+{"uid": "SUBSEC-KLASSY-FUNKCII-8fc18a", "section_uid": "SEC-FUNKCII-ebfa2f", "title": "Классы функций", "description": ""}
+{"uid": "SUBSEC-EVKLIDOVA-GEOMETRIYA-c7a0dc", "section_uid": "SEC-GEOMETRIYA-0cb73a", "title": "Евклидова геометрия", "description": ""}
+{"uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-aeeb58", "section_uid": "SEC-GEOMETRIYA-0cb73a", "title": "Пространственная геометрия", "description": ""}
+{"uid": "SUBSEC-KOORDINATNYI-METOD-f48590", "section_uid": "SEC-ANALITICHESKAYA-GEOMETRI-090b57", "title": "Координатный метод", "description": ""}
+{"uid": "SUBSEC-LINII-I-POVERHNOSTI-14fc62", "section_uid": "SEC-ANALITICHESKAYA-GEOMETRI-090b57", "title": "Линии и поверхности", "description": ""}
+{"uid": "SUBSEC-OSNOVY-ed0118", "section_uid": "SEC-TRIGONOMETRIYA-0305cb", "title": "Основы", "description": ""}
+{"uid": "SUBSEC-TOZHDESTVA-I-URAVNENIYA-49d55e", "section_uid": "SEC-TRIGONOMETRIYA-0305cb", "title": "Тождества и уравнения", "description": ""}
+{"uid": "SUBSEC-KOMBINATORIKA-1f6c9b", "section_uid": "SEC-KOMBINATORIKA-I-VEROYATN-b8f684", "title": "Комбинаторика", "description": ""}
+{"uid": "SUBSEC-VEROYATNOST-74cbe7", "section_uid": "SEC-KOMBINATORIKA-I-VEROYATN-b8f684", "title": "Вероятность", "description": ""}
+{"uid": "SUBSEC-OSNOVY-STATISTIKI-f52c01", "section_uid": "SEC-STATISTIKA-215694", "title": "Основы статистики", "description": ""}
+{"uid": "SUBSEC-MATRICY-f6882e", "section_uid": "SEC-LINEINAYA-ALGEBRA-7e5903", "title": "Матрицы", "description": ""}
+{"uid": "SUBSEC-VEKTORNYE-PROSTRANSTVA-813ced", "section_uid": "SEC-LINEINAYA-ALGEBRA-7e5903", "title": "Векторные пространства", "description": ""}
+{"uid": "SUBSEC-PREDEL-418829", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-6ba393", "title": "Предел", "description": ""}
+{"uid": "SUBSEC-PROIZVODNAYA-056f30", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-6ba393", "title": "Производная", "description": ""}
+{"uid": "SUBSEC-INTEGRAL-d0cf3b", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-6ba393", "title": "Интеграл", "description": ""}
+{"uid": "SUBSEC-BULEVA-LOGIKA-cc49e4", "section_uid": "SEC-DISKRETNAYA-MATEMATIKA-a654ba", "title": "Булева логика", "description": ""}
+{"uid": "SUBSEC-TEORIYA-GRAFOV-960986", "section_uid": "SEC-DISKRETNAYA-MATEMATIKA-a654ba", "title": "Теория графов", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-OPERACII-S-CHIS-4314e5", "section_uid": "SEC-ALGEBRA-ac12a2", "title": "Основные операции с числами", "description": ""}
+{"uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-8f631a", "section_uid": "SEC-ALGEBRA-ac12a2", "title": "Уравнения и неравенства", "description": ""}
+{"uid": "SUBSEC-FUNKCII-I-GRAFIKI-bb4508", "section_uid": "SEC-ALGEBRA-ac12a2", "title": "Функции и графики", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8d0561", "section_uid": "SEC-GEOMETRIYA-26faa0", "title": "Основные понятия геометрии", "description": ""}
+{"uid": "SUBSEC-PLOSKAYA-GEOMETRIYA-d88870", "section_uid": "SEC-GEOMETRIYA-26faa0", "title": "Плоская геометрия", "description": ""}
+{"uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-37fc0d", "section_uid": "SEC-GEOMETRIYA-26faa0", "title": "Пространственная геометрия", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-FUNKCII-TRIGONO-d870ce", "section_uid": "SEC-TRIGONOMETRIYA-7e75ed", "title": "Основные функции тригонометрии", "description": ""}
+{"uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-ed04a6", "section_uid": "SEC-TRIGONOMETRIYA-7e75ed", "title": "Тригонометрические уравнения", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-OPERACII-S-CHIS-d64ca1", "section_uid": "SEC-ALGEBRA-0d01fa", "title": "Основные операции с числами", "description": ""}
+{"uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-3a03f0", "section_uid": "SEC-TRIGONOMETRIYA-7e75ed", "title": "Применение тригонометрии в геометрии", "description": ""}
+{"uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-87d541", "section_uid": "SEC-ALGEBRA-0d01fa", "title": "Уравнения и неравенства", "description": ""}
+{"uid": "SUBSEC-VVEDENIE-V-MATEMATICHESK-2d067f", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-017120", "title": "Введение в математический анализ", "description": ""}
+{"uid": "SUBSEC-FUNKCII-I-GRAFIKI-ed1ef9", "section_uid": "SEC-ALGEBRA-0d01fa", "title": "Функции и графики", "description": ""}
+{"uid": "SUBSEC-PREDELY-I-NEPRERYVNOST-88c9e2", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-017120", "title": "Пределы и непрерывность", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-0617fd", "section_uid": "SEC-GEOMETRIYA-aa1143", "title": "Основные понятия геометрии", "description": ""}
+{"uid": "SUBSEC-PLOSKIE-FIGURY-897fe4", "section_uid": "SEC-GEOMETRIYA-aa1143", "title": "Плоские фигуры", "description": ""}
+{"uid": "SUBSEC-PROIZVODNYE-I-DIFFERENCI-23fb22", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-017120", "title": "Производные и дифференцирование", "description": ""}
+{"uid": "SUBSEC-PROSTRANSTVENNYE-FIGURY-784ec7", "section_uid": "SEC-GEOMETRIYA-aa1143", "title": "Пространственные фигуры", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-TRIGONOMETRICHE-6271da", "section_uid": "SEC-TRIGONOMETRIYA-c10101", "title": "Основные тригонометрические функции", "description": ""}
+{"uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-f5ce50", "section_uid": "SEC-TRIGONOMETRIYA-c10101", "title": "Тригонометрические уравнения", "description": ""}
+{"uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-8436b3", "section_uid": "SEC-TRIGONOMETRIYA-c10101", "title": "Применение тригонометрии в геометрии", "description": ""}
+{"uid": "SUBSEC-VVEDENIE-V-MATEMATICHESK-b70659", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-021485", "title": "Введение в математический анализ", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-OPERACII-S-CHIS-9f5c67", "section_uid": "SEC-ALGEBRA-ada96d", "title": "Основные операции с числами", "description": ""}
+{"uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-6e3e8b", "section_uid": "SEC-ALGEBRA-ada96d", "title": "Уравнения и неравенства", "description": ""}
+{"uid": "SUBSEC-FUNKCII-I-GRAFIKI-797e9e", "section_uid": "SEC-ALGEBRA-ada96d", "title": "Функции и графики", "description": ""}
+{"uid": "SUBSEC-LOGIKA-432904", "section_uid": "SEC-MATEMATICHESKIE-OSNOVANI-b7e168", "title": "Логика", "description": ""}
+{"uid": "SUBSEC-TEORIYA-MNOZHESTV-cc39d1", "section_uid": "SEC-MATEMATICHESKIE-OSNOVANI-b7e168", "title": "Теория множеств", "description": ""}
+{"uid": "SUBSEC-CHISLOVYE-SISTEMY-2f4ee4", "section_uid": "SEC-CHISLA-I-STRUKTURY-7d817e", "title": "Числовые системы", "description": ""}
+{"uid": "SUBSEC-ARIFMETICHESKAYA-STRUKTU-bca2af", "section_uid": "SEC-CHISLA-I-STRUKTURY-7d817e", "title": "Арифметическая структура", "description": ""}
+{"uid": "SUBSEC-ALGEBRAICHESKIE-VYRAZHEN-0f8069", "section_uid": "SEC-ALGEBRA-1429b1", "title": "Алгебраические выражения", "description": ""}
+{"uid": "SUBSEC-URAVNENIYA-db1677", "section_uid": "SEC-ALGEBRA-1429b1", "title": "Уравнения", "description": ""}
+{"uid": "SUBSEC-NERAVENSTVA-1546a1", "section_uid": "SEC-ALGEBRA-1429b1", "title": "Неравенства", "description": ""}
+{"uid": "SUBSEC-OBSCHAYA-TEORIYA-FUNKCII-8ec348", "section_uid": "SEC-FUNKCII-4c3276", "title": "Общая теория функций", "description": ""}
+{"uid": "SUBSEC-KLASSY-FUNKCII-120e66", "section_uid": "SEC-FUNKCII-4c3276", "title": "Классы функций", "description": ""}
+{"uid": "SUBSEC-EVKLIDOVA-GEOMETRIYA-c3f5c6", "section_uid": "SEC-GEOMETRIYA-a294fd", "title": "Евклидова геометрия", "description": ""}
+{"uid": "SUBSEC-PROSTRANSTVENNAYA-GEOMET-f504cb", "section_uid": "SEC-GEOMETRIYA-a294fd", "title": "Пространственная геометрия", "description": ""}
+{"uid": "SUBSEC-KOORDINATNYI-METOD-540551", "section_uid": "SEC-ANALITICHESKAYA-GEOMETRI-f3cc54", "title": "Координатный метод", "description": ""}
+{"uid": "SUBSEC-LINII-I-POVERHNOSTI-b2dfbf", "section_uid": "SEC-ANALITICHESKAYA-GEOMETRI-f3cc54", "title": "Линии и поверхности", "description": ""}
+{"uid": "SUBSEC-OSNOVY-4fe800", "section_uid": "SEC-TRIGONOMETRIYA-651c05", "title": "Основы", "description": ""}
+{"uid": "SUBSEC-TOZHDESTVA-I-URAVNENIYA-fbc713", "section_uid": "SEC-TRIGONOMETRIYA-651c05", "title": "Тождества и уравнения", "description": ""}
+{"uid": "SUBSEC-KOMBINATORIKA-ede5a4", "section_uid": "SEC-KOMBINATORIKA-I-VEROYATN-9ea4cf", "title": "Комбинаторика", "description": ""}
+{"uid": "SUBSEC-VEROYATNOST-2b4125", "section_uid": "SEC-KOMBINATORIKA-I-VEROYATN-9ea4cf", "title": "Вероятность", "description": ""}
+{"uid": "SUBSEC-OSNOVY-STATISTIKI-b25d12", "section_uid": "SEC-STATISTIKA-8df5b4", "title": "Основы статистики", "description": ""}
+{"uid": "SUBSEC-MATRICY-41b84c", "section_uid": "SEC-LINEINAYA-ALGEBRA-16f729", "title": "Матрицы", "description": ""}
+{"uid": "SUBSEC-VEKTORNYE-PROSTRANSTVA-f19722", "section_uid": "SEC-LINEINAYA-ALGEBRA-16f729", "title": "Векторные пространства", "description": ""}
+{"uid": "SUBSEC-PREDEL-5a6c24", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-ac5c3f", "title": "Предел", "description": ""}
+{"uid": "SUBSEC-PROIZVODNAYA-1dbc4f", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-ac5c3f", "title": "Производная", "description": ""}
+{"uid": "SUBSEC-INTEGRAL-23b99e", "section_uid": "SEC-MATEMATICHESKII-ANALIZ-ac5c3f", "title": "Интеграл", "description": ""}
+{"uid": "SUBSEC-BULEVA-LOGIKA-18a242", "section_uid": "SEC-DISKRETNAYA-MATEMATIKA-55d913", "title": "Булева логика", "description": ""}
+{"uid": "SUBSEC-TEORIYA-GRAFOV-8be4cb", "section_uid": "SEC-DISKRETNAYA-MATEMATIKA-55d913", "title": "Теория графов", "description": ""}

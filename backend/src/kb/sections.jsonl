@@ -106,3 +106,50 @@
 {"uid": "SEC-ALGEBRA-91e98a", "subject_uid": "SUB-MATHEMATICS-889283", "title": "Алгебра", "description": ""}
 {"uid": "SEC-GEOMETRIYA-fad028", "subject_uid": "SUB-MATHEMATICS-889283", "title": "Геометрия", "description": ""}
 {"uid": "SEC-TRIGONOMETRIYA-caba16", "subject_uid": "SUB-MATHEMATICS-889283", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-ALGEBRA-909e3b", "subject_uid": "SUB-MATHEMATICS-75378d", "title": "Алгебра", "description": ""}
+{"uid": "SEC-GEOMETRIYA-d996d6", "subject_uid": "SUB-MATHEMATICS-75378d", "title": "Геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-912c6b", "subject_uid": "SUB-MATHEMATICS-75378d", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-ALGEBRA-bff4f4", "subject_uid": "SUB-MATHEMATICS-119715", "title": "Алгебра", "description": ""}
+{"uid": "SEC-GEOMETRIYA-d71044", "subject_uid": "SUB-MATHEMATICS-119715", "title": "Геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-49801e", "subject_uid": "SUB-MATHEMATICS-119715", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-125b3e", "subject_uid": "SUB-MATHEMATICS-119715", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-LINEINAYA-ALGEBRA-741b4b", "subject_uid": "SUB-MATHEMATICS-119715", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-STATISTIKA-I-TEORIYA-VER-e67a28", "subject_uid": "SUB-MATHEMATICS-119715", "title": "Статистика и теория вероятностей", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-17aaeb", "subject_uid": "SUB-MATHEMATICS-119715", "title": "Дискретная математика", "description": ""}
+{"uid": "SEC-CHISLENNYE-METODY-df4a99", "subject_uid": "SUB-MATHEMATICS-119715", "title": "Численные методы", "description": ""}
+{"uid": "SEC-ALGEBRA-2b1b8f", "subject_uid": "SUB-MATHEMATICS-2dcbf7", "title": "Алгебра", "description": ""}
+{"uid": "SEC-GEOMETRIYA-5d8f26", "subject_uid": "SUB-MATHEMATICS-2dcbf7", "title": "Геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-2e803e", "subject_uid": "SUB-MATHEMATICS-2dcbf7", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-MATEMATICHESKIE-OSNOVANI-f0d1c9", "subject_uid": "SUB-MATH-c254f5", "title": "Математические основания", "description": ""}
+{"uid": "SEC-CHISLA-I-STRUKTURY-1d31c2", "subject_uid": "SUB-MATH-c254f5", "title": "Числа и структуры", "description": ""}
+{"uid": "SEC-ALGEBRA-704b3b", "subject_uid": "SUB-MATH-c254f5", "title": "Алгебра", "description": ""}
+{"uid": "SEC-FUNKCII-ebfa2f", "subject_uid": "SUB-MATH-c254f5", "title": "Функции", "description": ""}
+{"uid": "SEC-GEOMETRIYA-0cb73a", "subject_uid": "SUB-MATH-c254f5", "title": "Геометрия", "description": ""}
+{"uid": "SEC-ANALITICHESKAYA-GEOMETRI-090b57", "subject_uid": "SUB-MATH-c254f5", "title": "Аналитическая геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-0305cb", "subject_uid": "SUB-MATH-c254f5", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-KOMBINATORIKA-I-VEROYATN-b8f684", "subject_uid": "SUB-MATH-c254f5", "title": "Комбинаторика и вероятность", "description": ""}
+{"uid": "SEC-STATISTIKA-215694", "subject_uid": "SUB-MATH-c254f5", "title": "Статистика", "description": ""}
+{"uid": "SEC-LINEINAYA-ALGEBRA-7e5903", "subject_uid": "SUB-MATH-c254f5", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-6ba393", "subject_uid": "SUB-MATH-c254f5", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-a654ba", "subject_uid": "SUB-MATH-c254f5", "title": "Дискретная математика", "description": ""}
+{"uid": "SEC-ALGEBRA-ac12a2", "subject_uid": "SUB-MATHEMATICS-80622f", "title": "Алгебра", "description": ""}
+{"uid": "SEC-GEOMETRIYA-26faa0", "subject_uid": "SUB-MATHEMATICS-80622f", "title": "Геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-7e75ed", "subject_uid": "SUB-MATHEMATICS-80622f", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-ALGEBRA-0d01fa", "subject_uid": "SUB-MATHEMATICS-3b22a4", "title": "Алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-017120", "subject_uid": "SUB-MATHEMATICS-80622f", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-GEOMETRIYA-aa1143", "subject_uid": "SUB-MATHEMATICS-3b22a4", "title": "Геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-c10101", "subject_uid": "SUB-MATHEMATICS-3b22a4", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-021485", "subject_uid": "SUB-MATHEMATICS-3b22a4", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-ALGEBRA-ada96d", "subject_uid": "SUB-MATHEMATICS-4109e2", "title": "Алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKIE-OSNOVANI-b7e168", "subject_uid": "SUB-MATH-f2234c", "title": "Математические основания", "description": ""}
+{"uid": "SEC-CHISLA-I-STRUKTURY-7d817e", "subject_uid": "SUB-MATH-f2234c", "title": "Числа и структуры", "description": ""}
+{"uid": "SEC-ALGEBRA-1429b1", "subject_uid": "SUB-MATH-f2234c", "title": "Алгебра", "description": ""}
+{"uid": "SEC-FUNKCII-4c3276", "subject_uid": "SUB-MATH-f2234c", "title": "Функции", "description": ""}
+{"uid": "SEC-GEOMETRIYA-a294fd", "subject_uid": "SUB-MATH-f2234c", "title": "Геометрия", "description": ""}
+{"uid": "SEC-ANALITICHESKAYA-GEOMETRI-f3cc54", "subject_uid": "SUB-MATH-f2234c", "title": "Аналитическая геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-651c05", "subject_uid": "SUB-MATH-f2234c", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-KOMBINATORIKA-I-VEROYATN-9ea4cf", "subject_uid": "SUB-MATH-f2234c", "title": "Комбинаторика и вероятность", "description": ""}
+{"uid": "SEC-STATISTIKA-8df5b4", "subject_uid": "SUB-MATH-f2234c", "title": "Статистика", "description": ""}
+{"uid": "SEC-LINEINAYA-ALGEBRA-16f729", "subject_uid": "SUB-MATH-f2234c", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKII-ANALIZ-ac5c3f", "subject_uid": "SUB-MATH-f2234c", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-55d913", "subject_uid": "SUB-MATH-f2234c", "title": "Дискретная математика", "description": ""}
