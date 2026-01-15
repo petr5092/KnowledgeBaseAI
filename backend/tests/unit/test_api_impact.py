@@ -1,9 +1,9 @@
 from fastapi.testclient import TestClient
-from src.main import app
-from src.db.pg import ensure_tables, get_conn
-from src.services.proposal_service import create_draft_proposal
-from src.schemas.proposal import Operation, OpType, ProposalStatus
-from src.services.graph.neo4j_repo import get_driver
+from app.main import app
+from app.db.pg import ensure_tables, get_conn
+from app.services.proposal_service import create_draft_proposal
+from app.schemas.proposal import Operation, OpType, ProposalStatus
+from app.services.graph.neo4j_repo import get_driver
 import uuid, json
 
 def test_api_impact_endpoint_filters_types():

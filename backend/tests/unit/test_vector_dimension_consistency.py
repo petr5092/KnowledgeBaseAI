@@ -1,9 +1,9 @@
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance
-from src.config.settings import settings
-from src.services.graph.neo4j_repo import get_driver
-from src.events.publisher import publish_graph_committed
-from src.workers.vector_sync import consume_graph_committed
+from app.config.settings import settings
+from app.services.graph.neo4j_repo import get_driver
+from app.events.publisher import publish_graph_committed
+from app.workers.vector_sync import consume_graph_committed
 import uuid
 
 def test_vector_sync_respects_existing_collection_dimension():

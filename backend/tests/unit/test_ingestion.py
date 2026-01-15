@@ -1,6 +1,6 @@
-from src.workers.ingestion import normalize_text, chunk_text, embed_chunks
+from app.workers.ingestion import normalize_text, chunk_text, embed_chunks
 from qdrant_client import QdrantClient
-from src.config.settings import settings
+from app.config.settings import settings
 
 def test_parse_and_chunk():
     raw = "  Hello\tWorld  " + ("x " * 300)

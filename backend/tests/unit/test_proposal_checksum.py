@@ -1,5 +1,5 @@
-from src.schemas.proposal import Operation, OpType
-from src.services.proposal_service import compute_checksum
+from app.schemas.proposal import Operation, OpType
+from app.services.proposal_service import compute_checksum
 
 def test_checksum_stable_with_key_reordering():
     ops1 = [

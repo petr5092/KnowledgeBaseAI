@@ -1,5 +1,5 @@
-from src.core.context import set_tenant_id, get_tenant_id
-from src.db.dao_base import DaoBase, TenantRequiredError
+from app.core.context import set_tenant_id, get_tenant_id
+from app.db.dao_base import DaoBase, TenantRequiredError
 
 def test_dao_requires_tenant():
     set_tenant_id(None)

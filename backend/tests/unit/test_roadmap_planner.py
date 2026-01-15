@@ -1,5 +1,5 @@
-from src.services.roadmap_planner import plan_route
-from src.services.graph.neo4j_repo import get_driver
+from app.services.roadmap_planner import plan_route
+from app.services.graph.neo4j_repo import get_driver
 
 def test_plan_route_orders_by_priority():
     drv = get_driver()

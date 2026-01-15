@@ -1,9 +1,9 @@
-from src.schemas.proposal import Operation, OpType, ProposalStatus
-from src.services.proposal_service import create_draft_proposal
-from src.db.pg import ensure_tables, get_conn
-from src.workers.commit import commit_proposal
-from src.workers.outbox_publisher import process_once
-from src.events.publisher import get_redis
+from app.schemas.proposal import Operation, OpType, ProposalStatus
+from app.services.proposal_service import create_draft_proposal
+from app.db.pg import ensure_tables, get_conn
+from app.workers.commit import commit_proposal
+from app.workers.outbox_publisher import process_once
+from app.events.publisher import get_redis
 import json, uuid
 
 def test_outbox_publisher_publishes_graph_committed():

@@ -1,8 +1,8 @@
-from src.workers.ingestion import normalize_text, chunk_text, embed_chunks
-from src.services.proposal_service import create_draft_proposal
-from src.schemas.proposal import Operation, OpType, ProposalStatus
-from src.db.pg import ensure_tables, get_conn
-from src.services.diff import build_diff
+from app.workers.ingestion import normalize_text, chunk_text, embed_chunks
+from app.services.proposal_service import create_draft_proposal
+from app.schemas.proposal import Operation, OpType, ProposalStatus
+from app.db.pg import ensure_tables, get_conn
+from app.services.diff import build_diff
 import json
 
 def test_diff_contains_chunk_text():

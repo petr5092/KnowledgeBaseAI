@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 os.environ["PG_DSN"] = ""
 os.environ["JWT_SECRET_KEY"] = "test-secret"
 
-from src.main import app
+from app.main import app
 
 
 def test_register_login_me_without_pg(monkeypatch):

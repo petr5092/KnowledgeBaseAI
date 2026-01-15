@@ -1,6 +1,6 @@
 import pytest
-from src.schemas.proposal import Operation, OpType
-from src.services.proposal_service import validate_operations
+from app.schemas.proposal import Operation, OpType
+from app.services.proposal_service import validate_operations
 
 def test_evidence_required_for_create():
     ops = [

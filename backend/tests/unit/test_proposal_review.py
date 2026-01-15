@@ -1,7 +1,7 @@
-from src.schemas.proposal import Operation, OpType, ProposalStatus
-from src.services.proposal_service import create_draft_proposal
-from src.db.pg import ensure_tables, get_conn, get_proposal, get_graph_version
-from src.workers.commit import commit_proposal
+from app.schemas.proposal import Operation, OpType, ProposalStatus
+from app.services.proposal_service import create_draft_proposal
+from app.db.pg import ensure_tables, get_conn, get_proposal, get_graph_version
+from app.workers.commit import commit_proposal
 
 def test_approve_and_commit_flow():
     ensure_tables()

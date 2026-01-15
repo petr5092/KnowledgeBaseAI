@@ -1,8 +1,8 @@
 import os, json, uuid
-from src.schemas.proposal import Operation, OpType, ProposalStatus
-from src.services.proposal_service import create_draft_proposal
-from src.db.pg import ensure_tables, get_conn
-from src.workers.commit import commit_proposal
+from app.schemas.proposal import Operation, OpType, ProposalStatus
+from app.services.proposal_service import create_draft_proposal
+from app.db.pg import ensure_tables, get_conn
+from app.workers.commit import commit_proposal
 
 def test_commit_fails_on_skill_based_on_exceeding_max():
     ensure_tables()

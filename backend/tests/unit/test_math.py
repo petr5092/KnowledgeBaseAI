@@ -1,4 +1,4 @@
-from src.core.math import w_edge, ema
+from app.core.math import w_edge, ema
 
 def test_w_edge_clip_bounds():
     assert w_edge(100, 100, 100, 0.0) == 10.0

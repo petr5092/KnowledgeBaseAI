@@ -1,8 +1,8 @@
 import json, uuid
 from redis import Redis
-from src.config.settings import settings
-from src.db.pg import ensure_tables, get_conn
-from src.workers.outbox_publisher import process_once
+from app.config.settings import settings
+from app.db.pg import ensure_tables, get_conn
+from app.workers.outbox_publisher import process_once
 
 def test_outbox_publishes_graph_committed_to_redis():
     ensure_tables()

@@ -1,4 +1,4 @@
-from src.services.embeddings.provider import HashEmbeddingProvider
+from app.services.embeddings.provider import HashEmbeddingProvider
 
 def test_hash_embedding_provider_dim():
     p8 = HashEmbeddingProvider(dim=8)

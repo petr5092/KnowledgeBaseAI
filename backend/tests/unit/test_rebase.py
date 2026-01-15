@@ -1,5 +1,5 @@
-from src.db.pg import ensure_tables, set_graph_version, add_graph_change
-from src.services.rebase import rebase_check, RebaseResult
+from app.db.pg import ensure_tables, set_graph_version, add_graph_change
+from app.services.rebase import rebase_check, RebaseResult
 import uuid
 
 def test_same_version():

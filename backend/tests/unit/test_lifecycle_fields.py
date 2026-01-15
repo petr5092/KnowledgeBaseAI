@@ -1,8 +1,8 @@
-from src.schemas.proposal import Operation, OpType, ProposalStatus
-from src.services.proposal_service import create_draft_proposal
-from src.db.pg import ensure_tables, get_conn
-from src.workers.commit import commit_proposal
-from src.services.graph.neo4j_repo import node_by_uid
+from app.schemas.proposal import Operation, OpType, ProposalStatus
+from app.services.proposal_service import create_draft_proposal
+from app.db.pg import ensure_tables, get_conn
+from app.workers.commit import commit_proposal
+from app.services.graph.neo4j_repo import node_by_uid
 import json
 
 def test_created_node_has_lifecycle_and_created_at():

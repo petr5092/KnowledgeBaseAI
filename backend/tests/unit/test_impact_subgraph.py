@@ -1,8 +1,8 @@
-from src.db.pg import ensure_tables, get_conn
-from src.services.impact import impact_subgraph_for_proposal
-from src.services.proposal_service import create_draft_proposal
-from src.schemas.proposal import Operation, OpType, ProposalStatus
-from src.services.graph.neo4j_repo import get_driver
+from app.db.pg import ensure_tables, get_conn
+from app.services.impact import impact_subgraph_for_proposal
+from app.services.proposal_service import create_draft_proposal
+from app.schemas.proposal import Operation, OpType, ProposalStatus
+from app.services.graph.neo4j_repo import get_driver
 import json, uuid
 
 def test_impact_subgraph_collects_neighbors_from_diff_items():

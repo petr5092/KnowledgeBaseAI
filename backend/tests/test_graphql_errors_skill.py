@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from src.main import app
+from app.main import app
 
 def test_graphql_errors_by_skill(monkeypatch):
     client = TestClient(app)

@@ -3,7 +3,7 @@ import os
 
 os.environ["PG_DSN"] = ""
 
-from src.main import app
+from app.main import app
 
 def test_admin_curriculum_without_pg(monkeypatch):
     monkeypatch.setenv('PG_DSN', '')

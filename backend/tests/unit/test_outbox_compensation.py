@@ -1,5 +1,5 @@
-from src.db.pg import ensure_tables, get_conn
-from src.workers.outbox_publisher import process_once
+from app.db.pg import ensure_tables, get_conn
+from app.workers.outbox_publisher import process_once
 import json
 
 def test_outbox_marks_failed_on_unsupported_event():

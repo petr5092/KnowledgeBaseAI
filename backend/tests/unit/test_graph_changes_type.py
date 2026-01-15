@@ -1,7 +1,7 @@
-from src.db.pg import ensure_tables, get_conn
-from src.schemas.proposal import Operation, OpType, ProposalStatus
-from src.services.proposal_service import create_draft_proposal
-from src.workers.commit import commit_proposal
+from app.db.pg import ensure_tables, get_conn
+from app.schemas.proposal import Operation, OpType, ProposalStatus
+from app.services.proposal_service import create_draft_proposal
+from app.workers.commit import commit_proposal
 import json, uuid
 
 def test_graph_changes_insert_includes_change_type():

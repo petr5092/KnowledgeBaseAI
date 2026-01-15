@@ -161,6 +161,24 @@ def remove_orphans(session) -> Dict[str,List[str]]:
         session.run(f"UNWIND $uids AS u MATCH (n) WHERE n.uid=u DETACH DELETE n", {"uids": uids})
     return report
 
+def ensure_tenant_id(session, default_tenant="default") -> int:
+    # Set tenant_id for all nodes that don't have it
+    res = session.run(
+        "MATCH (n) WHERE n.tenant_id IS NULL SET n.tenant_id=$tid RETURN count(n) AS c",
+        {"tid": default_tenant}
+    ).single()
+    return res["c"] if res else 0
+
+def delete_user_artifacts(session) -> Dict[str,int]:
+    # Delete User nodes and COMPLETED/EVIDENCED_BY relationships
+    res_users = session.run("MATCH (u:User) DETACH DELETE u RETURN count(u) AS c").single()
+    deleted_users = res_users["c"] if res_users else 0
+    
+    res_rels = session.run("MATCH ()-[r:COMPLETED|EVIDENCED_BY]-() DELETE r RETURN count(r) AS c").single()
+    deleted_rels = res_rels["c"] if res_rels else 0
+    
+    return {"deleted_users": deleted_users, "deleted_progress_rels": deleted_rels}
+
 def main():
     if not (NEO4J_URI and NEO4J_USER and NEO4J_PASSWORD):
         print("Neo4j is not configured via env", file=sys.stderr)
@@ -168,9 +186,17 @@ def main():
     drv = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
     with drv.session() as s:
         stats = {}
+        # Pre-cleanup
+        stats.update(delete_user_artifacts(s))
+        
         stats.update(migrate_relationships(s))
         stats.update(ensure_hierarchy(s))
         orphans = remove_orphans(s)
+        
+        # Tenant ID
+        count_tid = ensure_tenant_id(s)
+        stats["nodes_assigned_tenant_id"] = count_tid
+        
     drv.close()
     print(json_dump({"stats": stats, "orphans_removed": {k: len(v) for k, v in orphans.items()}}))
 

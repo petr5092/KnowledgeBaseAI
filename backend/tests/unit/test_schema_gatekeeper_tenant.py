@@ -1,5 +1,5 @@
-from src.db.pg import ensure_schema_version, set_tenant_schema_version
-from src.core.migrations import check_and_gatekeep
+from app.db.pg import ensure_schema_version, set_tenant_schema_version
+from app.core.migrations import check_and_gatekeep
 
 def test_schema_gatekeeper_tenant():
     ensure_schema_version()

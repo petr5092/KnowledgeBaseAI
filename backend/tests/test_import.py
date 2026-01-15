@@ -1,4 +1,4 @@
-from src.services.kb.jsonl_io import load_jsonl
+from app.services.kb.jsonl_io import load_jsonl
 import os
 
 def test_load_jsonl_handles_missing(tmp_path):

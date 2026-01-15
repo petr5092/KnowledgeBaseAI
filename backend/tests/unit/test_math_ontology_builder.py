@@ -1,8 +1,8 @@
 import json
-from src.services.kb.builder import build_mathematics_ontology, enrich_all_topics
-from src.services.kb.jsonl_io import load_jsonl, get_path
-from src.services.graph.utils import sync_from_jsonl
-from src.db.pg import ensure_tables
+from app.services.kb.builder import build_mathematics_ontology, enrich_all_topics
+from app.services.kb.jsonl_io import load_jsonl, get_path
+from app.services.graph.utils import sync_from_jsonl
+from app.db.pg import ensure_tables
 
 def test_build_mathematics_ontology_jsonl():
     res = build_mathematics_ontology()

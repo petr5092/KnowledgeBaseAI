@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 from pydantic import BaseModel, EmailStr
 
-from src.api.errors import (
+from app.api.errors import (
     http_exception_handler,
     validation_exception_handler,
     global_exception_handler

@@ -1,10 +1,10 @@
 import warnings, pytest
 warnings.filterwarnings("ignore")
-from src.db.pg import get_conn, ensure_tables
-from src.events.publisher import get_redis
-from src.services.graph.neo4j_repo import get_driver
+from app.db.pg import get_conn, ensure_tables
+from app.events.publisher import get_redis
+from app.services.graph.neo4j_repo import get_driver
 import os
-from src.services import impact as impact_mod
+from app.services import impact as impact_mod
 
 @pytest.fixture(autouse=True)
 def _clean_db():

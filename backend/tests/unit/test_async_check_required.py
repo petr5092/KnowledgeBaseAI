@@ -1,8 +1,8 @@
 import os
-from src.schemas.proposal import Operation, OpType, ProposalStatus
-from src.services.proposal_service import create_draft_proposal
-from src.db.pg import ensure_tables, get_conn
-from src.workers.commit import commit_proposal
+from app.schemas.proposal import Operation, OpType, ProposalStatus
+from app.services.proposal_service import create_draft_proposal
+from app.db.pg import ensure_tables, get_conn
+from app.workers.commit import commit_proposal
 import json
 
 def test_async_check_triggers_on_threshold():

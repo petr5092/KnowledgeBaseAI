@@ -1,4 +1,4 @@
-from src.events.publisher import publish_graph_committed, get_redis
+from app.events.publisher import publish_graph_committed, get_redis
 import json, uuid
 
 def test_publish_graph_committed_pushes_to_list():

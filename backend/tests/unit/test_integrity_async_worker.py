@@ -1,7 +1,7 @@
-from src.db.pg import ensure_tables, get_conn
-from src.schemas.proposal import Operation, OpType, ProposalStatus
-from src.services.proposal_service import create_draft_proposal
-from src.workers.integrity_async import process_once
+from app.db.pg import ensure_tables, get_conn
+from app.schemas.proposal import Operation, OpType, ProposalStatus
+from app.services.proposal_service import create_draft_proposal
+from app.workers.integrity_async import process_once
 import json
 
 def test_integrity_async_marks_ready_for_valid_ops():

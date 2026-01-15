@@ -1,5 +1,5 @@
-from src.events.publisher import get_redis, publish_graph_committed
-from src.workers.vector_sync import consume_graph_committed
+from app.events.publisher import get_redis, publish_graph_committed
+from app.workers.vector_sync import consume_graph_committed
 import uuid, json
 
 def test_consume_graph_committed_no_targets():

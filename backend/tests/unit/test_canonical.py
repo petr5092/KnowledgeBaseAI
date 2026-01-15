@@ -1,4 +1,4 @@
-from src.core.canonical import (
+from app.core.canonical import (
     normalize_text,
     canonical_json,
     hash_sha256,
