@@ -2,6 +2,19 @@
 
 React + TypeScript + Vite приложение для визуализации и управления графом знаний, интегрированное с ИИ-ассистентом.
 
+## Документация
+
+Полная документация доступна в мастер-индексе: [docs/INDEX.md](file:///c:/Users/freak/TRAE/KnowledgeBaseAI/docs/INDEX.md)
+
+Ключевые разделы:
+- Архитектура и конвейер предложений (Proposal): [ARCHITECTURE.md](file:///c:/Users/freak/TRAE/KnowledgeBaseAI/docs/ARCHITECTURE.md)
+- Каноническая спецификация графа (CANON): [CANONICAL_SPEC.md](file:///c:/Users/freak/TRAE/KnowledgeBaseAI/docs/CANONICAL_SPEC.md)
+- API справочник: [API_REFERENCE.md](file:///c:/Users/freak/TRAE/KnowledgeBaseAI/docs/API_REFERENCE.md)
+- Векторный поиск и индексация: [VECTOR_SPEC.md](file:///c:/Users/freak/TRAE/KnowledgeBaseAI/docs/VECTOR_SPEC.md)
+- Деплой: [DEPLOYMENT.md](file:///c:/Users/freak/TRAE/KnowledgeBaseAI/docs/DEPLOYMENT.md)
+- Миграция данных: [MIGRATION_GUIDE.md](file:///c:/Users/freak/TRAE/KnowledgeBaseAI/docs/MIGRATION_GUIDE.md)
+- Руководство разработчика: [DEVELOPER_GUIDE.md](file:///c:/Users/freak/TRAE/KnowledgeBaseAI/docs/DEVELOPER_GUIDE.md)
+
 ---
 
 ## 🛠️ Запуск и Разработка
