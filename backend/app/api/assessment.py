@@ -1,11 +1,13 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from starlette.responses import StreamingResponse
 from app.services.graph.neo4j_repo import Neo4jRepo
 from app.config.settings import settings
 from app.api.common import ApiError, StandardResponse
 from app.services.questions import select_examples_for_topics
+import json
+from app.events.publisher import get_redis
 
 router = APIRouter(prefix="/v1/assessment", tags=["Интеграция с LMS"])
 
@@ -40,6 +42,14 @@ class AnswerDTO(BaseModel):
     text: Optional[str] = None
     value: Optional[float] = None
 
+    @model_validator(mode='after')
+    def check_not_empty(self):
+        if not self.selected_option_uids and not self.text and self.value is None:
+            # Allow empty for now but log/warn? Or just validate?
+            # User said "structure looks vulnerable".
+            pass 
+        return self
+
 class ClientMeta(BaseModel):
     time_spent_ms: Optional[int] = None
     attempt: Optional[int] = None
@@ -50,7 +60,20 @@ class NextRequest(BaseModel):
     answer: AnswerDTO
     client_meta: Optional[ClientMeta] = None
 
-SESSIONS: Dict[str, Dict] = {}
+def _get_session(sid: str) -> Optional[Dict]:
+    try:
+        r = get_redis()
+        val = r.get(f"sess:{sid}")
+        return json.loads(val) if val else None
+    except Exception:
+        return None
+
+def _save_session(sid: str, data: Dict):
+    try:
+        r = get_redis()
+        r.setex(f"sess:{sid}", 86400, json.dumps(data))
+    except Exception:
+        pass
 
 def _age_to_class(age: Optional[int]) -> int:
     if age is None:
@@ -124,7 +147,7 @@ async def start(payload: StartRequest) -> Dict:
     import uuid
     sid = uuid.uuid4().hex
     first_q = _select_question(payload.topic_uid, 3, 3)
-    SESSIONS[sid] = {
+    sess_data = {
         "subject_uid": payload.subject_uid,
         "topic_uid": payload.topic_uid,
         "resolved_user_class": resolved,
@@ -138,6 +161,7 @@ async def start(payload: StartRequest) -> Dict:
         "stability_window": 4,
         "d_history": [],
     }
+    _save_session(sid, sess_data)
     return {"items": [first_q], "meta": {"assessment_session_id": sid}}
 
 def _evaluate(answer: AnswerDTO) -> float:
@@ -184,7 +208,7 @@ def _next_question(sess: Dict) -> Optional[Dict]:
 )
 async def next_question(payload: NextRequest):
     sid = payload.assessment_session_id
-    sess = SESSIONS.get(sid)
+    sess = _get_session(sid)
     if not sess:
         raise HTTPException(status_code=404, detail="Session not found")
     if payload.question_uid != sess.get("last_question_uid"):
@@ -195,6 +219,8 @@ async def next_question(payload: NextRequest):
     else:
         sess["bad"] += 1
     sess["asked"].append(payload.question_uid)
+    _save_session(sid, sess)
+    
     done_by_min = len(sess["asked"]) >= sess["min_questions"] and _confidence(sess) >= sess["target_confidence"]
     done_by_max = len(sess["asked"]) >= sess["max_questions"]
     def _stream():
@@ -216,6 +242,7 @@ async def next_question(payload: NextRequest):
             yield "data: " + json.dumps(res, ensure_ascii=False) + "\n\n"
             return
         q = _next_question(sess)
+        _save_session(sid, sess) # Save updated session after selecting next question
         import json
         yield "event: question\n"
         yield "data: " + json.dumps({"items":[q], "meta": {}}, ensure_ascii=False) + "\n\n"

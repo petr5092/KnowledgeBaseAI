@@ -32,13 +32,17 @@ class CommitResponse(BaseModel):
     violations: Optional[Dict] = None
     error: Optional[str] = None
 
+class CreateProposalInput(BaseModel):
+    base_graph_version: int = Field(0, description="Версия графа-основания")
+    operations: List[Dict] = Field(..., description="Список операций")
+
 @router.post(
     "",
     summary="Создать черновик заявки",
     description="Создает новую заявку на изменение графа. Проверяет структуру и фиксирует checksum, но не применяет изменения.",
     response_model=StandardResponse,
 )
-async def create_proposal(payload: Dict, tenant_id: str = Depends(require_tenant), x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
+async def create_proposal(payload: CreateProposalInput, tenant_id: str = Depends(require_tenant), x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
     Принимает:
       - base_graph_version: версия графа-основания для ребейза
@@ -50,8 +54,8 @@ async def create_proposal(payload: Dict, tenant_id: str = Depends(require_tenant
       - status: текущий статус (DRAFT)
     """
     try:
-        ops = [Operation.model_validate(o) for o in (payload.get("operations") or [])]
-        base_graph_version = int(payload.get("base_graph_version") or 0)
+        ops = [Operation.model_validate(o) for o in (payload.operations or [])]
+        base_graph_version = int(payload.base_graph_version or 0)
         ensure_tables()
         p = create_draft_proposal(tenant_id, base_graph_version, ops)
         conn = get_conn()

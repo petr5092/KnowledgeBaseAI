@@ -13,7 +13,12 @@ class CreateCurriculumInput(BaseModel):
     standard: str
     language: str
 
-@router.post("/curriculum", summary="Создать учебный план", description="Создает новый учебный план в Postgres и возвращает его идентификатор.")
+class CurriculumResponse(BaseModel):
+    ok: bool
+    id: Optional[int] = None
+    error: Optional[str] = None
+
+@router.post("/curriculum", summary="Создать учебный план", description="Создает новый учебный план в Postgres и возвращает его идентификатор.", response_model=CurriculumResponse)
 async def admin_create_curriculum(payload: CreateCurriculumInput, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
     """
     Принимает:

@@ -1,3 +1,4 @@
+from typing import Any
 import logging
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -6,7 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logger = logging.getLogger("errors")
 
-def http_error_response(status_code: int, message: str, details: any = None):
+def http_error_response(status_code: int, message: str, details: Any = None):
     return JSONResponse(
         status_code=status_code,
         content={

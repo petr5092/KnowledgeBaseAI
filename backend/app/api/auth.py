@@ -75,8 +75,10 @@ def _bearer_token(authorization: str | None) -> str | None:
     return parts[1].strip() or None
 
 
+from typing import Dict, Union
+
 @router.post("/register", summary="Регистрация", description="Создает пользователя и возвращает его идентификатор и email.", response_model=RegisterResponse)
-def register(payload: RegisterPayload):
+def register(payload: RegisterPayload) -> Dict:
     """
     Принимает:
       - email: почта пользователя
@@ -103,7 +105,7 @@ def register(payload: RegisterPayload):
 
 
 @router.post("/login", summary="Вход", description="Проверяет учетные данные и возвращает пару токенов (access/refresh).", response_model=LoginResponse)
-def login(payload: LoginPayload):
+def login(payload: LoginPayload) -> Dict:
     """
     Принимает:
       - email: почта пользователя
@@ -134,7 +136,7 @@ def login(payload: LoginPayload):
 
 
 @router.post("/refresh", summary="Обновление токена", description="Обновляет пару токенов по действительному refresh токену.", response_model=RefreshResponse)
-def refresh(payload: RefreshPayload):
+def refresh(payload: RefreshPayload) -> Dict:
     """
     Принимает:
       - refresh_token: валидный токен обновления
@@ -172,7 +174,7 @@ def refresh(payload: RefreshPayload):
 
 
 @router.get("/me", summary="Текущий пользователь", description="Возвращает информацию о пользователе по access-токену.", response_model=MeResponse)
-def me(authorization: str | None = Header(default=None)):
+def me(authorization: str | None = Header(default=None)) -> Dict:
     """
     Принимает:
       - Authorization: заголовок формата 'Bearer <access_token>'

@@ -21,8 +21,10 @@ from app.api.admin_curriculum import router as admin_curriculum_router
 from app.api.admin_generate import router as admin_generate_router
 from app.api.admin_graph import router as admin_graph_router
 from app.api.levels import router as levels_router
+from app.api.levels import router as levels_router
 from app.api.maintenance import router as maintenance_router
 from app.api.proposals import router as proposals_router
+from app.api.kb import router as kb_router
 from app.api.knowledge import router as knowledge_router
 from app.api.kb import router as kb_router
 from app.api.assessment import router as assessment_router
@@ -95,7 +97,6 @@ app = FastAPI(
     license_info={"name": "Proprietary"},
     redoc_url=None,
 )
-
 app.mount("/static", StaticFiles(directory="src/static"), name="static")
 app.include_router(kb_router)
 
@@ -226,7 +227,6 @@ app.include_router(admin_router)
 app.include_router(admin_curriculum_router)
 app.include_router(admin_generate_router)
 app.include_router(admin_graph_router)
-app.include_router(levels_router)
 app.include_router(maintenance_router)
 app.include_router(proposals_router)
 if graphql_router:
