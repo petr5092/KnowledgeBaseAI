@@ -123,4 +123,5 @@
 
 - **Iteration 1:** [Pending] Waiting to start Phase 1.
 - **Iteration 2:** [Completed] Phase 1 executed. Removed hardcoded Math ontology, added domain_context to LLM prompts, and generalized assessment logic.
+- **Iteration 3:** [Completed] Phase 2 executed. Created Universal Ingestion Engine with Academic and Corporate strategies. Exposed via API `/ingestion/generate_proposal`.
 ```
