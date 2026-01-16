@@ -152,21 +152,6 @@
 > Возвращает:
 >   - объект результата генерации (асинхронные результаты по шагам)
 
-#### Function `generate_subject_import`
-```python
-@router.post('/generate_subject_import', summary='Генерация и импорт', description='Генерирует предмет, импортирует в граф, пересчитывает веса и анализирует знания.')
-```
-`def generate_subject_import(payload: GenerateSubjectInput) -> Dict`
-
-> Принимает:
->   - те же поля, что и generate_subject
-> 
-> Возвращает:
->   - generated: результат генерации
->   - sync: статистика импорта
->   - weights: результаты пересчета весов
->   - metrics: метрики анализа знаний
-
 ### Classes
 #### Class `GenerateSubjectInput(BaseModel)`
 **Fields**:
@@ -897,25 +882,6 @@
 - `error(self, uid: str) -> ErrorNode`
 ---
 
-## File: `backend\app\api\kb.py`
-### Global Variables
-- `router = ...`
-
-### Global Functions
-#### Function `generate_smart`
-```python
-@router.post('/generate_smart')
-```
-`def generate_smart(req: GenerateRequest) -> Dict`
-### Classes
-#### Class `GenerateRequest(BaseModel)`
-**Fields**:
-- `subject: str`
-- `language: str`
-- `import_into_graph: Optional[bool]`
-- `limits: Optional[Dict]`
----
-
 ## File: `backend\app\api\knowledge.py`
 ### Global Variables
 - `router = ...`
@@ -953,162 +919,11 @@
 - `topics: List[TopicItem]`
 ---
 
-## File: `backend\app\api\levels.py`
-### Global Variables
-- `router = ...`
-
-### Global Functions
-#### Function `level_topic`
-```python
-@router.get('/topic/{uid}', summary='Уровень темы', description='Возвращает уровень освоения темы для статeless-пользователя.')
-```
-`def level_topic(uid: str) -> Dict`
-
-> Принимает:
->   - uid: UID темы
-> 
-> Возвращает:
->   - объект уровня навыка/темы согласно алгоритму get_user_topic_level
-
-#### Function `level_skill`
-```python
-@router.get('/skill/{uid}', summary='Уровень навыка', description='Возвращает уровень освоения навыка для статeless-пользователя.')
-```
-`def level_skill(uid: str) -> Dict`
-
-> Принимает:
->   - uid: UID навыка
-> 
-> Возвращает:
->   - объект уровня навыка согласно алгоритму get_user_skill_level
-
----
-
 ## File: `backend\app\api\maintenance.py`
 ### Global Variables
 - `router = ...`
 
 ### Global Functions
-#### Function `kb_rebuild_async`
-```python
-@router.post('/kb/rebuild_async', summary='Асинхронная пересборка KB', description='Запускает задачу пересборки базы знаний (ARQ/Redis), возвращает job_id и WebSocket для прогресса.', response_model=StandardResponse)
-```
-`def kb_rebuild_async(x_tenant_id: str) -> Dict`
-
-> Принимает:
->   - нет входных параметров
-> 
-> Возвращает:
->   - job_id: идентификатор задачи
->   - queued: признак постановки в очередь
->   - ws: путь WebSocket для отслеживания прогресса
-
-#### Function `kb_pipeline_async`
-```python
-@router.post('/kb/pipeline_async', summary='Асинхронный конвейер KB', description='Запускает конвейер пересборки, опционально публикует результаты после валидации.', response_model=StandardResponse)
-```
-`def kb_pipeline_async(auto_publish: bool, x_tenant_id: str) -> Dict`
-
-> Принимает:
->   - auto_publish: публиковать ли автоматически после успешной валидации
-> 
-> Возвращает:
->   - job_id: идентификатор задачи
->   - queued: признак постановки в очередь
->   - ws: путь WebSocket
->   - auto_publish: отражение входного параметра
-
-#### Function `kb_rebuild_status`
-```python
-@router.get('/kb/rebuild_status', summary='Статус пересборки', description='Возвращает статус задачи пересборки по job_id.', response_model=StandardResponse)
-```
-`def kb_rebuild_status(job_id: str) -> Dict`
-
-> Принимает:
->   - job_id: идентификатор задачи
-> 
-> Возвращает:
->   - объект статуса пересборки
-
-#### Function `kb_rebuild_state`
-```python
-@router.get('/kb/rebuild_state', summary='Текущее состояние пересборки', description='Возвращает текущее состояние пересборки (из Redis) или из резервного источника.', response_model=StandardResponse)
-```
-`def kb_rebuild_state(job_id: str) -> Dict`
-
-> Принимает:
->   - job_id: идентификатор задачи
-> 
-> Возвращает:
->   - объект текущего состояния
-
-#### Function `kb_validate_state`
-```python
-@router.get('/kb/validate_state', summary='Состояние валидации', description='Возвращает состояние результата валидации по job_id.', response_model=StandardResponse)
-```
-`def kb_validate_state(job_id: str) -> Dict`
-
-> Принимает:
->   - job_id: идентификатор задачи
-> 
-> Возвращает:
->   - объект результата валидации
-
-#### Function `kb_validate_async`
-```python
-@router.post('/kb/validate_async', summary='Асинхронная валидация', description='Ставит задачу валидации графа в очередь.', response_model=StandardResponse)
-```
-`def kb_validate_async(job_id: str, subject_uid: str | None, x_tenant_id: str) -> Dict`
-
-> Принимает:
->   - job_id: идентификатор задачи
->   - subject_uid: опционально, конкретный предмет для валидации
-> 
-> Возвращает:
->   - job_id: идентификатор задачи
->   - queued: признак постановки в очередь
->   - ws: путь WebSocket
-
-#### Function `kb_publish`
-```python
-@router.post('/kb/publish', summary='Публикация валидированного графа', description='Публикует результат пересборки, если валидация прошла успешно.', response_model=StandardResponse)
-```
-`def kb_publish(job_id: str, x_tenant_id: str) -> Dict`
-
-> Принимает:
->   - job_id: идентификатор задачи валидации
-> 
-> Возвращает:
->   - ok: признак успеха
->   - published_at: отметка времени публикации
->   - job_id: идентификатор задачи
-
-#### Function `kb_published`
-```python
-@router.get('/kb/published', summary='Текущая опубликованная версия', description='Возвращает метаданные последней опубликованной версии графа.', response_model=StandardResponse)
-```
-`def kb_published() -> Dict`
-
-> Принимает:
->   - нет входных параметров
-> 
-> Возвращает:
->   - status: 'none' если не публиковалось
->   - иначе объект метаданных публикации
-
-#### Function `recompute_links`
-```python
-@router.post('/recompute_links', summary='Пересчет весов связей', description='Пересчитывает статические веса отношений в графе.', response_model=StandardResponse)
-```
-`def recompute_links(x_tenant_id: str) -> Dict`
-
-> Принимает:
->   - нет входных параметров
-> 
-> Возвращает:
->   - ok: True
->   - stats: объект статистики пересчета
-
 #### Function `run_integrity_async`
 ```python
 @router.post('/proposals/run_integrity_async', summary='Асинхронная проверка целостности заявок', description='Запускает проверку заявок на целостность в фоне.', response_model=StandardResponse)
@@ -1136,18 +951,6 @@
 >   - processed: количество опубликованных событий
 
 ### Classes
-#### Class `JobQueuedResponse(BaseModel)`
-**Fields**:
-- `job_id: str`
-- `queued: bool`
-- `ws: Optional[str]`
-- `auto_publish: Optional[bool]`
-#### Class `PublishResponse(BaseModel)`
-**Fields**:
-- `ok: bool`
-- `published_at: Optional[int]`
-- `job_id: Optional[str]`
-- `status: Optional[str]`
 #### Class `ProcessedResponse(BaseModel)`
 **Fields**:
 - `ok: bool`
@@ -1346,44 +1149,6 @@
 - `score: float`
 - `prior_mastery: float`
 - `confidence: Optional[float]`
----
-
-## File: `backend\app\api\user.py`
-### Global Variables
-- `router = ...`
-
-### Global Functions
-#### Function `compute_topic_weight`
-```python
-@router.post('/compute_topic_weight')
-```
-`def compute_topic_weight(payload: ComputeTopicInput) -> Dict`
-#### Function `compute_skill_weight`
-```python
-@router.post('/compute_skill_weight')
-```
-`def compute_skill_weight(payload: ComputeSkillInput) -> Dict`
-#### Function `user_roadmap`
-```python
-@router.post('/roadmap')
-```
-`def user_roadmap(payload: UserRoadmapInput) -> Dict`
-### Classes
-#### Class `ComputeTopicInput(BaseModel)`
-**Fields**:
-- `topic_uid: str`
-- `score: float`
-- `base_weight: float | None`
-#### Class `ComputeSkillInput(BaseModel)`
-**Fields**:
-- `skill_uid: str`
-- `score: float`
-- `base_weight: float | None`
-#### Class `UserRoadmapInput(BaseModel)`
-**Fields**:
-- `subject_uid: str | None`
-- `progress: Dict[str, float]`
-- `limit: int`
 ---
 
 ## File: `backend\app\api\validation.py`
@@ -1920,99 +1685,6 @@
 - `write_unwind(self, query: str, rows: List[Dict], chunk_size: int) -> None`
 ---
 
-## File: `backend\app\services\graph\utils.py`
-### Global Functions
-#### Function `compute_user_weight`
-`def compute_user_weight(base_weight: float, score: float) -> float`
-#### Function `compute_topic_user_weight`
-`def compute_topic_user_weight(topic_uid: str, score: float, base_weight: float | None) -> Dict`
-#### Function `compute_skill_user_weight`
-`def compute_skill_user_weight(skill_uid: str, score: float, base_weight: float | None) -> Dict`
-#### Function `knowledge_level_from_weight`
-`def knowledge_level_from_weight(weight: float) -> str`
-#### Function `ensure_constraints`
-`def ensure_constraints(session) -> None`
-#### Function `ensure_weight_defaults`
-`def ensure_weight_defaults(session) -> None`
-#### Function `ensure_weight_defaults_repo`
-`def ensure_weight_defaults_repo(repo: Neo4jRepo) -> None`
-#### Function `sync_from_jsonl`
-`def sync_from_jsonl() -> Dict`
-#### Function `sync_from_jsonl_dir`
-`def sync_from_jsonl_dir(base_dir: str) -> Dict`
-#### Function `sync_from_jsonl_dir_sections`
-`def sync_from_jsonl_dir_sections(base_dir: str, section_uids: List[str]) -> Dict`
-#### Function `sync_from_jsonl_dir_subsections`
-`def sync_from_jsonl_dir_subsections(base_dir: str, subsection_uids: List[str]) -> Dict`
-#### Function `build_graph_from_neo4j`
-`def build_graph_from_neo4j(subject_filter: str | None) -> Dict`
-#### Function `analyze_knowledge`
-`def analyze_knowledge(subject_uid: str | None) -> Dict`
-#### Function `update_dynamic_weight`
-`def update_dynamic_weight(topic_uid: str, score: float) -> Dict`
-#### Function `update_skill_dynamic_weight`
-`def update_skill_dynamic_weight(skill_uid: str, score: float) -> Dict`
-#### Function `get_current_knowledge_level`
-`def get_current_knowledge_level(topic_uid: str) -> Dict`
-#### Function `get_current_skill_level`
-`def get_current_skill_level(skill_uid: str) -> Dict`
-#### Function `build_adaptive_roadmap`
-`def build_adaptive_roadmap(subject_uid: str | None, limit: int) -> List[Dict]`
-#### Function `build_user_roadmap_stateless`
-`def build_user_roadmap_stateless(subject_uid: str | None, user_topic_weights: Dict[str, float], user_skill_weights: Dict[str, float] | None, limit: int, penalty_factor: float) -> List[Dict]`
-#### Function `recompute_relationship_weights`
-`def recompute_relationship_weights() -> Dict`
-#### Function `recompute_adaptive_for_skill`
-`def recompute_adaptive_for_skill(skill_uid: str) -> Dict`
-#### Function `update_user_topic_weight`
-`def update_user_topic_weight(user_id: str, topic_uid: str, score: float) -> Dict`
-#### Function `update_user_skill_weight`
-`def update_user_skill_weight(user_id: str, skill_uid: str, score: float) -> Dict`
-#### Function `get_user_topic_level`
-`def get_user_topic_level(user_id: str, topic_uid: str) -> Dict`
-#### Function `get_user_skill_level`
-`def get_user_skill_level(user_id: str, skill_uid: str) -> Dict`
-#### Function `build_user_roadmap`
-`def build_user_roadmap(user_id: str, subject_uid: str | None, limit: int, penalty_factor: float) -> List[Dict]`
-#### Function `complete_user_topic`
-`def complete_user_topic(user_id: str, topic_uid: str, time_spent_sec: float, errors: int) -> Dict`
-#### Function `complete_user_skill`
-`def complete_user_skill(user_id: str, skill_uid: str, time_spent_sec: float, errors: int) -> Dict`
-#### Function `search_titles`
-`def search_titles(q: str, limit: int) -> List[Dict]`
-#### Function `health`
-`def health() -> Dict`
-#### Function `list_items`
-`def list_items(kind: str, subject_uid: str | None, section_uid: str | None) -> List[Dict]`
-#### Function `get_node_details`
-`def get_node_details(uid: str) -> Dict`
-#### Function `fix_orphan_section`
-`def fix_orphan_section(section_uid: str, subject_uid: str) -> Dict`
-#### Function `compute_static_weights`
-`def compute_static_weights() -> Dict`
-#### Function `analyze_prereqs`
-`def analyze_prereqs(subject_uid: str | None) -> Dict`
-#### Function `add_prereqs_heuristic`
-`def add_prereqs_heuristic() -> Dict`
-#### Function `link_remaining_skills_methods`
-`def link_remaining_skills_methods() -> Dict`
-#### Function `link_skill_to_best`
-`def link_skill_to_best(skill_uid: str, method_candidates: List[str]) -> Dict`
----
-
-## File: `backend\app\services\jobs\rebuild.py`
-### Global Variables
-- `_jobs: Dict[str, Dict]`
-
-### Global Functions
-#### Function `_run_job`
-`def _run_job(job_id: str) -> None`
-#### Function `start_rebuild_async`
-`def start_rebuild_async() -> Dict`
-#### Function `get_job_status`
-`def get_job_status(job_id: str) -> Dict`
----
-
 ## File: `backend\app\services\kb\builder.py`
 ### Global Variables
 - `BASE_DIR = ...`
@@ -2196,20 +1868,7 @@
 ---
 
 ## File: `backend\app\tasks\worker.py`
-### Global Variables
-- `KB_STATE_TTL_SEC = ...`
-
 ### Global Functions
-#### Function `publish_progress`
-`def publish_progress(ctx, job_id: str, step: str, payload: dict) -> None`
-#### Function `persist_kb_rebuild_state`
-`def persist_kb_rebuild_state(ctx, job_id: str, state: dict) -> None`
-#### Function `magic_fill_job`
-`def magic_fill_job(ctx, job_id: str, topic_uid: str, topic_title: str) -> None`
-#### Function `kb_validate_job`
-`def kb_validate_job(ctx, job_id: str, subject_uid: str | None, auto_publish: bool) -> None`
-#### Function `kb_rebuild_job`
-`def kb_rebuild_job(ctx, job_id: str, auto_publish: bool) -> None`
 #### Function `vector_consume_job`
 `def vector_consume_job(ctx) -> None`
 #### Function `outbox_publish_job`

@@ -12,6 +12,7 @@ class GenerateSubjectInput(BaseModel):
     subject_uid: str
     subject_title: str
     language: str = "ru"
+    domain_context: str = "Academic Subject"
     sections_seed: List[str] | None = None
     topics_per_section: int = 6
     skills_per_topic: int = 3
@@ -26,6 +27,7 @@ async def generate_subject(payload: GenerateSubjectInput) -> Dict:
       - subject_uid: UID предмета
       - subject_title: название предмета
       - language: язык генерации
+      - domain_context: контекст (например, "Academic Subject", "Corporate Manual")
       - параметры глубины генерации: sections_seed, topics_per_section, skills_per_topic, methods_per_skill, examples_per_topic, concurrency
 
     Возвращает:
@@ -35,6 +37,7 @@ async def generate_subject(payload: GenerateSubjectInput) -> Dict:
         payload.subject_uid,
         payload.subject_title,
         payload.language,
+        domain_context=payload.domain_context,
         sections_seed=payload.sections_seed,
         topics_per_section=payload.topics_per_section,
         skills_per_topic=payload.skills_per_topic,

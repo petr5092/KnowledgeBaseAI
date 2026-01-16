@@ -621,244 +621,6 @@ async def generate_subject_with_llm(subject_title: str, language: str, limits: D
     normalize_kb_dir(base_dir)
     return {'ok': True, 'base_dir': base_dir}
 
-MATHEMATICS_ONTOLOGY: Dict = {
-    'subject': 'MATH',
-    'sections': [
-        {'title': 'Математические основания', 'subsections': [
-            {'title': 'Логика', 'topics': [
-                {'title': 'Высказывания', 'prereqs': []},
-                {'title': 'Логические связки', 'prereqs': ['Высказывания']},
-                {'title': 'Таблицы истинности', 'prereqs': ['Логические связки']},
-                {'title': 'Логические законы', 'prereqs': ['Таблицы истинности']},
-                {'title': 'Кванторы', 'prereqs': ['Логические законы']},
-                {'title': 'Методы доказательства', 'prereqs': ['Кванторы']}
-            ]},
-            {'title': 'Теория множеств', 'topics': [
-                {'title': 'Понятие множества', 'prereqs': []},
-                {'title': 'Операции над множествами', 'prereqs': ['Понятие множества']},
-                {'title': 'Отношения', 'prereqs': ['Операции над множествами']},
-                {'title': 'Отображения', 'prereqs': ['Отношения']},
-                {'title': 'Эквивалентность и порядок', 'prereqs': ['Отношения']}
-            ]}
-        ]},
-        {'title': 'Числа и структуры', 'subsections': [
-            {'title': 'Числовые системы', 'topics': [
-                {'title': 'Натуральные числа', 'prereqs': []},
-                {'title': 'Целые числа', 'prereqs': ['Натуральные числа']},
-                {'title': 'Рациональные числа', 'prereqs': ['Целые числа']},
-                {'title': 'Действительные числа', 'prereqs': ['Рациональные числа']},
-                {'title': 'Комплексные числа', 'prereqs': ['Действительные числа']}
-            ]},
-            {'title': 'Арифметическая структура', 'topics': [
-                {'title': 'Операции и свойства', 'prereqs': ['Натуральные числа']},
-                {'title': 'Делимость', 'prereqs': ['Целые числа']},
-                {'title': 'Простые числа', 'prereqs': ['Делимость']},
-                {'title': 'НОД и НОК', 'prereqs': ['Делимость']}
-            ]}
-        ]},
-        {'title': 'Алгебра', 'subsections': [
-            {'title': 'Алгебраические выражения', 'topics': [
-                {'title': 'Переменные и выражения', 'prereqs': ['Операции и свойства']},
-                {'title': 'Степени', 'prereqs': ['Переменные и выражения']},
-                {'title': 'Корни', 'prereqs': ['Степени', 'Действительные числа']},
-                {'title': 'Многочлены', 'prereqs': ['Переменные и выражения']},
-                {'title': 'Факторизация', 'prereqs': ['Многочлены']}
-            ]},
-            {'title': 'Уравнения', 'topics': [
-                {'title': 'Линейные уравнения', 'prereqs': ['Переменные и выражения']},
-                {'title': 'Квадратные уравнения', 'prereqs': ['Многочлены']},
-                {'title': 'Дискриминант', 'prereqs': ['Квадратные уравнения']},
-                {'title': 'Рациональные уравнения', 'prereqs': ['Линейные уравнения']},
-                {'title': 'Иррациональные уравнения', 'prereqs': ['Корни']},
-                {'title': 'Системы уравнений', 'prereqs': ['Линейные уравнения']}
-            ]},
-            {'title': 'Неравенства', 'topics': [
-                {'title': 'Линейные неравенства', 'prereqs': ['Линейные уравнения']},
-                {'title': 'Квадратные неравенства', 'prereqs': ['Квадратные уравнения']},
-                {'title': 'Неравенства с модулем', 'prereqs': ['Действительные числа']},
-                {'title': 'Рациональные неравенства', 'prereqs': ['Рациональные уравнения']}
-            ]}
-        ]},
-        {'title': 'Функции', 'subsections': [
-            {'title': 'Общая теория функций', 'topics': [
-                {'title': 'Функция как отображение', 'prereqs': ['Отображения']},
-                {'title': 'Область определения', 'prereqs': ['Функция как отображение']},
-                {'title': 'График функции', 'prereqs': ['Координаты']},
-                {'title': 'Монотонность', 'prereqs': ['График функции']},
-                {'title': 'Обратная функция', 'prereqs': ['Функция как отображение']}
-            ]},
-            {'title': 'Классы функций', 'topics': [
-                {'title': 'Линейные функции', 'prereqs': ['Линейные уравнения']},
-                {'title': 'Степенные функции', 'prereqs': ['Степени']},
-                {'title': 'Рациональные функции', 'prereqs': ['Рациональные уравнения']},
-                {'title': 'Корневые функции', 'prereqs': ['Корни']},
-                {'title': 'Экспоненциальные функции', 'prereqs': ['Степени']},
-                {'title': 'Логарифмические функции', 'prereqs': ['Экспоненциальные функции']}
-            ]}
-        ]},
-        {'title': 'Геометрия', 'subsections': [
-            {'title': 'Евклидова геометрия', 'topics': [
-                {'title': 'Точка и прямая', 'prereqs': []},
-                {'title': 'Углы', 'prereqs': ['Точка и прямая']},
-                {'title': 'Треугольники', 'prereqs': ['Углы']},
-                {'title': 'Подобие', 'prereqs': ['Треугольники']},
-                {'title': 'Окружность', 'prereqs': ['Треугольники']},
-                {'title': 'Площади', 'prereqs': ['Многоугольники']}
-            ]},
-            {'title': 'Пространственная геометрия', 'topics': [
-                {'title': 'Прямая и плоскость', 'prereqs': ['Евклидова геометрия']},
-                {'title': 'Многогранники', 'prereqs': ['Прямая и плоскость']},
-                {'title': 'Тела вращения', 'prereqs': ['Многогранники']},
-                {'title': 'Объёмы', 'prereqs': ['Площади']}
-            ]}
-        ]},
-        {'title': 'Аналитическая геометрия', 'subsections': [
-            {'title': 'Координатный метод', 'topics': [
-                {'title': 'Декартовы координаты', 'prereqs': ['Действительные числа']},
-                {'title': 'Векторы', 'prereqs': ['Координаты']},
-                {'title': 'Скалярное произведение', 'prereqs': ['Векторы']}
-            ]},
-            {'title': 'Линии и поверхности', 'topics': [
-                {'title': 'Уравнение прямой', 'prereqs': ['Координаты']},
-                {'title': 'Уравнение окружности', 'prereqs': ['Координаты']},
-                {'title': 'Кривые второго порядка', 'prereqs': ['Квадратные уравнения']},
-                {'title': 'Плоскость в пространстве', 'prereqs': ['Векторы']}
-            ]}
-        ]},
-        {'title': 'Тригонометрия', 'subsections': [
-            {'title': 'Основы', 'topics': [
-                {'title': 'Радианная мера', 'prereqs': ['Действительные числа']},
-                {'title': 'Тригонометрические функции', 'prereqs': ['Радианная мера']},
-                {'title': 'Единичная окружность', 'prereqs': ['Тригонометрические функции']}
-            ]},
-            {'title': 'Тождества и уравнения', 'topics': [
-                {'title': 'Тригонометрические тождества', 'prereqs': ['Тригонометрические функции']},
-                {'title': 'Тригонометрические уравнения', 'prereqs': ['Тождества']},
-                {'title': 'Тригонометрические неравенства', 'prereqs': ['Тригонометрические уравнения']}
-            ]}
-        ]},
-        {'title': 'Комбинаторика и вероятность', 'subsections': [
-            {'title': 'Комбинаторика', 'topics': [
-                {'title': 'Правила подсчёта', 'prereqs': ['Натуральные числа']},
-                {'title': 'Перестановки', 'prereqs': ['Правила подсчёта']},
-                {'title': 'Сочетания', 'prereqs': ['Перестановки']},
-                {'title': 'Размещения', 'prereqs': ['Перестановки']}
-            ]},
-            {'title': 'Вероятность', 'topics': [
-                {'title': 'Случайные события', 'prereqs': ['Комбинаторика']},
-                {'title': 'Вероятность', 'prereqs': ['Случайные события']},
-                {'title': 'Условная вероятность', 'prereqs': ['Вероятность']},
-                {'title': 'Формула Байеса', 'prereqs': ['Условная вероятность']}
-            ]}
-        ]},
-        {'title': 'Статистика', 'subsections': [
-            {'title': 'Основы статистики', 'topics': [
-                {'title': 'Выборка', 'prereqs': ['Рациональные числа']},
-                {'title': 'Средние характеристики', 'prereqs': ['Выборка']},
-                {'title': 'Разброс', 'prereqs': ['Средние характеристики']},
-                {'title': 'Корреляция', 'prereqs': ['Разброс']}
-            ]}
-        ]},
-        {'title': 'Линейная алгебра', 'subsections': [
-            {'title': 'Матрицы', 'topics': [
-                {'title': 'Матрицы', 'prereqs': ['Системы уравнений']},
-                {'title': 'Определители', 'prereqs': ['Матрицы']},
-                {'title': 'Обратная матрица', 'prereqs': ['Определители']}
-            ]},
-            {'title': 'Векторные пространства', 'topics': [
-                {'title': 'Линейная комбинация', 'prereqs': ['Векторы']},
-                {'title': 'Базис', 'prereqs': ['Линейная комбинация']},
-                {'title': 'Размерность', 'prereqs': ['Базис']}
-            ]}
-        ]},
-        {'title': 'Математический анализ', 'subsections': [
-            {'title': 'Предел', 'topics': [
-                {'title': 'Предел последовательности', 'prereqs': ['Действительные числа']},
-                {'title': 'Предел функции', 'prereqs': ['Предел последовательности']}
-            ]},
-            {'title': 'Производная', 'topics': [
-                {'title': 'Производная', 'prereqs': ['Предел функции']},
-                {'title': 'Правила дифференцирования', 'prereqs': ['Производная']},
-                {'title': 'Исследование функций', 'prereqs': ['Производная']}
-            ]},
-            {'title': 'Интеграл', 'topics': [
-                {'title': 'Первообразная', 'prereqs': ['Производная']},
-                {'title': 'Определённый интеграл', 'prereqs': ['Предел функции']},
-                {'title': 'Применения интеграла', 'prereqs': ['Определённый интеграл']}
-            ]}
-        ]},
-        {'title': 'Дискретная математика', 'subsections': [
-            {'title': 'Булева логика', 'topics': [
-                {'title': 'Булевы функции', 'prereqs': ['Логика']},
-                {'title': 'Законы булевой алгебры', 'prereqs': ['Булевы функции']}
-            ]},
-            {'title': 'Теория графов', 'topics': [
-                {'title': 'Графы', 'prereqs': ['Множества']},
-                {'title': 'Пути и циклы', 'prereqs': ['Графы']},
-                {'title': 'Деревья', 'prereqs': ['Пути и циклы']}
-            ]}
-        ]}
-    ]
-}
-
-def build_mathematics_ontology() -> Dict:
-    subj = add_subject(MATHEMATICS_ONTOLOGY['subject'])
-    subject_uid = subj['uid']
-    topic_map: Dict[str, str] = {}
-    sections_defs = MATHEMATICS_ONTOLOGY.get('sections', [])
-    sec_uids: List[str] = []
-    for sec in sections_defs:
-        s = add_section(subject_uid, sec.get('title',''))
-        sec_uids.append(s['uid'])
-        for sub in sec.get('subsections', []):
-            ss = add_subsection(s['uid'], sub.get('title',''))
-            for t in sub.get('topics', []):
-                tt = add_topic_to_subsection(ss['uid'], t.get('title',''))
-                topic_map[t.get('title','')] = tt['uid']
-    edges: List[Tuple[str,str]] = []
-    for sec in sections_defs:
-        for sub in sec.get('subsections', []):
-            for t in sub.get('topics', []):
-                tu = topic_map.get(t.get('title',''))
-                for pre_title in t.get('prereqs', []):
-                    pu = topic_map.get(pre_title)
-                    if tu and pu:
-                        edges.append((tu, pu))
-    adj: Dict[str, List[str]] = {}
-    for a, b in edges:
-        adj.setdefault(a, []).append(b)
-    visited: Dict[str, int] = {}
-    def _dfs(u: str) -> bool:
-        visited[u] = 1
-        for v in adj.get(u, []):
-            if visited.get(v, 0) == 1:
-                return False
-            if visited.get(v, 0) == 0:
-                if not _dfs(v):
-                    return False
-        visited[u] = 2
-        return True
-    good_edges: List[Tuple[str,str]] = []
-    for a, b in edges:
-        for k in list(visited.keys()):
-            visited[k] = 0
-        adj.setdefault(a, [])
-        if b not in adj[a]:
-            adj[a].append(b)
-        ok = True
-        for node in topic_map.values():
-            if visited.get(node, 0) == 0:
-                if not _dfs(node):
-                    ok = False
-                    break
-        if ok:
-            good_edges.append((a, b))
-        adj[a].remove(b)
-    for a, b in good_edges:
-        link_topic_prereq(a, b, 1.0)
-    normalize_kb()
-    return {'ok': True, 'subject_uid': subject_uid, 'sections': len(sec_uids), 'topics': len(topic_map), 'prereqs': len(good_edges)}
-
 async def generate_examples_for_topic_openai_async(topic_title: str, count: int = 3, difficulty: int = 3) -> List[Dict]:
     messages = [
         {'role': 'system', 'content': 'Сгенерируй учебные задачи, верни JSONL с полями title и statement.'},
@@ -878,16 +640,16 @@ async def generate_examples_for_topic_openai_async(topic_title: str, count: int 
             continue
     return items
 
-async def generate_subject_openai_async(subject_uid: str, subject_title: str, language: str, sections_seed: Optional[List[str]] = None, topics_per_section: int = 6, skills_per_topic: int = 3, methods_per_skill: int = 2, examples_per_topic: int = 3, concurrency: int = 4) -> Dict:
+async def generate_subject_openai_async(subject_uid: str, subject_title: str, language: str, domain_context: str = "Academic Subject", sections_seed: Optional[List[str]] = None, topics_per_section: int = 6, skills_per_topic: int = 3, methods_per_skill: int = 2, examples_per_topic: int = 3, concurrency: int = 4) -> Dict:
     add_subject(subject_title, uid=subject_uid)
-    sec_titles = sections_seed or await generate_sections_openai_async(subject_title, language, count=5)
+    sec_titles = sections_seed or await generate_sections_openai_async(subject_title, language, domain_context=domain_context, count=5)
     sec_uids: List[str] = []
     for st in sec_titles:
         sec = add_section(subject_uid, st)
         sec_uids.append(sec['uid'])
     topic_defs: List[Tuple[str, Dict]] = []
     for st, suid in zip(sec_titles, sec_uids):
-        tdefs = await generate_topics_for_section_openai_async(st, language, count=topics_per_section)
+        tdefs = await generate_topics_for_section_openai_async(st, language, domain_context=domain_context, count=topics_per_section)
         for td in tdefs:
             tuid = add_topic(suid, td['title'], td.get('description',''))['uid']
             topic_defs.append((tuid, td))
@@ -912,16 +674,6 @@ async def generate_subject_openai_async(subject_uid: str, subject_title: str, la
     normalize_kb()
     return {'ok': True, 'subjects': 1, 'sections': len(sec_uids), 'topics': len(topic_defs)}
 
-def rebuild_subject_math_with_openai(section_title: str = 'Generated Section') -> Dict:
-    subject_uid = 'SUB-MATH'
-    boot = bootstrap_subject_from_skill_topics(subject_uid, section_title=section_title)
-    topics = [t.get('uid') for t in load_jsonl(get_path('topics.jsonl')) if t.get('section_uid') in {s.get('uid') for s in load_jsonl(get_path('sections.jsonl')) if s.get('subject_uid') == subject_uid}]
-    bundles = []
-    for tu in topics:
-        bundles.append(generate_topic_bundle_openai(tu, examples_count=5))
-    normalize_kb()
-    return {'ok': True, 'subjects_updated': 1, 'topics_processed': len(topics), 'bundles': bundles}
-
 def truth_check_openai(text: str, context: Optional[str] = None) -> Dict:
     messages = [
         {'role': 'system', 'content': 'Проверь истинность утверждения. Ответь JSON с полями verdict (true/false) и confidence (0..1).'},
@@ -936,14 +688,14 @@ def truth_check_openai(text: str, context: Optional[str] = None) -> Dict:
     except Exception:
         return {'ok': False, 'error': 'parse failed', 'raw': res.get('content','')}
 
-def bootstrap_subject_from_skill_topics(subject_uid: str, section_title: str = 'Generated Section') -> Dict:
+def bootstrap_subject_from_skill_topics(subject_uid: str, subject_title: str = 'Subject', section_title: str = 'Generated Section') -> Dict:
     subjects = load_jsonl(get_path('subjects.jsonl'))
     sections = load_jsonl(get_path('sections.jsonl'))
     topics = load_jsonl(get_path('topics.jsonl'))
     skill_topics = load_jsonl(get_path('skill_topics.jsonl'))
     subj = next((s for s in subjects if s.get('uid') == subject_uid), None)
     if subj is None:
-        add_subject('Математика', uid=subject_uid)
+        add_subject(subject_title, uid=subject_uid)
         subjects = load_jsonl(get_path('subjects.jsonl'))
     sec = next((s for s in sections if s.get('subject_uid') == subject_uid and s.get('title') == section_title), None)
     if sec is None:

@@ -75,17 +75,19 @@ def _save_session(sid: str, data: Dict):
     except Exception:
         pass
 
-def _age_to_class(age: Optional[int]) -> int:
-    if age is None:
-        return 7
-    a = int(age)
-    if a < 7:
-        return 1
-    if a > 17:
-        return 11
-    return a - 6
+def _resolve_level(uc: UserContext) -> int:
+    if uc.level is not None:
+        return uc.level
+    if uc.user_class is not None:
+        return uc.user_class
+    if uc.age is not None:
+        a = int(uc.age)
+        if a < 7: return 1
+        if a > 17: return 11
+        return a - 6
+    return 7
 
-def _topic_accessible(subject_uid: str, topic_uid: str, resolved_user_class: int) -> bool:
+def _topic_accessible(subject_uid: str, topic_uid: str, resolved_level: int) -> bool:
     if not (settings.neo4j_uri and settings.neo4j_user and settings.neo4j_password.get_secret_value()):
         return True
     try:
@@ -104,9 +106,9 @@ def _topic_accessible(subject_uid: str, topic_uid: str, resolved_user_class: int
         mx = row[0].get("mx")
         ok = True
         if isinstance(mn, (int, float)):
-            ok = ok and resolved_user_class >= int(mn)
+            ok = ok and resolved_level >= int(mn)
         if isinstance(mx, (int, float)):
-            ok = ok and resolved_user_class <= int(mx)
+            ok = ok and resolved_level <= int(mx)
         return ok
     except Exception:
         return True
@@ -129,7 +131,7 @@ def _select_question(topic_uid: str, difficulty_min: int, difficulty_max: int) -
         "subject_uid": "",
         "topic_uid": topic_uid,
         "type": "free_text",
-        "prompt": f"Опишите ключевое понятие из темы '{topic_uid}' и приведите пример.",
+        "prompt": f"Explain the key concept of '{topic_uid}' and provide an example.",
         "options": [],
         "meta": {"difficulty": 0.5, "skill_uid": ""},
     }
@@ -141,7 +143,7 @@ def _select_question(topic_uid: str, difficulty_min: int, difficulty_max: int) -
 )
 async def start(payload: StartRequest) -> Dict:
     uc = payload.user_context or UserContext()
-    resolved = int(uc.user_class) if uc.user_class is not None else _age_to_class(uc.age)
+    resolved = _resolve_level(uc)
     if not _topic_accessible(payload.subject_uid, payload.topic_uid, resolved):
         raise HTTPException(status_code=404, detail="Topic not available")
     import uuid
