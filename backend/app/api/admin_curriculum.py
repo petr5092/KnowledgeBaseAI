@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header, Security
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
-from typing import Dict, List
+from typing import Dict, List, Optional
 from app.services.curriculum.repo import create_curriculum, add_curriculum_nodes, get_graph_view
 from app.api.deps import require_admin
 

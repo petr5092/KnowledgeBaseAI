@@ -7,7 +7,7 @@ from app.db.pg import (
     add_graph_change,
 )
 from app.services.rebase import rebase_check, RebaseResult
-from app.services.integrity import integrity_check_subgraph, check_prereq_cycles, check_dangling_skills, check_skill_based_on_rules
+from app.services.integrity import integrity_check_subgraph, check_prereq_cycles, check_orphan_skills, check_skill_based_on_rules
 from app.services.graph.neo4j_repo import get_driver
 from app.events.publisher import publish_graph_committed
 from app.core.correlation import get_correlation_id
@@ -192,7 +192,7 @@ def commit_proposal(proposal_id: str) -> Dict:
                 if fu and tu:
                     based_on.append({"type": "BASED_ON", "from_uid": fu, "to_uid": tu})
         if nodes:
-            dangling = check_dangling_skills(nodes, based_on)
+            dangling = check_orphan_skills(nodes, based_on)
             if dangling:
                 _update_proposal_status(proposal_id, "FAILED")
                 INTEGRITY_VIOLATION_TOTAL.labels(type="dangling_skill").inc()

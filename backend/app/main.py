@@ -10,22 +10,7 @@ from app.core.logging import setup_logging, logger
 from app.config.settings import settings
 from app.core.context import extract_tenant_id_from_request, set_tenant_id
 from app.core.correlation import new_correlation_id, set_correlation_id, get_correlation_id
-from app.api.graph import router as graph_router
-from app.api.assistant import router as assistant_router
-from app.api.construct import router as construct_router
-from app.api.analytics import router as analytics_router
-from app.api.ws import router as ws_router
-from app.api.curriculum import router as curriculum_router
-from app.api.admin import router as admin_router
-from app.api.admin_curriculum import router as admin_curriculum_router
-from app.api.admin_generate import router as admin_generate_router
-from app.api.admin_graph import router as admin_graph_router
-from app.api.maintenance import router as maintenance_router
-from app.api.proposals import router as proposals_router
-from app.api.knowledge import router as knowledge_router
-from app.api.assessment import router as assessment_router
-from app.api.reasoning import router as reasoning_router
-from app.api.ingestion import router as ingestion_router
+from app.api.engine import router as engine_router
 try:
     from app.api.graphql import router as graphql_router
 except Exception:
@@ -98,7 +83,7 @@ app = FastAPI(
     license_info={"name": "Proprietary"},
     redoc_url=None,
 )
-app.mount("/static", StaticFiles(directory="src/static"), name="static")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 @app.get("/redoc", include_in_schema=False)
 async def redoc_html():
@@ -217,23 +202,9 @@ if origins:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-app.include_router(graph_router)
-app.include_router(assistant_router)
-app.include_router(construct_router)
-app.include_router(analytics_router)
-app.include_router(ws_router)
-app.include_router(curriculum_router)
-app.include_router(admin_router)
-app.include_router(admin_curriculum_router)
-app.include_router(admin_generate_router)
-app.include_router(admin_graph_router)
-app.include_router(maintenance_router)
-app.include_router(proposals_router)
-app.include_router(ingestion_router)
+app.include_router(engine_router)
 if graphql_router:
     app.include_router(graphql_router, prefix="/v1/graphql")
 app.include_router(auth_router)
 app.include_router(validation_router)
-app.include_router(knowledge_router)
-app.include_router(assessment_router)
-app.include_router(reasoning_router)
+

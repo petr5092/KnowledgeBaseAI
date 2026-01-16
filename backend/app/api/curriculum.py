@@ -56,11 +56,8 @@ async def pathfind(payload: PathfindInput) -> Dict:
                 q.append(v)
     return {"target": payload.target_uid, "path": ordered}
 
-class RoadmapInput(BaseModel):
-    subject_uid: str | None = None
-    progress: Dict[str, float] = {}
-    limit: int = 30
-    penalty_factor: float = 0.15
+from app.schemas.roadmap import RoadmapRequest
+from app.schemas.context import UserContext
 
 class RoadmapItem(BaseModel):
     uid: str
@@ -73,6 +70,7 @@ class RoadmapResponse(BaseModel):
     items: List[RoadmapItem]
 
 @router.post("/roadmap", summary="Построить учебный маршрут", description="Возвращает отсортированный по приоритету список тем с учётом прогресса и недостающих PREREQ.", response_model=RoadmapResponse)
-async def roadmap(payload: RoadmapInput) -> Dict:
-    items = plan_route(payload.subject_uid, payload.progress or {}, payload.limit, payload.penalty_factor, curriculum_code=payload.curriculum_code)
+async def roadmap(payload: RoadmapRequest) -> Dict:
+    # Use unified request model. Assuming 0.15 as default penalty factor as it was removed from model.
+    items = plan_route(payload.subject_uid, payload.current_progress or {}, payload.limit, 0.15)
     return {"items": items}

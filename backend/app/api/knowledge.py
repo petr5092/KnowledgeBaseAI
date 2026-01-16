@@ -8,9 +8,7 @@ from app.services.questions import all_topic_uids_from_examples
 
 router = APIRouter(prefix="/v1/knowledge", tags=["Интеграция с LMS"])
 
-class UserContext(BaseModel):
-    user_class: Optional[int] = None
-    age: Optional[int] = None
+from app.schemas.context import UserContext
 
 class TopicsAvailableRequest(BaseModel):
     subject_uid: Optional[str] = None

@@ -11,9 +11,7 @@ from app.events.publisher import get_redis
 
 router = APIRouter(prefix="/v1/assessment", tags=["Интеграция с LMS"])
 
-class UserContext(BaseModel):
-    user_class: Optional[int] = None
-    age: Optional[int] = None
+from app.schemas.context import UserContext
 
 class StartRequest(BaseModel):
     subject_uid: str

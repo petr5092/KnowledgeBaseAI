@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Header, Security
 from fastapi.security import HTTPBearer
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from pydantic import BaseModel, Field
 from app.schemas.proposal import Proposal, Operation, ProposalStatus
 from app.db.pg import get_conn, ensure_tables
