@@ -74,5 +74,5 @@ class RoadmapResponse(BaseModel):
 
 @router.post("/roadmap", summary="Построить учебный маршрут", description="Возвращает отсортированный по приоритету список тем с учётом прогресса и недостающих PREREQ.", response_model=RoadmapResponse)
 async def roadmap(payload: RoadmapInput) -> Dict:
-    items = plan_route(payload.subject_uid, payload.progress or {}, payload.limit, payload.penalty_factor)
+    items = plan_route(payload.subject_uid, payload.progress or {}, payload.limit, payload.penalty_factor, curriculum_code=payload.curriculum_code)
     return {"items": items}

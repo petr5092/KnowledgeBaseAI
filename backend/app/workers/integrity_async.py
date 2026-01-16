@@ -1,6 +1,6 @@
 from typing import Dict, List, Any
 from app.db.pg import get_conn
-from app.services.integrity import check_prereq_cycles, check_dangling_skills
+from app.services.integrity import integrity_check_subgraph
 
 def _collect_nodes_and_rels(ops: List[Dict[str, Any]]) -> Dict[str, List[Dict]]:
     nodes: List[Dict] = []
@@ -8,15 +8,20 @@ def _collect_nodes_and_rels(ops: List[Dict[str, Any]]) -> Dict[str, List[Dict]]:
     for op in ops:
         t = op.get("op_type")
         pd = op.get("properties_delta") or {}
+        mc = op.get("match_criteria") or {}
+        
+        # Nodes
         if t in ("CREATE_NODE", "MERGE_NODE", "UPDATE_NODE"):
-            typ = str(pd.get("type") or "")
-            uid = str(pd.get("uid") or op.get("target_id") or "")
+            typ = str(pd.get("type") or pd.get("labels", [None])[0] or "")
+            uid = str(pd.get("uid") or op.get("target_id") or op.get("temp_id") or "")
             if typ and uid:
                 nodes.append({"type": typ, "uid": uid})
+                
+        # Rels
         elif t in ("CREATE_REL", "MERGE_REL", "UPDATE_REL"):
-            typ = str(pd.get("type") or "")
-            fu = str(pd.get("from_uid") or "")
-            tu = str(pd.get("to_uid") or "")
+            typ = str(pd.get("type") or mc.get("type") or "")
+            fu = str(pd.get("from_uid") or mc.get("start_uid") or "")
+            tu = str(pd.get("to_uid") or mc.get("end_uid") or "")
             if typ and fu and tu:
                 rels.append({"type": typ, "from_uid": fu, "to_uid": tu})
     return {"nodes": nodes, "rels": rels}
@@ -31,10 +36,11 @@ def process_once(limit: int = 20) -> Dict:
         for r in rows:
             pid = r[0]; tid = r[1]; ops = list(r[2] or [])
             x = _collect_nodes_and_rels(ops)
-            cyc = check_prereq_cycles([rel for rel in x["rels"] if rel.get("type")=="PREREQ"])
-            skills = [{"type": n["type"], "uid": n["uid"]} for n in x["nodes"] if n["type"]=="Skill"]
-            based = [{"type": rel["type"], "from_uid": rel["from_uid"], "to_uid": rel["to_uid"]} for rel in x["rels"] if rel["type"]=="BASED_ON"]
-            if cyc or check_dangling_skills(skills, based):
+            
+            res = integrity_check_subgraph(x["nodes"], x["rels"])
+            
+            if not res["ok"]:
+                # Log failures if needed or store in proposal
                 cur.execute("UPDATE proposals SET status='FAILED' WHERE proposal_id=%s", (pid,))
             else:
                 cur.execute("UPDATE proposals SET status='READY' WHERE proposal_id=%s", (pid,))

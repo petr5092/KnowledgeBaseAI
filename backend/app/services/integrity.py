@@ -40,10 +40,10 @@ def check_prereq_cycles(rels: List[Dict]) -> List[Tuple[str, str]]:
                 violations.append((cyc[i], cyc[(i + 1) % len(cyc)]))
     return violations
 
-def check_dangling_skills(nodes: List[Dict], rels: List[Dict]) -> List[str]:
+def check_orphan_skills(nodes: List[Dict], rels: List[Dict]) -> List[str]:
     """
     nodes: list of {'type': 'Skill', 'uid': str}
-    rels: list of {'type': 'BASED_ON', 'from_uid': str, 'to_uid': str}
+    rels: list of {'type': 'USES_SKILL', 'from_uid': str, 'to_uid': str}
     """
     skills: Set[str] = set()
     for n in nodes:
@@ -51,21 +51,68 @@ def check_dangling_skills(nodes: List[Dict], rels: List[Dict]) -> List[str]:
             uid = str(n.get("uid"))
             if uid:
                 skills.add(uid)
-    has_base: Set[str] = set()
+    
+    connected_skills: Set[str] = set()
     for r in rels:
-        if str(r.get("type")) == "BASED_ON":
-            uid = str(r.get("from_uid"))
-            if uid:
-                has_base.add(uid)
-    dangling = sorted(list(skills.difference(has_base)))
-    return dangling
+        if str(r.get("type")) == "USES_SKILL":
+            # Topic -> Skill
+            to_uid = str(r.get("to_uid"))
+            if to_uid:
+                connected_skills.add(to_uid)
+                
+    orphans = sorted(list(skills.difference(connected_skills)))
+    return orphans
+
+def check_hierarchy_compliance(nodes: List[Dict], rels: List[Dict]) -> List[str]:
+    """
+    Ensures:
+    - Topic has incoming CONTAINS from Subsection
+    - Subsection has incoming CONTAINS from Section
+    - Section has incoming CONTAINS from Subject
+    
+    Only checks nodes present in the list (if a node is created/merged, it must have a parent link in the same changeset OR be valid otherwise).
+    Warning: This local check might be too strict for partial updates if not handled carefully.
+    For now, we strictly check: IF a node of type T is in 'nodes', it MUST have an incoming CONTAINS in 'rels'.
+    """
+    violations = []
+    
+    # Index parents by child_uid
+    parents: Dict[str, str] = {} # child -> parent
+    for r in rels:
+        if str(r.get("type")) == "CONTAINS":
+            parents[str(r.get("to_uid"))] = str(r.get("from_uid"))
+            
+    for n in nodes:
+        typ = str(n.get("type"))
+        uid = str(n.get("uid"))
+        if not uid: continue
+        
+        if typ == "Topic":
+            if uid not in parents:
+                violations.append(f"Topic {uid} missing parent Subsection")
+        elif typ == "Subsection":
+            if uid not in parents:
+                violations.append(f"Subsection {uid} missing parent Section")
+        elif typ == "Section":
+            if uid not in parents:
+                violations.append(f"Section {uid} missing parent Subject")
+                
+    return violations
 
 def integrity_check_subgraph(nodes: List[Dict], rels: List[Dict]) -> Dict:
     canon_violations = check_canon_compliance(nodes, rels)
     cyc = check_prereq_cycles(rels)
-    dangling = check_dangling_skills(nodes, rels)
-    ok = (len(cyc) == 0) and (len(dangling) == 0) and (len(canon_violations) == 0)
-    return {"ok": ok, "prereq_cycles": cyc, "dangling_skills": dangling, "canon_violations": canon_violations}
+    orphans = check_orphan_skills(nodes, rels)
+    hierarchy = check_hierarchy_compliance(nodes, rels)
+    
+    ok = (len(cyc) == 0) and (len(orphans) == 0) and (len(canon_violations) == 0) and (len(hierarchy) == 0)
+    return {
+        "ok": ok, 
+        "prereq_cycles": cyc, 
+        "orphan_skills": orphans, 
+        "canon_violations": canon_violations,
+        "hierarchy_violations": hierarchy
+    }
 
 def check_skill_based_on_rules(nodes: List[Dict], rels: List[Dict], min_required: int = 1, max_allowed: int | None = None) -> Dict:
     skills: Set[str] = set()

@@ -1,22 +1,31 @@
 from typing import Dict, List
 from app.services.graph import neo4j_repo
-from app.services.questions import all_topic_uids_from_examples
+from app.services.curriculum.repo import get_graph_view
 
-
-def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int = 30, penalty_factor: float = 0.15, tenant_id: str | None = None) -> List[Dict]:
+def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int = 30, penalty_factor: float = 0.15, tenant_id: str | None = None, curriculum_code: str | None = None) -> List[Dict]:
     drv = neo4j_repo.get_driver()
     items: List[Dict] = []
     s = drv.session()
     
+    # Curriculum filter set
+    allowed_topics = set()
+    if curriculum_code:
+        cv = get_graph_view(curriculum_code)
+        if cv.get("ok") and cv.get("nodes"):
+            # Fetch recursive prereqs for these nodes
+            root_nodes = [n["canonical_uid"] for n in cv["nodes"]]
+            if root_nodes:
+                res = s.run(
+                    "UNWIND $roots AS root MATCH (t:Topic {uid:root})-[:PREREQ*0..]->(p:Topic) RETURN collect(DISTINCT p.uid) AS uids",
+                    {"roots": root_nodes}
+                ).single()
+                allowed_topics = set(res["uids"]) if res else set()
+
     # Define query filter
     tid_filter_sub = "WHERE sub.tenant_id = $tid" if tenant_id else ""
     tid_filter_node = "WHERE ($tid IS NULL OR t.tenant_id = $tid)"
     
     if subject_uid:
-        # If tenant_id provided, use it. If not, try to infer? No, strict filtering.
-        # But previous logic tried to look up tenant_id from subject.
-        # If tenant_id is passed, we should respect it.
-        
         query = (
             "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(sec:Section)-[:CONTAINS]->(t:Topic) "
             f"WHERE ($tid IS NULL OR sub.tenant_id = $tid) "
@@ -38,6 +47,11 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
         tuid = r["uid"]
         if tuid.startswith("TOP-"):
             continue
+        
+        # PRISM FILTER
+        if curriculum_code and tuid not in allowed_topics:
+            continue
+            
         mastered = float(progress.get(tuid, 0.0) or 0.0)
         missing = 0
         for pre in (r.get("prereqs") or []):

@@ -42,18 +42,21 @@ def add_curriculum_nodes(code: str, nodes: List[Dict]) -> Dict:
     return {"ok": True}
 
 def get_graph_view(code: str) -> Dict:
-    conn = get_conn()
-    if conn is None:
-        return {"ok": False, "error": "postgres not configured"}
-    with conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT id FROM curricula WHERE code=%s", (code,))
-            row = cur.fetchone()
-            if not row:
-                return {"ok": False, "error": "curriculum not found"}
-            cid = row[0]
-            cur.execute("SELECT kind, canonical_uid, order_index FROM curriculum_nodes WHERE curriculum_id=%s ORDER BY order_index ASC", (cid,))
-            nodes = [{"kind": r[0], "canonical_uid": r[1], "order_index": r[2]} for r in cur.fetchall()]
-    conn.close()
-    return {"ok": True, "nodes": nodes}
+    # 1. Get curriculum definition
+    curr = get_curriculum(code)
+    if not curr:
+        return {"ok": False, "error": "not_found"}
+    
+    # If filters are present, use them. Otherwise return all explicitly linked topics.
+    filters = curr.get("filters", {})
+    
+    # 2. If simple filters are defined (e.g. list of topics)
+    # For now, let's assume 'items' in curriculum are the source of truth for the Prism.
+    # We return the explicit items. The Roadmap Planner will expand prereqs.
+    
+    return {
+        "ok": True, 
+        "nodes": curr.get("items", []),
+        "meta": {"title": curr.get("title")}
+    }
 
