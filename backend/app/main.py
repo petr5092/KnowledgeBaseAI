@@ -20,7 +20,7 @@ from app.api.admin_graph import router as admin_graph_router
 from app.api.maintenance import router as maintenance_router
 from app.api.proposals import router as proposals_router
 from app.api.ingestion import router as ingestion_router
-from app.api.knowledge import router as knowledge_router
+
 from app.api.assessment import router as assessment_router
 from app.api.assistant import router as assistant_router
 
@@ -229,7 +229,7 @@ app.include_router(admin_graph_router)
 app.include_router(maintenance_router)
 app.include_router(proposals_router)
 app.include_router(ingestion_router)
-app.include_router(knowledge_router)
+
 app.include_router(assessment_router)
 app.include_router(assistant_router)
 

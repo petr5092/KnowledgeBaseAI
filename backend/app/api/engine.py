@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Any
-from app.services.graph.neo4j_repo import relation_context, neighbors, get_node_details
+from typing import Dict, List, Optional, Any, Set
+from app.services.graph.neo4j_repo import relation_context, neighbors, get_node_details, get_driver, Neo4jRepo
 from app.config.settings import settings
 from app.services.roadmap_planner import plan_route
 from app.services.questions import select_examples_for_topics, all_topic_uids_from_examples
 from app.api.common import ApiError, StandardResponse
 from app.core.context import get_tenant_id
 from app.schemas.roadmap import RoadmapRequest
+from app.schemas.context import UserContext
 from app.services.reasoning.gaps import compute_gaps
 from app.services.reasoning.next_best_topic import next_best_topics
 from app.services.reasoning.mastery_update import update_mastery
@@ -44,6 +45,48 @@ async def get_node(uid: str) -> Dict:
 async def viewport(center_uid: str, depth: int = 1) -> Dict:
     ns, es = neighbors(center_uid, depth=depth, tenant_id=get_tenant_id())
     return {"items": ns, "meta": {"edges": es, "center_uid": center_uid, "depth": depth}}
+
+class PathfindInput(BaseModel):
+    target_uid: str
+
+class PathfindResponse(BaseModel):
+    target: str
+    path: List[str]
+
+@router.post("/pathfind", summary="Find learning path", response_model=PathfindResponse)
+async def pathfind(payload: PathfindInput) -> Dict:
+    drv = get_driver()
+    with drv.session() as s:
+        res = s.run(
+            "MATCH (t:Topic {uid:$uid})-[:PREREQ*0..]->(p:Topic) RETURN collect(DISTINCT p.uid) AS uids",
+            {"uid": payload.target_uid}
+        ).single()
+        closure: List[str] = res["uids"] if res else []
+        edges = s.run(
+            "MATCH (a:Topic)-[:PREREQ]->(b:Topic) WHERE a.uid IN $uids AND b.uid IN $uids "
+            "RETURN a.uid AS a, b.uid AS b",
+            {"uids": closure}
+        )
+        g: Dict[str, List[str]] = {u: [] for u in closure}
+        indeg: Dict[str, int] = {u: 0 for u in closure}
+        for r in edges:
+            g[r["b"]].append(r["a"])
+            indeg[r["a"]] += 1
+    drv.close()
+    q: List[str] = [u for u, d in indeg.items() if d == 0]
+    ordered: List[str] = []
+    seen: Set[str] = set()
+    while q:
+        u = q.pop(0)
+        if u in seen:
+            continue
+        seen.add(u)
+        ordered.append(u)
+        for v in g.get(u, []):
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                q.append(v)
+    return {"target": payload.target_uid, "path": ordered}
 
 # --- Chat ---
 
@@ -98,6 +141,201 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
     # Use unified request model
     items = plan_route(payload.subject_uid, payload.current_progress or {}, payload.limit, 0.15, tenant_id=get_tenant_id())
     return {"items": items}
+
+# --- Knowledge / Topics ---
+
+class TopicsAvailableRequest(BaseModel):
+    subject_uid: Optional[str] = None
+    subject_title: Optional[str] = None
+    user_context: UserContext
+
+class TopicItem(BaseModel):
+    topic_uid: str
+    title: Optional[str] = None
+    user_class_min: Optional[int] = None
+    user_class_max: Optional[int] = None
+    difficulty_band: Optional[str] = None
+    prereq_topic_uids: List[str] = []
+
+class TopicsAvailableResponse(BaseModel):
+    subject_uid: str
+    resolved_user_class: int
+    topics: List[TopicItem]
+
+def _age_to_class(age: Optional[int]) -> int:
+    if age is None:
+        return 7
+    a = int(age)
+    if a < 7:
+        return 1
+    if a > 17:
+        return 11
+    return a - 6
+
+@router.post("/topics/available", response_model=StandardResponse)
+async def topics_available(payload: TopicsAvailableRequest) -> Dict:
+    # Extract level/class from context attributes if present, else fallback
+    # Assuming attributes might have 'grade' or 'class'
+    attrs = payload.user_context.attributes
+    user_class = attrs.get("user_class") or attrs.get("grade")
+    age = attrs.get("age")
+    
+    resolved = int(user_class) if user_class is not None else _age_to_class(age)
+    topics: List[Dict] = []
+    su = payload.subject_uid
+    if not su and (payload.subject_title or "").strip():
+        try:
+            repo = Neo4jRepo()
+            r = repo.read("MATCH (sub:Subject) WHERE toUpper(sub.title)=toUpper($t) RETURN sub.uid AS uid LIMIT 1", {"t": payload.subject_title})
+            su = r[0]["uid"] if r else None
+            repo.close()
+        except Exception:
+            su = None
+    if settings.neo4j_uri and settings.neo4j_user and settings.neo4j_password.get_secret_value():
+        try:
+            repo = Neo4jRepo()
+            rows = repo.read(
+                (
+                    "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "WITH t, collect(pre.uid) AS pre1 "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       pre1 AS prereq_topic_uids "
+                    "UNION "
+                    "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "WITH t, collect(pre.uid) AS pre2 "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       pre2 AS prereq_topic_uids"
+                ),
+                {"su": su},
+            )
+            if not rows and (payload.subject_title or "").strip():
+                rows = repo.read(
+                    (
+                        "MATCH (sub:Subject) WHERE toUpper(sub.title)=toUpper($t) "
+                        "MATCH (sub)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) "
+                        "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                        "WITH t, collect(pre.uid) AS pre1 "
+                        "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                        "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                        "       pre1 AS prereq_topic_uids "
+                        "UNION "
+                        "MATCH (sub:Subject) WHERE toUpper(sub.title)=toUpper($t) "
+                        "MATCH (sub)-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic) "
+                        "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                        "WITH t, collect(pre.uid) AS pre2 "
+                        "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                        "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                        "       pre2 AS prereq_topic_uids"
+                    ),
+                    {"t": payload.subject_title},
+                )
+            for r in rows or []:
+                mn = r.get("user_class_min")
+                mx = r.get("user_class_max")
+                ok = True
+                if isinstance(mn, (int, float)):
+                    ok = ok and resolved >= int(mn)
+                if isinstance(mx, (int, float)):
+                    ok = ok and resolved <= int(mx)
+                if ok:
+                    topics.append(
+                        {
+                            "topic_uid": r.get("topic_uid"),
+                            "title": r.get("title"),
+                            "user_class_min": int(mn) if isinstance(mn, (int, float)) else None,
+                            "user_class_max": int(mx) if isinstance(mx, (int, float)) else None,
+                            "difficulty_band": r.get("difficulty_band") or "standard",
+                            "prereq_topic_uids": [p for p in (r.get("prereq_topic_uids") or []) if p],
+                        }
+                    )
+            repo.close()
+        except Exception:
+            topics = []
+    if not topics and su:
+        try:
+            repo = Neo4jRepo()
+            rows = repo.read(
+                (
+                    "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       collect(pre.uid) AS prereq_topic_uids "
+                    "UNION "
+                    "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       collect(pre.uid) AS prereq_topic_uids"
+                ),
+                {"su": su},
+            )
+            for r in rows or []:
+                topics.append(
+                    {
+                        "topic_uid": r.get("topic_uid"),
+                        "title": r.get("title"),
+                        "user_class_min": r.get("user_class_min"),
+                        "user_class_max": r.get("user_class_max"),
+                        "difficulty_band": r.get("difficulty_band") or "standard",
+                        "prereq_topic_uids": [p for p in (r.get("prereq_topic_uids") or []) if p],
+                    }
+                )
+            repo.close()
+        except Exception:
+            ...
+    if not topics and (payload.subject_title or "").strip():
+        try:
+            repo = Neo4jRepo()
+            rows = repo.read(
+                (
+                    "MATCH (sub:Subject) WHERE toUpper(sub.title)=toUpper($t) "
+                    "MATCH (sub)-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       collect(pre.uid) AS prereq_topic_uids "
+                    "UNION "
+                    "MATCH (sub:Subject) WHERE toUpper(sub.title)=toUpper($t) "
+                    "MATCH (sub)-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic) "
+                    "OPTIONAL MATCH (t)-[:PREREQ]->(pre:Topic) "
+                    "RETURN t.uid AS topic_uid, t.title AS title, t.user_class_min AS user_class_min, "
+                    "       t.user_class_max AS user_class_max, t.difficulty_band AS difficulty_band, "
+                    "       collect(pre.uid) AS prereq_topic_uids"
+                ),
+                {"t": payload.subject_title},
+            )
+            for r in rows or []:
+                topics.append(
+                    {
+                        "topic_uid": r.get("topic_uid"),
+                        "title": r.get("title"),
+                        "user_class_min": r.get("user_class_min"),
+                        "user_class_max": r.get("user_class_max"),
+                        "difficulty_band": r.get("difficulty_band") or "standard",
+                        "prereq_topic_uids": [p for p in (r.get("prereq_topic_uids") or []) if p],
+                    }
+                )
+            repo.close()
+        except Exception:
+            ...
+    if not topics:
+        for tu in all_topic_uids_from_examples():
+            topics.append(
+                {
+                    "topic_uid": tu,
+                    "title": tu,
+                    "user_class_min": None,
+                    "user_class_max": None,
+                    "difficulty_band": "standard",
+                    "prereq_topic_uids": [],
+                }
+            )
+    return {"items": topics, "meta": {"subject_uid": su or payload.subject_uid, "resolved_user_class": resolved}}
 
 # --- Adaptive Questions ---
 
