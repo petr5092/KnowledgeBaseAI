@@ -4,3 +4,5 @@ from pydantic import BaseModel, Field
 class UserContext(BaseModel):
     language: str = "ru"
     attributes: Dict[str, Any] = Field(default_factory=dict)
+    user_class: Optional[int] = None
+    age: Optional[int] = None

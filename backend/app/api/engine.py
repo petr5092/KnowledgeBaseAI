@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any, Set
+import json
 from app.services.graph.neo4j_repo import relation_context, neighbors, get_node_details, get_driver, Neo4jRepo
 from app.config.settings import settings
 from app.services.roadmap_planner import plan_route
@@ -126,21 +127,201 @@ async def chat(payload: ChatInput) -> Dict:
 
 # --- Roadmap ---
 
-class RoadmapItem(BaseModel):
+class LessonUnit(BaseModel):
     uid: str
-    title: Optional[str] = None
-    mastered: float
-    missing_prereqs: int
-    priority: float
+    type: str  # i_do, we_do, you_do, test
+    title: str
+    payload: Dict[str, Any]
+
+class RoadmapNode(BaseModel):
+    topic_uid: str
+    title: str
+    description: Optional[str] = None
+    status: str = "locked"  # locked, available, completed
+    max_score: int = 0
+    units: List[LessonUnit] = []
 
 class RoadmapResponse(BaseModel):
-    items: List[RoadmapItem]
+    max_score: int = 0
+    nodes: List[RoadmapNode]
 
 @router.post("/roadmap", summary="Build adaptive roadmap", response_model=RoadmapResponse)
 async def roadmap(payload: RoadmapRequest) -> Dict:
-    # Use unified request model
-    items = plan_route(payload.subject_uid, payload.current_progress or {}, payload.limit, 0.15, tenant_id=get_tenant_id())
-    return {"items": items}
+    # Custom logic to support the "5 nodes + I/We/You Do" requirement
+    subject_uid = payload.subject_uid
+    progress = payload.current_progress or {}
+    
+    # 1. Fetch Candidate Topics (limit 5)
+    # We prefer topics that are accessible (prereqs met) but not fully mastered.
+    # For simplicity in this demo, we just fetch the first 5 topics of the subject.
+    topics = []
+    if settings.neo4j_uri:
+        repo = Neo4jRepo()
+        # Query to get topics and their content units
+        query = """
+        MATCH (sub:Subject {uid: $su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic)
+        OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
+        RETURN t.uid AS uid, t.title AS title, t.description AS description,
+               collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units
+        LIMIT 5
+        UNION
+        MATCH (sub:Subject {uid: $su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic)
+        OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
+        RETURN t.uid AS uid, t.title AS title, t.description AS description,
+               collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units
+        LIMIT 5
+        """
+        # Note: The UNION LIMIT 5 is a bit tricky, it might give 5 from first + 5 from second.
+        # Let's simplify: Get all, then process in python to pick best 5.
+        
+        # Better query: Get all topics, sort by some order (e.g. alphabetical or graph order), then pick 5.
+        query = """
+        MATCH (sub:Subject {uid: $su})
+        MATCH (sub)-[:CONTAINS*]->(t:Topic)
+        OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
+        RETURN t.uid AS uid, t.title AS title, t.description AS description,
+               collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units
+        LIMIT 20
+        """
+        print(f"Running roadmap query for {subject_uid}")
+        rows = repo.read(query, {"su": subject_uid})
+        print(f"Found {len(rows)} rows")
+        repo.close()
+        
+        # Process rows to build RoadmapNodes
+        count = 0
+        for r in rows:
+            if count >= 5:
+                break
+            
+            t_uid = r["uid"]
+            
+            # Determine status based on progress
+            # If previous topics in list are done? Or just check progress dict.
+            # For this demo: if it's in progress dict -> completed/in_progress.
+            p_val = progress.get(t_uid, 0.0)
+            if p_val >= 0.8:
+                status = "completed"
+            elif p_val > 0:
+                status = "available"
+            else:
+                status = "locked" # Simple logic
+            
+            # If it's the first one and locked, make it available
+            if count == 0 and status == "locked":
+                status = "available"
+                
+            # Categorize units
+            units = []
+            raw_units = r.get("units", [])
+            
+            # Helper to parse payload
+            def get_payload(u):
+                p = u.get("payload")
+                if isinstance(p, str):
+                    try:
+                        return json.loads(p)
+                    except:
+                        return {}
+                return p if p else {}
+
+            # Filter relevant units
+            # We want: lesson_i_do, lesson_we_do, lesson_you_do, lesson_test
+            # And sort them by order if available
+            
+            # Group by micro-lesson ID if possible, or just sort
+            # My generated UIDs are like UNIT-{t_uid}-M{id}-{TYPE}
+            # Or payload has 'order'
+            
+            relevant_units = []
+            final_test = None
+            
+            for u in raw_units:
+                u_type = u.get("type")
+                p = get_payload(u)
+                
+                if u_type == "lesson_test":
+                    final_test = u
+                    continue
+                    
+                if u_type in ["lesson_i_do", "lesson_we_do", "lesson_you_do"]:
+                    order = p.get("order", 999)
+                    # Map type to sort index: I=1, We=2, You=3
+                    type_order = 1 if u_type == "lesson_i_do" else (2 if u_type == "lesson_we_do" else 3)
+                    relevant_units.append({
+                        "u": u,
+                        "order": order,
+                        "type_order": type_order
+                    })
+
+            # Sort: primary by 'order', secondary by 'type_order'
+            relevant_units.sort(key=lambda x: (x["order"], x["type_order"]))
+            
+            # Convert to LessonUnit
+            for item in relevant_units:
+                u = item["u"]
+                u_type = u.get("type")
+                p = get_payload(u)
+                
+                # Friendly title
+                if u_type == "lesson_i_do":
+                    title = "Изучение (I Do)"
+                elif u_type == "lesson_we_do":
+                    title = "Практика (We Do)"
+                else:
+                    title = "Задание (You Do)"
+                    
+                # Add micro-lesson title if present
+                if "micro_lesson_title" in p:
+                    title += f": {p['micro_lesson_title']}"
+                    
+                units.append(LessonUnit(
+                    uid=u["uid"],
+                    type=u_type,
+                    title=title,
+                    payload=p
+                ))
+            
+            # Append Final Test
+            if final_test:
+                p = get_payload(final_test)
+                units.append(LessonUnit(
+                    uid=final_test["uid"],
+                    type="lesson_test",
+                    title="Финальный тест",
+                    payload=p
+                ))
+            elif not relevant_units:
+                # Fallback if no units found (stub)
+                units.append(LessonUnit(
+                    uid=f"stub-{t_uid}",
+                    type="info",
+                    title="Материалы готовятся",
+                    payload={"text": "Content coming soon"}
+                ))
+            
+            # Calculate max_score
+            # 1 point per micro-lesson unit (I/We/You Do)
+            # 3 points per final test
+            node_score = 0
+            for u in units:
+                if u.type == "lesson_test":
+                    node_score += 3
+                elif u.type in ["lesson_i_do", "lesson_we_do", "lesson_you_do"]:
+                    node_score += 1
+            
+            topics.append(RoadmapNode(
+                topic_uid=t_uid,
+                title=r["title"],
+                description=r.get("description"),
+                status=status,
+                max_score=node_score,
+                units=units
+            ))
+            count += 1
+
+    total_roadmap_score = sum(n.max_score for n in topics)
+    return {"nodes": topics, "max_score": total_roadmap_score}
 
 # --- Knowledge / Topics ---
 
@@ -176,9 +357,14 @@ def _age_to_class(age: Optional[int]) -> int:
 async def topics_available(payload: TopicsAvailableRequest) -> Dict:
     # Extract level/class from context attributes if present, else fallback
     # Assuming attributes might have 'grade' or 'class'
-    attrs = payload.user_context.attributes
-    user_class = attrs.get("user_class") or attrs.get("grade")
-    age = attrs.get("age")
+    ctx = payload.user_context
+    user_class = ctx.user_class
+    if user_class is None:
+        user_class = ctx.attributes.get("user_class") or ctx.attributes.get("grade")
+    
+    age = ctx.age
+    if age is None:
+        age = ctx.attributes.get("age")
     
     resolved = int(user_class) if user_class is not None else _age_to_class(age)
     topics: List[Dict] = []

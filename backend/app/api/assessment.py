@@ -74,18 +74,31 @@ def _save_session(sid: str, data: Dict):
         pass
 
 def _resolve_level(uc: UserContext) -> int:
-    if uc.level is not None:
-        return uc.level
     if uc.user_class is not None:
-        return uc.user_class
-    if uc.age is not None:
-        a = int(uc.age)
+        return int(uc.user_class)
+        
+    attrs = uc.attributes or {}
+    if attrs.get("level") is not None:
+        return int(attrs["level"])
+    if attrs.get("user_class") is not None:
+        return int(attrs["user_class"])
+        
+    age = uc.age
+    if age is None:
+        age = attrs.get("age")
+        
+    if age is not None:
+        a = int(age)
         if a < 7: return 1
         if a > 17: return 11
         return a - 6
     return 7
 
 def _topic_accessible(subject_uid: str, topic_uid: str, resolved_level: int) -> bool:
+    # If resolved_level is 0 (or negative), treat as Admin/Test mode -> Allow all
+    if resolved_level <= 0:
+        return True
+        
     if not (settings.neo4j_uri and settings.neo4j_user and settings.neo4j_password.get_secret_value()):
         return True
     try:
@@ -99,7 +112,13 @@ def _topic_accessible(subject_uid: str, topic_uid: str, resolved_level: int) -> 
         )
         repo.close()
         if not row:
-            return False
+            # Topic might exist but not linked to subject? 
+            # Check if topic exists at all
+            repo = Neo4jRepo()
+            exists = repo.read("MATCH (t:Topic {uid:$tu}) RETURN 1", {"tu": topic_uid})
+            repo.close()
+            return bool(exists)
+
         mn = row[0].get("mn")
         mx = row[0].get("mx")
         ok = True
@@ -227,12 +246,25 @@ async def next_question(payload: NextRequest):
         yield "event: ack\n"
         yield "data: {\"items\":[{\"accepted\":true}],\"meta\":{}}\n\n"
         if done_by_min or done_by_max:
+            score = round(min(1.0, sess['good'] / max(1, len(sess['asked']))), 3)
+            # Basic analytics
+            gaps = []
+            if score < 0.8:
+                gaps.append("Базовое понимание темы требует закрепления")
+            if score < 0.5:
+                gaps.append("Трудности с применением концепций на практике")
+                
             res = {
                 "items": [
                     {
                         "topic_uid": sess["topic_uid"],
                         "level": "intermediate" if sess["good"] >= sess["bad"] else "basic",
-                        "mastery": {"score": round(min(1.0, sess['good'] / max(1, len(sess['asked']))), 3)},
+                        "mastery": {"score": score},
+                        "analytics": {
+                            "gaps": gaps,
+                            "recommended_focus": "Повторить теорию и пройти практику 'We Do'" if score < 0.7 else "Переходить к следующей теме",
+                            "strength": "Хорошая скорость ответов" if score > 0.8 else "Внимательность к деталям"
+                        }
                     }
                 ],
                 "meta": {}
