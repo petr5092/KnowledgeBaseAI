@@ -7,11 +7,35 @@ from app.config.settings import settings
 from app.api.common import ApiError, StandardResponse
 from app.services.questions import select_examples_for_topics
 import json
+from enum import Enum
 from app.events.publisher import get_redis
 
 router = APIRouter(prefix="/v1/assessment", tags=["Интеграция с LMS"])
 
 from app.schemas.context import UserContext
+
+class VisualizationType(str, Enum):
+    GEOMETRIC_SHAPE = "geometric_shape"
+    GRAPH = "graph"
+    DIAGRAM = "diagram"
+    CHART = "chart"
+
+class VisualizationData(BaseModel):
+    type: VisualizationType
+    coordinates: List[Dict[str, Any]] | Dict[str, Any]
+    params: Optional[Dict[str, Any]] = {}
+
+    @model_validator(mode='after')
+    def validate_coordinates(self):
+        if self.type == VisualizationType.GEOMETRIC_SHAPE:
+            if not isinstance(self.coordinates, list):
+                raise ValueError("Coordinates for geometric_shape must be a list of points.")
+            if not all(isinstance(p, dict) and "x" in p and "y" in p for p in self.coordinates):
+                 raise ValueError("Each point in geometric_shape must have 'x' and 'y'.")
+        elif self.type == VisualizationType.GRAPH:
+            # Graph can be list of points or function params
+            pass 
+        return self
 
 class StartRequest(BaseModel):
     subject_uid: str
@@ -30,6 +54,8 @@ class QuestionDTO(BaseModel):
     prompt: str
     options: List[OptionDTO] = []
     meta: Dict = {}
+    is_visual: bool = False
+    visualization: Optional[VisualizationData] = None
 
 class StartResponse(BaseModel):
     assessment_session_id: str
@@ -130,12 +156,214 @@ def _topic_accessible(subject_uid: str, topic_uid: str, resolved_level: int) -> 
     except Exception:
         return True
 
-def _select_question(topic_uid: str, difficulty_min: int, difficulty_max: int) -> Dict:
-    qs = select_examples_for_topics([topic_uid], limit=1, difficulty_min=difficulty_min, difficulty_max=difficulty_max, exclude_uids=set())
+from app.services.kb.builder import openai_chat_async
+import random
+import uuid
+
+def _fallback_stub(topic_uid: str, exclude_count: int) -> Dict:
+    idx = exclude_count
+    templates = [
+        {
+            "type": "free_text",
+            "prompt": f"Explain the practical application of '{topic_uid}' in real-world scenarios.",
+            "options": []
+        },
+        {
+            "type": "single_choice",
+            "prompt": f"Which of the following best describes the core principle of '{topic_uid}'?",
+            "options": [
+                {"option_uid": "opt_1", "text": "It is deterministic and predictable."},
+                {"option_uid": "opt_2", "text": "It models uncertainty using probability."},
+                {"option_uid": "opt_3", "text": "It is only applicable to physics."},
+                {"option_uid": "opt_4", "text": "It ignores outliers completely."}
+            ]
+        },
+        {
+            "type": "numeric",
+            "prompt": f"Given a dataset with mean=10 and std_dev=2, calculate the Z-score for a value of 14 (related to '{topic_uid}').",
+            "options": []
+        },
+        {
+            "type": "single_choice",
+            "prompt": f"Identify the distribution type shown in the diagram (bell-shaped, symmetric).",
+            "options": [
+                {"option_uid": "opt_a", "text": "Normal Distribution"},
+                {"option_uid": "opt_b", "text": "Exponential Distribution"},
+                {"option_uid": "opt_c", "text": "Uniform Distribution"}
+            ]
+        },
+        {
+             "type": "free_text",
+             "prompt": f"Describe the relationship between variance and standard deviation in the context of '{topic_uid}'.",
+             "options": []
+        },
+        {
+             "type": "single_choice",
+             "prompt": "What is the area under the Probability Density Function (PDF) curve equal to?",
+             "options": [
+                 {"option_uid": "opt_x", "text": "1.0"},
+                 {"option_uid": "opt_y", "text": "0.5"},
+                 {"option_uid": "opt_z", "text": "Depends on the mean"}
+             ]
+        }
+    ]
+    tmpl = templates[idx % len(templates)]
+    return {
+        "question_uid": f"Q-STUB-{topic_uid}-{idx+1}",
+        "subject_uid": "",
+        "topic_uid": topic_uid,
+        "type": tmpl["type"],
+        "prompt": tmpl["prompt"],
+        "options": tmpl["options"],
+        "meta": {"difficulty": 0.5, "skill_uid": ""},
+    }
+
+async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: bool = False) -> Dict:
+    # 1. Get Topic Title
+    repo = Neo4jRepo()
+    topic_title = topic_uid
+    try:
+        def _get_title(tx):
+            res = tx.run("MATCH (t:Topic {uid: $uid}) RETURN t.title as title", uid=topic_uid)
+            rec = res.single()
+            return rec["title"] if rec else None
+        
+        # Use sync retry since it's robust, running in async context is acceptable for MVP
+        title = repo._retry(lambda s: s.read_transaction(_get_title))
+        if title:
+            topic_title = title
+    except Exception:
+        pass
+    finally:
+        repo.close()
+
+    # Auto-detect visual topics
+    if not is_visual and topic_title:
+        visual_keywords = ["geometry", "triangle", "circle", "graph", "function", "chart", "diagram", "геометрия", "треугольник", "график", "функция", "окружность", "углы", "angles", "slope", "derivative", "integral"]
+        if any(k in topic_title.lower() for k in visual_keywords):
+            is_visual = True
+
+    # 2. Choose Type
+    q_types = ["single_choice", "single_choice", "numeric", "free_text", "boolean"]
+    q_type = random.choice(q_types)
+    
+    # 3. Prompt
+    visual_instruction = ""
+    if is_visual:
+        visual_instruction = """
+    Visualization Requirements:
+    - You MUST set "is_visual": true.
+    - You MUST include a "visualization" object.
+    - "visualization" structure:
+      {
+        "type": "geometric_shape" | "graph" | "diagram" | "chart",
+        "coordinates": [ ... ], // Array of points {x,y} for shapes, or other format
+        "params": { "color": "...", "label": "...", ... } // Optional parameters
+      }
+    - Coordinate formats:
+      * geometric_shape: [{"x": 0, "y": 0}, {"x": 10, "y": 0}, {"x": 5, "y": 10}] (example triangle)
+      * graph: [{"x": -10, "y": ...}, ...] or functional params
+      * diagram/chart: appropriate JSON representation
+    """
+
+    prompt_text = f"""
+    Generate a unique assessment question for the topic "{topic_title}" (UID: {topic_uid}).
+    Context: Adaptive learning platform.
+    Target Audience: High school / University students.
+    Language: Russian.
+    
+    Question Type: {q_type}
+    Is Visual Task: {is_visual}
+    {visual_instruction}
+    
+    Requirements:
+    - Output valid JSON only.
+    - "single_choice": 4 options, 1 correct.
+    - "numeric": Problem with specific numeric answer.
+    - "boolean": True/False statement.
+    - "free_text": Open-ended question.
+    
+    JSON Structure:
+    {{
+        "prompt": "Question text",
+        "options": [
+            {{"option_uid": "opt_1", "text": "Option 1", "is_correct": true}},
+            {{"option_uid": "opt_2", "text": "Option 2", "is_correct": false}}
+        ],
+        "correct_value": 123.45,
+        "explanation": "Brief explanation",
+        "is_visual": { "true" if is_visual else "false" },
+        "visualization": {{ ... }}
+    }}
+    """
+    
+    messages = [{"role": "user", "content": prompt_text}]
+    
+    try:
+        res = await openai_chat_async(messages, temperature=0.9)
+        if not res.get("ok"):
+             return _fallback_stub(topic_uid, len(exclude_uids))
+        
+        content = res.get("content", "")
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0]
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0]
+        
+        data = json.loads(content.strip())
+        
+        q_uid = f"Q-GEN-{uuid.uuid4().hex[:8]}"
+        
+        options = []
+        if "options" in data and isinstance(data["options"], list):
+            for i, opt in enumerate(data["options"]):
+                options.append({
+                    "option_uid": opt.get("option_uid") or f"opt_{i}",
+                    "text": opt.get("text", "")
+                })
+        
+        visualization_data = None
+        if data.get("is_visual") and data.get("visualization"):
+            try:
+                # Basic validation or casting if needed
+                vis = data["visualization"]
+                # Ensure type is valid enum or string
+                visualization_data = VisualizationData(
+                    type=vis.get("type"),
+                    coordinates=vis.get("coordinates"),
+                    params=vis.get("params", {})
+                )
+            except Exception as e:
+                print(f"Visualization validation error: {e}")
+                # Fallback: ignore visualization if invalid
+                visualization_data = None
+
+        return {
+            "question_uid": q_uid,
+            "subject_uid": "",
+            "topic_uid": topic_uid,
+            "type": q_type,
+            "prompt": data.get("prompt", "Question"),
+            "options": options,
+            "is_visual": data.get("is_visual", False) and (visualization_data is not None),
+            "visualization": visualization_data,
+            "meta": {
+                "difficulty": 0.5,
+                "skill_uid": "",
+                "generated": True,
+                "correct_data": data
+            }
+        }
+    except Exception as e:
+        print(f"Gen Error: {e}")
+        return _fallback_stub(topic_uid, len(exclude_uids))
+
+async def _select_question(topic_uid: str, difficulty_min: int, difficulty_max: int, exclude_uids: set = set()) -> Dict:
+    qs = select_examples_for_topics([topic_uid], limit=1, difficulty_min=difficulty_min, difficulty_max=difficulty_max, exclude_uids=exclude_uids)
     if qs:
         q = qs[0]
         return {
-            "question_uid": str(q.get("uid") or f"Q-STUB-{topic_uid}-1"),
+            "question_uid": str(q.get("uid") or f"Q-STUB-{topic_uid}-{len(exclude_uids)+1}"),
             "subject_uid": "",
             "topic_uid": topic_uid,
             "type": "free_text",
@@ -143,15 +371,8 @@ def _select_question(topic_uid: str, difficulty_min: int, difficulty_max: int) -
             "options": [],
             "meta": {"difficulty": float(q.get("difficulty") or 0.5), "skill_uid": ""},
         }
-    return {
-        "question_uid": f"Q-STUB-{topic_uid}-1",
-        "subject_uid": "",
-        "topic_uid": topic_uid,
-        "type": "free_text",
-        "prompt": f"Explain the key concept of '{topic_uid}' and provide an example.",
-        "options": [],
-        "meta": {"difficulty": 0.5, "skill_uid": ""},
-    }
+    
+    return await _generate_question_llm(topic_uid, exclude_uids)
 
 @router.post(
     "/start",
@@ -165,7 +386,7 @@ async def start(payload: StartRequest) -> Dict:
         raise HTTPException(status_code=404, detail="Topic not available")
     import uuid
     sid = uuid.uuid4().hex
-    first_q = _select_question(payload.topic_uid, 3, 3)
+    first_q = await _select_question(payload.topic_uid, 3, 3, set())
     sess_data = {
         "subject_uid": payload.subject_uid,
         "topic_uid": payload.topic_uid,
@@ -174,7 +395,7 @@ async def start(payload: StartRequest) -> Dict:
         "last_question_uid": first_q["question_uid"],
         "good": 0,
         "bad": 0,
-        "min_questions": 5,
+        "min_questions": 6,
         "max_questions": 20,
         "target_confidence": 0.85,
         "stability_window": 4,
@@ -206,7 +427,7 @@ def _confidence(sess: Dict) -> float:
     base = min(1.0, asked / max(1, sess["min_questions"]))
     return max(0.0, min(1.0, 0.6 * base + 0.4 * stable))
 
-def _next_question(sess: Dict) -> Optional[Dict]:
+async def _next_question(sess: Dict) -> Optional[Dict]:
     good = sess["good"]
     bad = sess["bad"]
     if len(sess["asked"]) >= sess["max_questions"]:
@@ -217,7 +438,7 @@ def _next_question(sess: Dict) -> Optional[Dict]:
     else:
         d = max(1, d_last - 1)
     sess["d_history"].append(d)
-    q = _select_question(sess["topic_uid"], d, d)
+    q = await _select_question(sess["topic_uid"], d, d, set(sess["asked"]))
     sess["last_question_uid"] = q["question_uid"]
     return q
 
@@ -242,7 +463,7 @@ async def next_question(payload: NextRequest):
     
     done_by_min = len(sess["asked"]) >= sess["min_questions"] and _confidence(sess) >= sess["target_confidence"]
     done_by_max = len(sess["asked"]) >= sess["max_questions"]
-    def _stream():
+    async def _stream():
         yield "event: ack\n"
         yield "data: {\"items\":[{\"accepted\":true}],\"meta\":{}}\n\n"
         if done_by_min or done_by_max:
@@ -273,7 +494,7 @@ async def next_question(payload: NextRequest):
             yield "event: done\n"
             yield "data: " + json.dumps(res, ensure_ascii=False) + "\n\n"
             return
-        q = _next_question(sess)
+        q = await _next_question(sess)
         _save_session(sid, sess) # Save updated session after selecting next question
         import json
         yield "event: question\n"
