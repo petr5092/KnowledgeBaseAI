@@ -171,7 +171,7 @@ from app.services.kb.builder import openai_chat_async
 import random
 import uuid
 
-async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: bool = False, previous_prompts: List[str] = []) -> Dict:
+async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: bool = False, previous_prompts: List[str] = [], difficulty: int = 5) -> Dict:
     # 1. Get Topic Title
     repo = None
     topic_title = topic_uid
@@ -216,6 +216,11 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
         q_types = ["single_choice", "single_choice", "numeric", "free_text", "boolean"]
     
     q_type = random.choice(q_types)
+    
+    # Map difficulty int (1-10) to description
+    diff_desc = "Intermediate"
+    if difficulty <= 3: diff_desc = "Elementary/Basic"
+    elif difficulty >= 8: diff_desc = "Advanced/Expert"
     
     # 3. Prompt
     visual_instruction = ""
@@ -285,6 +290,11 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
     Context: Adaptive learning platform.
     Target Audience: High school / University students.
     Language: Russian.
+    
+    Difficulty Level: {difficulty}/10 ({diff_desc}).
+    - Level 1-3: Basic definition, simple recognition, 1-step problems.
+    - Level 4-7: Standard problems, application of formula, 2-step reasoning.
+    - Level 8-10: Complex problems, synthesis of concepts, edge cases, multi-step.
     
     Question Type: {q_type}
     Is Visual Task: {is_visual}
@@ -435,7 +445,8 @@ async def _select_question(topic_uid: str, difficulty_min: int, difficulty_max: 
                 "meta": {"difficulty": float(q.get("difficulty") or 0.5), "skill_uid": ""},
             }
     
-    return await _generate_question_llm(topic_uid, exclude_uids, previous_prompts=previous_prompts)
+    # Pass target difficulty (using max as target) to generator
+    return await _generate_question_llm(topic_uid, exclude_uids, previous_prompts=previous_prompts, difficulty=difficulty_max)
 
 @router.post(
     "/start",
@@ -488,18 +499,77 @@ async def start(payload: StartRequest) -> Dict:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-def _evaluate(answer: AnswerDTO) -> float:
+def _evaluate(answer: AnswerDTO, question_data: Dict = None) -> float:
     if answer is None:
         return 0.0
-    if answer.text and len(str(answer.text).strip()) >= 3:
-        return 1.0
+    
+    # 1. Check Single Choice (Option UIDs)
     if answer.selected_option_uids:
-        return 1.0
-    try:
-        v = float(answer.value or 0.0)
-        return 1.0 if v != 0.0 else 0.0
-    except Exception:
+        if not question_data or not question_data.get("options"):
+            # Fallback if no data (should not happen in normal flow)
+            return 1.0
+        
+        # Find correct options
+        correct_uids = {
+            opt["option_uid"] 
+            for opt in question_data["options"] 
+            if opt.get("is_correct")
+        }
+        
+        # Simple logic: exact match of selected vs correct
+        # (Can be improved for partial credit)
+        selected = set(answer.selected_option_uids)
+        return 1.0 if selected == correct_uids else 0.0
+
+    # 2. Check Numeric (Value)
+    if answer.value is not None:
+        try:
+            user_val = float(answer.value)
+            # Try to find correct value in correct_data
+            correct_val = None
+            if question_data and question_data.get("correct_data"):
+                cd = question_data["correct_data"]
+                if "correct_value" in cd:
+                    correct_val = float(cd["correct_value"])
+            
+            if correct_val is not None:
+                # Allow small epsilon error
+                return 1.0 if abs(user_val - correct_val) < 1e-6 else 0.0
+            
+            # Fallback if no correct value known: assume correct if non-zero? No, unsafe.
+            # But for now, let's return 0.0 if we can't verify.
+            return 0.0
+        except Exception:
+            return 0.0
+
+    # 3. Check Free Text
+    if answer.text:
+        text = str(answer.text).strip()
+        if len(text) < 1:
+            return 0.0
+            
+        # Try to match with correct_value if exists
+        if question_data and question_data.get("correct_data"):
+            cd = question_data["correct_data"]
+            correct_text = str(cd.get("correct_value", "")).strip().lower()
+            if correct_text:
+                # Basic fuzzy match
+                if text.lower() == correct_text:
+                    return 1.0
+                # If correct answer is numeric but user sent text
+                try:
+                    if float(text) == float(correct_text):
+                        return 1.0
+                except:
+                    pass
+                return 0.0 # Mismatch
+        
+        # If no correct data available (legacy/fallback), 
+        # DO NOT return 1.0 just for length. It allows "nonsense".
+        # Return 0.0 or mark for manual review.
         return 0.0
+
+    return 0.0
 
 def _confidence(sess: Dict) -> float:
     asked = len(sess["asked"])
@@ -517,10 +587,24 @@ async def _next_question(sess: Dict) -> Optional[Dict]:
     if len(sess["asked"]) >= sess["max_questions"]:
         return None
     d_last = sess["d_history"][-1] if sess["d_history"] else 3
-    if good > bad:
+    
+    # Adaptive Logic: Adjust difficulty based on the LAST answer specifically
+    # User feedback: "If I answered wrong, give easier question."
+    
+    last_q_uid = sess["asked"][-1] if sess["asked"] else None
+    last_score = 0.0
+    # Retrieve score of the last question if available
+    if last_q_uid and "question_details" in sess and last_q_uid in sess["question_details"]:
+        last_score = sess["question_details"][last_q_uid].get("score", 0.0)
+    
+    # Determine new difficulty
+    if last_score >= 0.5:
+        # Correct answer -> Increase difficulty
         d = min(10, d_last + 1)
     else:
+        # Incorrect answer -> Decrease difficulty
         d = max(1, d_last - 1)
+        
     sess["d_history"].append(d)
     
     try:
@@ -575,7 +659,12 @@ async def next_question(payload: NextRequest):
             raise HTTPException(status_code=404, detail="Session not found")
         if payload.question_uid != sess.get("last_question_uid"):
             raise HTTPException(status_code=400, detail="Invalid sequence")
-        score = _evaluate(payload.answer)
+            
+        q_data = None
+        if "question_details" in sess and payload.question_uid in sess["question_details"]:
+            q_data = sess["question_details"][payload.question_uid]
+            
+        score = _evaluate(payload.answer, q_data)
         if score >= 0.5:
             sess["good"] += 1
         else:
@@ -666,10 +755,12 @@ async def next_question(payload: NextRequest):
                         
                         sys_prompt = (
                             "You are an expert tutor. Analyze the student's session history detailedly.\\n"
-                            "1. Calculate the precise knowledge level (0-100%) based on answer correctness and difficulty.\\n"
-                            "2. Provide a specific, constructive feedback for EACH question (why it was right/wrong).\\n"
-                            "3. Identify specific knowledge gaps (e.g. 'confuses radius and diameter').\\n"
-                            "4. Provide a tailored recommendation (NOT just 'next topic', but specific actions).\\n"
+                            "LANGUAGE: All output text (feedback, comments, recommendations) MUST be in RUSSIAN.\\n"
+                            "1. Re-evaluate every answer. If the answer is nonsense, random text, or incorrect, count it as 0.\\n"
+                            "2. Calculate the precise knowledge level (0-100%) based on ACTUAL correctness, ignoring the system's preliminary score if it was too lenient.\\n"
+                            "3. Provide a specific, constructive feedback for EACH question (why it was right/wrong).\\n"
+                            "4. Identify specific knowledge gaps (e.g. 'confuses radius and diameter').\\n"
+                            "5. Provide a tailored recommendation (NOT just 'next topic', but specific actions).\\n"
                             "Output JSON format:\\n"
                             "{\\n"
                             "  \"questions_analytics\": [\\n"
@@ -740,7 +831,6 @@ async def next_question(payload: NextRequest):
                         ],
                         "meta": {}
                     }
-                    import json
                     yield "event: done\n"
                     yield "data: " + json.dumps(res, ensure_ascii=False) + "\n\n"
                     return
@@ -751,14 +841,12 @@ async def next_question(payload: NextRequest):
                     return
                 if not _save_session(sid, sess): # Save updated session after selecting next question
                     print(f"Warning: Failed to save session {sid} after selecting next question")
-                import json
                 yield "event: question\n"
                 yield "data: " + json.dumps({"items":[q], "meta": {}}, ensure_ascii=False) + "\n\n"
             except Exception as e:
                 import traceback
                 traceback.print_exc()
                 yield "event: error\n"
-                import json
                 yield f"data: {json.dumps({'error': str(e)})}\n\n"
         
         return StreamingResponse(_stream(), media_type="text/event-stream")

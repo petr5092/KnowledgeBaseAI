@@ -133,13 +133,21 @@ class LessonUnit(BaseModel):
     title: str
     payload: Dict[str, Any]
 
+class MicroLesson(BaseModel):
+    order: int
+    title: str
+    i_do: Optional[LessonUnit] = None
+    we_do: Optional[LessonUnit] = None
+    you_do: Optional[LessonUnit] = None
+
 class RoadmapNode(BaseModel):
     topic_uid: str
     title: str
     description: Optional[str] = None
     status: str = "locked"  # locked, available, completed
     max_score: int = 0
-    units: List[LessonUnit] = []
+    lessons: List[MicroLesson] = []
+    final_test: Optional[LessonUnit] = None
 
 class RoadmapResponse(BaseModel):
     max_score: int = 0
@@ -151,30 +159,12 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
     subject_uid = payload.subject_uid
     progress = payload.current_progress or {}
     
-    # 1. Fetch Candidate Topics (limit 5)
-    # We prefer topics that are accessible (prereqs met) but not fully mastered.
-    # For simplicity in this demo, we just fetch the first 5 topics of the subject.
+    # 1. Fetch Candidate Topics (limit 20 to give LLM choices)
     topics = []
+    rows = []
     if settings.neo4j_uri:
         repo = Neo4jRepo()
-        # Query to get topics and their content units
-        query = """
-        MATCH (sub:Subject {uid: $su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(t:Topic)
-        OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
-        RETURN t.uid AS uid, t.title AS title, t.description AS description,
-               collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units
-        LIMIT 5
-        UNION
-        MATCH (sub:Subject {uid: $su})-[:CONTAINS]->(:Section)-[:CONTAINS]->(:Subsection)-[:CONTAINS]->(t:Topic)
-        OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
-        RETURN t.uid AS uid, t.title AS title, t.description AS description,
-               collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units
-        LIMIT 5
-        """
-        # Note: The UNION LIMIT 5 is a bit tricky, it might give 5 from first + 5 from second.
-        # Let's simplify: Get all, then process in python to pick best 5.
-        
-        # Better query: Get all topics, sort by some order (e.g. alphabetical or graph order), then pick 5.
+        # Better query: Get all topics, sort by some order (e.g. alphabetical or graph order), then pick 20.
         query = """
         MATCH (sub:Subject {uid: $su})
         MATCH (sub)-[:CONTAINS*]->(t:Topic)
@@ -187,138 +177,192 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
         rows = repo.read(query, {"su": subject_uid})
         print(f"Found {len(rows)} rows")
         repo.close()
+
+    # 2. LLM Personalization & Description Generation
+    # We want to select top 5 topics based on gaps (low scores) and generate descriptions if missing.
+    selected_rows = []
+    
+    # Map rows by UID for easy access
+    rows_map = {r["uid"]: r for r in rows}
+    
+    # Prepare candidates for LLM
+    candidates_info = []
+    for r in rows:
+        uid = r["uid"]
+        score = progress.get(uid, 0.0)
+        candidates_info.append({
+            "uid": uid,
+            "title": r["title"],
+            "description": r.get("description") or "",
+            "current_score": score
+        })
+
+    used_llm = False
+    if settings.openai_api_key and candidates_info:
+        try:
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI(api_key=settings.openai_api_key.get_secret_value())
+            
+            prompt = (
+                "You are an adaptive learning AI. Select the best 5 topics for a student roadmap from the list below.\n"
+                "Prioritize topics where 'current_score' is low (< 0.6) to fix learning gaps, then proceed to new topics (score 0.0).\n"
+                "Also, GENERATE a short, engaging description (in Russian) for any topic that has an empty description.\n"
+                "Return a valid JSON object with a key 'selected_topics' containing a list of objects: {'uid': '...', 'description': '...'}.\n"
+                "The list must be ordered by priority (highest priority first).\n\n"
+                f"Candidates: {json.dumps(candidates_info, ensure_ascii=False)}"
+            )
+            
+            completion = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a helpful tutor assistant. Output valid JSON only."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"}
+            )
+            
+            content = completion.choices[0].message.content
+            if content:
+                data = json.loads(content)
+                selected_items = data.get("selected_topics", [])
+                
+                # Reconstruct selected_rows based on LLM order
+                for item in selected_items:
+                    uid = item.get("uid")
+                    if uid in rows_map:
+                        r = rows_map[uid]
+                        # Update description if LLM provided one
+                        new_desc = item.get("description")
+                        if new_desc and (not r.get("description") or len(r["description"]) < 5):
+                            r["description"] = new_desc
+                        selected_rows.append(r)
+                
+                used_llm = True
+                print(f"LLM selected {len(selected_rows)} topics")
+                
+        except Exception as e:
+            print(f"LLM Personalization failed, falling back to default order. Error: {e}")
+
+    # Fallback if LLM failed or returned nothing
+    if not selected_rows:
+        selected_rows = rows[:5]
+    else:
+        # Ensure we have at most 5
+        selected_rows = selected_rows[:5]
         
-        # Process rows to build RoadmapNodes
-        count = 0
-        for r in rows:
-            if count >= 5:
-                break
+    # 3. Process selected rows to build RoadmapNodes
+    count = 0
+    for r in selected_rows:
+        if count >= 5:
+            break
+        
+        t_uid = r["uid"]
             
-            t_uid = r["uid"]
+        # Determine status based on progress
+        p_val = progress.get(t_uid, 0.0)
+        if p_val >= 0.8:
+            status = "completed"
+        elif p_val > 0:
+            status = "available"
+        else:
+            status = "locked" # Simple logic
+        
+        # If it's the first one and locked, make it available
+        if count == 0 and status == "locked":
+            status = "available"
             
-            # Determine status based on progress
-            # If previous topics in list are done? Or just check progress dict.
-            # For this demo: if it's in progress dict -> completed/in_progress.
-            p_val = progress.get(t_uid, 0.0)
-            if p_val >= 0.8:
-                status = "completed"
-            elif p_val > 0:
-                status = "available"
-            else:
-                status = "locked" # Simple logic
-            
-            # If it's the first one and locked, make it available
-            if count == 0 and status == "locked":
-                status = "available"
-                
-            # Categorize units
-            units = []
-            raw_units = r.get("units", [])
-            
-            # Helper to parse payload
-            def get_payload(u):
-                p = u.get("payload")
-                if isinstance(p, str):
-                    try:
-                        return json.loads(p)
-                    except:
-                        return {}
-                return p if p else {}
+        # Categorize units
+        raw_units = r.get("units", [])
+        
+        # Helper to parse payload
+        def get_payload(u):
+            p = u.get("payload")
+            if isinstance(p, str):
+                try:
+                    return json.loads(p)
+                except:
+                    return {}
+            return p if p else {}
 
-            # Filter relevant units
-            # We want: lesson_i_do, lesson_we_do, lesson_you_do, lesson_test
-            # And sort them by order if available
+        # Group units into MicroLessons
+        lessons_map: Dict[int, Dict[str, Any]] = {} # order -> {title: "", i_do: ..., we_do: ..., you_do: ...}
+        final_test_unit = None
+        
+        for u in raw_units:
+            u_type = u.get("type")
+            p = get_payload(u)
             
-            # Group by micro-lesson ID if possible, or just sort
-            # My generated UIDs are like UNIT-{t_uid}-M{id}-{TYPE}
-            # Or payload has 'order'
-            
-            relevant_units = []
-            final_test = None
-            
-            for u in raw_units:
-                u_type = u.get("type")
-                p = get_payload(u)
-                
-                if u_type == "lesson_test":
-                    final_test = u
-                    continue
-                    
-                if u_type in ["lesson_i_do", "lesson_we_do", "lesson_you_do"]:
-                    order = p.get("order", 999)
-                    # Map type to sort index: I=1, We=2, You=3
-                    type_order = 1 if u_type == "lesson_i_do" else (2 if u_type == "lesson_we_do" else 3)
-                    relevant_units.append({
-                        "u": u,
-                        "order": order,
-                        "type_order": type_order
-                    })
-
-            # Sort: primary by 'order', secondary by 'type_order'
-            relevant_units.sort(key=lambda x: (x["order"], x["type_order"]))
-            
-            # Convert to LessonUnit
-            for item in relevant_units:
-                u = item["u"]
-                u_type = u.get("type")
-                p = get_payload(u)
-                
-                # Friendly title
-                if u_type == "lesson_i_do":
-                    title = "Изучение (I Do)"
-                elif u_type == "lesson_we_do":
-                    title = "Практика (We Do)"
-                else:
-                    title = "Задание (You Do)"
-                    
-                # Add micro-lesson title if present
-                if "micro_lesson_title" in p:
-                    title += f": {p['micro_lesson_title']}"
-                    
-                units.append(LessonUnit(
+            if u_type == "lesson_test":
+                final_test_unit = LessonUnit(
                     uid=u["uid"],
-                    type=u_type,
-                    title=title,
-                    payload=p
-                ))
-            
-            # Append Final Test
-            if final_test:
-                p = get_payload(final_test)
-                units.append(LessonUnit(
-                    uid=final_test["uid"],
                     type="lesson_test",
                     title="Финальный тест",
                     payload=p
-                ))
-            elif not relevant_units:
-                # Fallback if no units found (stub)
-                units.append(LessonUnit(
-                    uid=f"stub-{t_uid}",
-                    type="info",
-                    title="Материалы готовятся",
-                    payload={"text": "Content coming soon"}
-                ))
-            
-            # Calculate max_score
-            # 1 point per micro-lesson unit (I/We/You Do)
-            # 3 points per final test
-            node_score = 0
-            for u in units:
-                if u.type == "lesson_test":
-                    node_score += 3
-                elif u.type in ["lesson_i_do", "lesson_we_do", "lesson_you_do"]:
-                    node_score += 1
-            
-            topics.append(RoadmapNode(
-                topic_uid=t_uid,
-                title=r["title"],
-                description=r.get("description"),
-                status=status,
-                max_score=node_score,
-                units=units
+                )
+                continue
+                
+            if u_type in ["lesson_i_do", "lesson_we_do", "lesson_you_do"]:
+                order = p.get("order", 1)
+                
+                if order not in lessons_map:
+                    # Try to find a title from any unit in this group, usually I_DO has the main title
+                    lessons_map[order] = {"order": order, "title": f"Урок {order}"}
+                
+                # Update title if present in micro_lesson_title
+                if "micro_lesson_title" in p:
+                    lessons_map[order]["title"] = p["micro_lesson_title"]
+                
+                l_unit = LessonUnit(
+                    uid=u["uid"],
+                    type=u_type,
+                    title="", # Will be set by frontend or implied by field
+                    payload=p
+                )
+                # Assign friendly title based on type
+                if u_type == "lesson_i_do":
+                    l_unit.title = "Изучение (I Do)"
+                    lessons_map[order]["i_do"] = l_unit
+                elif u_type == "lesson_we_do":
+                    l_unit.title = "Практика (We Do)"
+                    lessons_map[order]["we_do"] = l_unit
+                elif u_type == "lesson_you_do":
+                    l_unit.title = "Задание (You Do)"
+                    lessons_map[order]["you_do"] = l_unit
+
+        # Convert map to list and sort
+        lessons_list = []
+        for order, data in lessons_map.items():
+            lessons_list.append(MicroLesson(
+                order=order,
+                title=data["title"],
+                i_do=data.get("i_do"),
+                we_do=data.get("we_do"),
+                you_do=data.get("you_do")
             ))
-            count += 1
+        
+        lessons_list.sort(key=lambda x: x.order)
+        
+        # Calculate max_score
+        # 1 point per micro-lesson (if fully completed i/we/you? or 1 per unit?)
+        # Let's keep 1 point per unit for simplicity, so max_score = sum of units
+        node_score = 0
+        if final_test_unit:
+            node_score += 3
+        for l in lessons_list:
+            if l.i_do: node_score += 1
+            if l.we_do: node_score += 1
+            if l.you_do: node_score += 1
+        
+        topics.append(RoadmapNode(
+            topic_uid=t_uid,
+            title=r["title"],
+            description=r.get("description"),
+            status=status,
+            max_score=node_score,
+            lessons=lessons_list,
+            final_test=final_test_unit
+        ))
+        count += 1
 
     total_roadmap_score = sum(n.max_score for n in topics)
     return {"nodes": topics, "max_score": total_roadmap_score}
