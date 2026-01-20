@@ -6,13 +6,20 @@ from app.config.settings import settings
 from app.services.graph.neo4j_repo import Neo4jRepo
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-KB_DIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'kb')
+KB_DIR = os.path.join(os.path.dirname(BASE_DIR), 'kb')
 
 def load_jsonl(filename: str) -> List[Dict]:
     path = os.path.join(KB_DIR, filename)
     data: List[Dict] = []
     if not os.path.exists(path):
-        return data
+        # Try recursive search if file not found in root
+        for root, _, files in os.walk(KB_DIR):
+            if filename in files:
+                path = os.path.join(root, filename)
+                break
+        else:
+            return data
+            
     with open(path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.strip()
@@ -54,14 +61,18 @@ def select_examples_for_topics(
                     "MATCH (t:Topic {uid:tuid}) "
                     "WHERE ($tid IS NULL OR t.tenant_id = $tid) "
                     "OPTIONAL MATCH (t)-[:HAS_EXAMPLE]->(ex:Example) "
-                    "OPTIONAL MATCH (t)-[:HAS_QUESTION|:CONTAINS]->(q:Question) "
+                    "OPTIONAL MATCH (t)-[:HAS_QUESTION|CONTAINS]->(q:Question) "
                     "WITH t, ex, q "
                     "WHERE ex IS NOT NULL OR q IS NOT NULL "
                     "RETURN coalesce(q.uid, ex.uid) AS uid, "
                     "       coalesce(q.title, ex.title) AS title, "
                     "       coalesce(q.text, q.statement, ex.statement) AS statement, "
                     "       coalesce(q.difficulty, ex.difficulty_level) AS difficulty, "
-                    "       t.uid AS topic_uid"
+                    "       t.uid AS topic_uid, "
+                    "       q.type AS type, "
+                    "       q.options AS options, "
+                    "       q.is_visual AS is_visual, "
+                    "       q.visualization AS visualization"
                 ),
                 {"t": topic_uids, "tid": tenant_id}
             )
@@ -82,31 +93,49 @@ def select_examples_for_topics(
                 if r.get('uid') in exclude:
                     continue
                 r['difficulty'] = _norm(d_raw)
+                
+                # Deserialize JSON fields if they are strings
+                if isinstance(r.get('options'), str):
+                    try:
+                        r['options'] = json.loads(r['options'])
+                    except:
+                        r['options'] = []
+                
+                if isinstance(r.get('visualization'), str):
+                    try:
+                        r['visualization'] = json.loads(r['visualization'])
+                    except:
+                        r['visualization'] = None
+
                 pool.append(r)
             repo.close()
         except Exception:
             pool = []
     if not pool:
-        idx = get_examples_indexed()
-        def _norm(x):
-            try:
-                xf = float(x)
-            except Exception:
-                return 0.6
-            return xf if xf <= 1.0 else max(0.0, min(1.0, xf / 5.0))
-        for tu in topic_uids:
-            for e in idx["by_topic"].get(tu, []):
-                d_raw = e.get('difficulty', 3)
+        try:
+            idx = get_examples_indexed()
+            def _norm(x):
                 try:
-                    d = int(float(d_raw))
+                    xf = float(x)
                 except Exception:
-                    d = 3
-                if d < difficulty_min or d > difficulty_max:
-                    continue
-                if e.get('uid') in exclude:
-                    continue
-                e['difficulty'] = _norm(d_raw)
-                pool.append(e)
+                    return 0.6
+                return xf if xf <= 1.0 else max(0.0, min(1.0, xf / 5.0))
+            for tu in topic_uids:
+                for e in idx["by_topic"].get(tu, []):
+                    d_raw = e.get('difficulty', 3)
+                    try:
+                        d = int(float(d_raw))
+                    except Exception:
+                        d = 3
+                    if d < difficulty_min or d > difficulty_max:
+                        continue
+                    if e.get('uid') in exclude:
+                        continue
+                    e['difficulty'] = _norm(d_raw)
+                    pool.append(e)
+        except Exception:
+            # If fallback fails, we leave pool empty and let the caller handle it (e.g. generate via LLM)
+            pass
     if not pool:
         titles: Dict[str, str] = {}
         topics_source: List[Dict] = []
@@ -132,29 +161,8 @@ def select_examples_for_topics(
                 repo.close()
             except Exception:
                 topics_source = []
-        source_topics = topic_uids or [t["uid"] for t in topics_source]
-        if not source_topics:
-            source_topics = []
-        i = 0
-        for tu in source_topics:
-            if len(pool) >= max(1, limit):
-                break
-            title = titles.get(tu) or tu
-            for k in range(2):
-                qid = f"Q-STUB-{tu}-{k}"
-                if qid in exclude:
-                    continue
-                pool.append(
-                    {
-                        "uid": qid,
-                        "title": f"Вопрос по теме: {title}",
-                        "statement": f"Опишите ключевое понятие из темы '{title}' и приведите пример.",
-                        "difficulty": 0.5,
-                        "topic_uid": tu,
-                    }
-                )
-                if len(pool) >= limit:
-                    break
+        # Removed stub generation logic to enforce strict question selection or LLM generation
+
     selected: List[Dict] = []
     seen_by_topic: Dict[str, int] = {tu: 0 for tu in topic_uids}
     for e in pool:

@@ -6,35 +6,68 @@ from app.core.correlation import get_correlation_id
 from app.core.logging import logger
 
 
+_driver_instance = None
+
 def get_driver():
+    global _driver_instance
+    if _driver_instance:
+        return _driver_instance
+
     uri = settings.neo4j_uri
+    # Force localhost if neo4j hostname fails
+    if 'neo4j:7687' in uri:
+        import socket
+        try:
+            socket.gethostbyname('neo4j')
+        except:
+            uri = uri.replace('neo4j:7687', 'localhost:7687')
+            
     user = settings.neo4j_user
     password = settings.neo4j_password.get_secret_value()
     if not (uri and user and password):
         raise RuntimeError('Missing Neo4j connection environment variables')
-    return GraphDatabase.driver(uri, auth=(user, password))
+    
+    _driver_instance = GraphDatabase.driver(
+        uri, 
+        auth=(user, password),
+        connection_timeout=3.0,  # Fail fast if connection is bad
+        max_connection_lifetime=60.0
+    )
+    return _driver_instance
 
 class Neo4jRepo:
     def __init__(self, uri: Optional[str] = None, user: Optional[str] = None, password: Optional[str] = None, max_retries: int = 3, backoff_sec: float = 0.8):
         self.uri = uri or settings.neo4j_uri
-        # Force localhost if neo4j hostname fails
-        if 'neo4j:7687' in self.uri:
-            import socket
-            try:
-                socket.gethostbyname('neo4j')
-            except:
-                self.uri = self.uri.replace('neo4j:7687', 'localhost:7687')
-        
         self.user = user or settings.neo4j_user
         self.password = password or settings.neo4j_password.get_secret_value()
-        if not self.uri or not self.user or not self.password:
-            raise RuntimeError('Missing Neo4j connection environment variables')
-        self.driver = GraphDatabase.driver(self.uri, auth=(self.user, self.password))
+        
         self.max_retries = max_retries
         self.backoff_sec = backoff_sec
+        self._owns_driver = False
+
+        if uri or user or password:
+            # Custom connection - create own driver
+             # Force localhost if neo4j hostname fails (apply logic here too if needed, but usually this is for internal use)
+            target_uri = self.uri
+            if 'neo4j:7687' in target_uri:
+                import socket
+                try:
+                    socket.gethostbyname('neo4j')
+                except:
+                    target_uri = target_uri.replace('neo4j:7687', 'localhost:7687')
+            
+            if not self.uri or not self.user or not self.password:
+                raise RuntimeError('Missing Neo4j connection environment variables')
+                
+            self.driver = GraphDatabase.driver(target_uri, auth=(self.user, self.password))
+            self._owns_driver = True
+        else:
+            # Use shared driver
+            self.driver = get_driver()
 
     def close(self):
-        self.driver.close()
+        if self._owns_driver:
+            self.driver.close()
 
     def _retry(self, fn: Callable[[Any], Any]) -> Any:
         attempt = 0

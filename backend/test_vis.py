@@ -40,9 +40,18 @@ async def test_generation():
             
             # Call function
             # Note: topic_uid "topic_123" will correspond to "Geometry Basics" via mock
-            result = await _generate_question_llm("topic_123", set())
+            result = await _generate_question_llm("topic_123", set(), previous_prompts=["Avoid this prompt"])
             
-            # Verify
+            # Verify prompt content
+            call_args = mock_openai.call_args
+            prompt_sent = call_args[0][0][0]["content"]
+            if "Avoid this prompt" not in prompt_sent:
+                print("FAILED: Previous prompts not found in LLM prompt")
+                return
+            else:
+                print("PASSED: Previous prompts included in LLM prompt")
+
+            # Verify result
             print(f"Result is_visual: {result.get('is_visual')}")
             print(f"Result visualization: {result.get('visualization')}")
             
@@ -55,12 +64,16 @@ async def test_generation():
                 print("FAILED: visualization is None")
                 return
                 
-            if vis.type != VisualizationType.GEOMETRIC_SHAPE:
-                print(f"FAILED: Unexpected type {vis.type}")
+            # Handle both dict and object (in case implementation changes)
+            vis_type = vis.get("type") if isinstance(vis, dict) else vis.type
+            vis_coords = vis.get("coordinates") if isinstance(vis, dict) else vis.coordinates
+
+            if vis_type != "geometric_shape" and vis_type != VisualizationType.GEOMETRIC_SHAPE:
+                print(f"FAILED: Unexpected type {vis_type}")
                 return
                 
-            if len(vis.coordinates) != 3:
-                print(f"FAILED: Coordinates length {len(vis.coordinates)}")
+            if len(vis_coords) != 3:
+                print(f"FAILED: Coordinates length {len(vis_coords)}")
                 return
                 
             print("Test Passed!")
