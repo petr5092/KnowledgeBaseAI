@@ -645,6 +645,7 @@ async def _next_question(sess: Dict) -> Optional[Dict]:
             "correct_data": q["meta"].get("correct_data"),
             "options": q.get("options"),
             "type": q.get("type"),
+            "difficulty": q["meta"].get("difficulty", 5), # Default to 5 if missing
         }
 
     sess["last_question_uid"] = q["question_uid"]
@@ -697,9 +698,10 @@ async def next_question(payload: NextRequest):
                     # Precise Score Calculation
                     # Calculate weighted score based on difficulty
                     # Score = Sum(answer_score * difficulty) / Sum(difficulty)
-                    # Difficulties are stored in d_history (last 20) or we can infer from session
-                    # But d_history tracks difficulty of *next* question.
-                    # Better to use difficulty of *asked* questions.
+                    # But if user answers hard questions wrong, we shouldn't punish too hard compared to easy questions?
+                    # Actually, standard weighted average is fine: 
+                    # 100% on Diff 10 is better than 100% on Diff 1.
+                    # 0% on Diff 10 is same as 0% on Diff 1 (0 points).
                     
                     total_weighted_score = 0.0
                     total_difficulty = 0.0
@@ -708,22 +710,11 @@ async def next_question(payload: NextRequest):
                     for q_uid in sess.get("asked", []):
                         if q_uid in q_details:
                             qd = q_details[q_uid]
-                            # Try to get difficulty from meta, default to 3 if missing
-                            diff = 3.0
-                            try:
-                                # In select_question, we store meta.difficulty. 
-                                # But we didn't explicitly store difficulty in question_details in start/next
-                                # Let's assume average difficulty or check if we can retrieve it.
-                                # Actually, we should have stored it. 
-                                # But currently question_details only stores prompt, correct_data, options, type, user_answer, score
-                                pass
-                            except:
-                                pass
+                            diff = float(qd.get("difficulty", 5.0))
+                            user_score = float(qd.get("score", 0.0))
                             
-                            # Fallback: use simple score for now, but with better precision
-                            user_score = qd.get("score", 0.0)
-                            total_weighted_score += user_score
-                            total_difficulty += 1.0
+                            total_weighted_score += user_score * diff
+                            total_difficulty += diff
                             
                     raw_score = total_weighted_score / max(1.0, total_difficulty)
                     score = round(raw_score, 2)
@@ -759,8 +750,8 @@ async def next_question(payload: NextRequest):
                         sys_prompt = (
                             "You are an expert tutor. Analyze the student's session history detailedly.\\n"
                             "LANGUAGE: All output text (feedback, comments, recommendations) MUST be in RUSSIAN.\\n"
-                            "1. Re-evaluate every answer. If the answer is nonsense, random text, or incorrect, count it as 0.\\n"
-                            "2. Calculate the precise knowledge level (0-100%) based on ACTUAL correctness, ignoring the system's preliminary score if it was too lenient.\\n"
+                            "1. Re-evaluate every answer. BE LENIENT with formatting errors (e.g. 0.2 vs 2/10, or missing units). If the student shows understanding but failed specific format, give PARTIAL credit (0.5).\\n"
+                            "2. Calculate the precise knowledge level (0-100%) based on ACTUAL correctness. Focus on CONCEPTUAL understanding.\\n"
                             "3. Provide a specific, constructive feedback for EACH question (why it was right/wrong).\\n"
                             "4. Identify specific knowledge gaps (e.g. 'confuses radius and diameter').\\n"
                             "5. Provide a tailored recommendation (NOT just 'next topic', but specific actions).\\n"
