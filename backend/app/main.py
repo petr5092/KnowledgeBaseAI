@@ -221,6 +221,7 @@ if origins:
     )
 
 app.include_router(engine_router, prefix="/v1/engine", tags=["Engine"])
+app.include_router(roadmap_router, prefix="/v1/roadmap", tags=["Roadmap"])
 app.include_router(analytics_router)
 app.include_router(ws_router)
 app.include_router(admin_router)

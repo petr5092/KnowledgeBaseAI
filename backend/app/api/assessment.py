@@ -352,6 +352,36 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
             try:
                 # Basic validation or casting if needed
                 vis = data["visualization"]
+                
+                # Integrations with GeometryEngine for valid coordinates
+                if vis.get("type") == "geometric_shape":
+                    try:
+                        from app.services.geometry import GeometryEngine
+                        # Initialize engine with default canvas (assuming frontend uses ~400x400)
+                        engine = GeometryEngine(canvas_width=400, canvas_height=400, min_distance=20)
+                        
+                        coords = vis.get("coordinates")
+                        if isinstance(coords, list) and len(coords) > 0:
+                            # Check if it's single shape (list of points) or multiple (list of shape objects)
+                            # Single shape: [{"x": 1, "y": 2}, ...] -> dicts have "x"
+                            # Multi shape: [{"type": "...", "points": [...]}, ...] -> dicts have "points"
+                            
+                            is_multi = "points" in coords[0]
+                            
+                            if is_multi:
+                                # Repack multiple shapes to avoid overlap
+                                new_shapes = engine.repack_shapes(coords)
+                                vis["coordinates"] = new_shapes
+                            elif "x" in coords[0]:
+                                # Single shape (points list)
+                                # Wrap as one shape, repack (centers it), unwrap
+                                wrapped = [{"type": "polygon", "points": coords}]
+                                repacked = engine.repack_shapes(wrapped)
+                                if repacked:
+                                    vis["coordinates"] = repacked[0]["points"]
+                    except Exception as geo_err:
+                        print(f"GeometryEngine error (using original coords): {geo_err}")
+
                 # Ensure type is valid enum or string
                 vis_obj = VisualizationData(
                     type=vis.get("type"),
