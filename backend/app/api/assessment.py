@@ -240,9 +240,12 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
       * geometric_shape (multiple shapes) - USE THIS FOR COMPARISONS OR MULTIPLE FIGURES:
         [
           {"type": "polygon", "label": "Figure A", "color": "blue", "points": [{"x": 0, "y": 0}, {"x": 4, "y": 0}, {"x": 0, "y": 3}]},
-          {"type": "polygon", "label": "Figure B", "color": "red", "points": [{"x": 5, "y": 0}, {"x": 9, "y": 0}, {"x": 9, "y": 3}]}
+          {"type": "line", "label": "Segment B", "color": "red", "points": [{"x": 5, "y": 0}, {"x": 9, "y": 0}]}
         ]
-        CRITICAL FOR GEOMETRY: The coordinates MUST be mathematically consistent with the problem statement values (scale 1:1). 
+        CRITICAL FOR GEOMETRY: 
+        - For SEGMENTS ("отрезки") or LINES: Use "type": "line" and provide EXACTLY 2 points (start and end). DO NOT use "polygon" for lines.
+        - For POLYGONS (triangles, squares): Use "type": "polygon" and provide 3+ points.
+        - The coordinates MUST be mathematically consistent with the problem statement values (scale 1:1). 
         If a side is length 5, the distance between its points must be 5. If a base is 8, the x-difference must be 8.
         Do not provide arbitrary coordinates. Calculate them to match the problem data exactly.
       * graph (single line): [{"x": -10, "y": ...}, ...]
@@ -821,6 +824,7 @@ async def next_question(payload: NextRequest):
                     }
 
                     res = {
+                        "is_completed": True,
                         "items": [
                             {
                                 "topic_uid": sess["topic_uid"],
@@ -842,7 +846,7 @@ async def next_question(payload: NextRequest):
                 if not _save_session(sid, sess): # Save updated session after selecting next question
                     print(f"Warning: Failed to save session {sid} after selecting next question")
                 yield "event: question\n"
-                yield "data: " + json.dumps({"items":[q], "meta": {}}, ensure_ascii=False) + "\n\n"
+                yield "data: " + json.dumps({"is_completed": False, "items":[q], "meta": {}}, ensure_ascii=False) + "\n\n"
             except Exception as e:
                 import traceback
                 traceback.print_exc()
