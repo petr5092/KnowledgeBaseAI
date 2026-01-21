@@ -249,11 +249,13 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
         If a side is length 5, the distance between its points must be 5. If a base is 8, the x-difference must be 8.
         Do not provide arbitrary coordinates. Calculate them to match the problem data exactly.
       * graph (single line): [{"x": -10, "y": ...}, ...]
-      * graph (multiple lines/functions) - USE THIS FOR INTERSECTIONS OR SYSTEMS:
+      * graph (multiple lines/functions) - USE THIS IF PROMPT MENTIONS MULTIPLE FUNCTIONS:
         [
           {"type": "line", "label": "y=2x+3", "color": "blue", "points": [{"x": -10, "y": -17}, {"x": 10, "y": 23}]},
           {"type": "line", "label": "y=-x+1", "color": "red", "points": [{"x": -10, "y": 11}, {"x": 10, "y": -9}]}
         ]
+        CRITICAL: If the prompt mentions multiple functions (e.g. f(x) and g(x)), you MUST provide an array of objects for "coordinates".
+        Do not provide a single array of points if you are describing multiple functions.
       * diagram/chart: appropriate JSON representation
     """
 
