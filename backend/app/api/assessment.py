@@ -172,6 +172,63 @@ from app.services.kb.builder import openai_chat_async
 import random
 import uuid
 
+def _enrich_vertex_labels(coords: List[Dict]) -> List[Dict]:
+    """
+    Enrich shapes with vertex_labels if missing.
+    Infers labels from shape 'label' (e.g. "Triangle ABC" -> A, B, C).
+    """
+    if not coords:
+        return coords
+        
+    # Check if this is a list of points (single shape) or list of shapes
+    # If first item has "x" and "y" directly, it's a list of points.
+    if "x" in coords[0] and "y" in coords[0]:
+        return coords
+        
+    enriched_coords = []
+    
+    for shape in coords:
+        if not isinstance(shape, dict):
+            enriched_coords.append(shape)
+            continue
+            
+        new_shape = shape.copy()
+        
+        # If vertex_labels already exist, skip
+        if new_shape.get("vertex_labels"):
+            enriched_coords.append(new_shape)
+            continue
+            
+        label = new_shape.get("label", "")
+        points = new_shape.get("points", [])
+        
+        if not label or not points:
+            enriched_coords.append(new_shape)
+            continue
+            
+        # Extract potential vertex names
+        # Strategy: Find contiguous uppercase sequence (min 2 chars)
+        match = re.search(r'\b([A-Z]{2,})\b', label)
+        candidates = []
+        if match:
+            candidates = list(match.group(1))
+            
+        # If candidate count matches points count, assign them
+        if candidates and len(candidates) == len(points):
+            v_labels = []
+            for i, pt in enumerate(points):
+                v_labels.append({
+                    "text": candidates[i],
+                    "x": pt.get("x", 0),
+                    "y": pt.get("y", 0)
+                })
+            new_shape["vertex_labels"] = v_labels
+            print(f"Enriched {label} with {candidates}")
+            
+        enriched_coords.append(new_shape)
+        
+    return enriched_coords
+
 async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: bool = False, previous_prompts: List[str] = [], difficulty: int = 5) -> Dict:
     # 1. Get Topic Title
     repo = None
@@ -438,6 +495,10 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
                     except Exception as geo_err:
                         print(f"GeometryEngine error (using original coords): {geo_err}")
 
+                # Enrich vertex labels if possible
+                if vis.get("coordinates") and isinstance(vis["coordinates"], list):
+                     vis["coordinates"] = _enrich_vertex_labels(vis["coordinates"])
+
                 # Ensure type is valid enum or string
                 vis_obj = VisualizationData(
                     type=vis.get("type"),
@@ -455,6 +516,14 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
         final_type = q_type
         if options and len(options) > 0:
             final_type = "single_choice"
+        
+        # Correction for "Solve..." questions: If prompt asks to solve/calculate, use free_text instead of numeric
+        # This addresses user feedback: "Where it says to solve something type should be free_text not numeric"
+        if final_type == "numeric":
+            prompt_lower = data.get("prompt", "").lower()
+            solve_keywords = ["решите", "solve", "найдите решение", "calculate", "вычислите"]
+            if any(k in prompt_lower for k in solve_keywords):
+                final_type = "free_text"
 
         # Optimization: Remove options from meta.correct_data to reduce duplication
         correct_data = data.copy()
@@ -907,8 +976,32 @@ async def next_question(payload: NextRequest):
                             for i, uid in enumerate(asked_uids):
                                  if uid in q_details:
                                      qd = q_details[uid]
+                                     
+                                     # Format user answer for better LLM understanding
+                                     ua = qd.get('user_answer', {})
+                                     ans_str = "No answer"
+                                     if isinstance(ua, dict):
+                                         if ua.get('selected_option_uids'):
+                                             # Map UIDs to Option Text if available? 
+                                             # For now just showing UIDs is better than showing empty text field
+                                             ans_str = f"Selected Options: {ua.get('selected_option_uids')}"
+                                             
+                                             # Try to find option text for context
+                                             if qd.get('options'):
+                                                 selected_texts = []
+                                                 for opt in qd['options']:
+                                                     if opt['option_uid'] in ua['selected_option_uids']:
+                                                         selected_texts.append(opt['text'])
+                                                 if selected_texts:
+                                                     ans_str += f" ({', '.join(selected_texts)})"
+
+                                         elif ua.get('text'):
+                                             ans_str = f"Text: {ua.get('text')}"
+                                         elif ua.get('value') is not None:
+                                             ans_str = f"Value: {ua.get('value')}"
+                                     
                                      history_text += f"Q{i+1}: {qd.get('prompt')}\\n"
-                                     history_text += f"User Answer: {qd.get('user_answer')}\\n"
+                                     history_text += f"User Answer: {ans_str}\\n"
                                      history_text += f"Correct Data: {qd.get('correct_data')}\\n"
                                      history_text += f"Score: {qd.get('score')}\\n\\n"
                             
