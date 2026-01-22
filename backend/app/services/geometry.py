@@ -95,13 +95,6 @@ class GeometryEngine:
         b1 = shape1.bbox
         b2 = shape2.bbox
         
-        # Effective padding is shared, so use full padding check?
-        # Requirement: "Strict observance of minimum distances"
-        # If min_distance is D, then shapes must be at least D apart.
-        # So we expand each bbox by D/2? Or check if dist(bbox1, bbox2) < D?
-        # Simplest: Expand both by D/2. Overlap means distance < D in L-infinity norm.
-        # For strict Euclidean distance, we need more complex checks, but AABB is safe upper bound.
-        
         # Expand b1 by padding
         if (b1.max_x + padding < b2.min_x or 
             b1.min_x - padding > b2.max_x or 
@@ -111,110 +104,225 @@ class GeometryEngine:
         
         return True # Collision
 
+    def _get_intersection_area(self, b1: BoundingBox, b2: BoundingBox) -> float:
+        x_overlap = max(0, min(b1.max_x, b2.max_x) - max(b1.min_x, b2.min_x))
+        y_overlap = max(0, min(b1.max_y, b2.max_y) - max(b1.min_y, b2.min_y))
+        return x_overlap * y_overlap
+
+    def _get_area(self, b: BoundingBox) -> float:
+        return (b.max_x - b.min_x) * (b.max_y - b.min_y)
+
+    def _is_layout_valid(self, shapes: List[Dict]) -> bool:
+        """
+        Check if the layout is valid (no significant overlap between same-type shapes).
+        Returns True if valid, False if needs scattering.
+        """
+        # Parse shapes into temp objects with bboxes
+        parsed = []
+        for s in shapes:
+            points = s.get("points", [])
+            if not points: continue
+            xs = [p["x"] for p in points]
+            ys = [p["y"] for p in points]
+            if not xs: continue
+            bbox = BoundingBox(min_x=min(xs), max_x=max(xs), min_y=min(ys), max_y=max(ys))
+            parsed.append({"type": s.get("type", "polygon"), "bbox": bbox})
+
+        # Check pairs
+        for i in range(len(parsed)):
+            for j in range(i + 1, len(parsed)):
+                s1 = parsed[i]
+                s2 = parsed[j]
+                
+                # If types are different (e.g. Line vs Polygon), allow overlap
+                if s1["type"] != s2["type"]:
+                    continue
+                
+                # If types are same, check IoU or simple Intersection
+                # We want to detect "Stacked" shapes
+                area1 = self._get_area(s1["bbox"])
+                area2 = self._get_area(s2["bbox"])
+                intersection = self._get_intersection_area(s1["bbox"], s2["bbox"])
+                
+                if intersection > 0:
+                    # If overlap is significant (> 10% of smaller shape), invalid
+                    min_area = min(area1, area2)
+                    if min_area > 0 and (intersection / min_area) > 0.1:
+                        return False
+        return True
+
+    def _scale_and_center(self, shapes: List[Dict]) -> List[Dict]:
+        """
+        Normalize shapes to origin (Top-Left).
+        If shapes are small (logical coordinates like 0-15), PRESERVE SCALE.
+        Only scale if they are very large or tiny (normalized 0..1).
+        """
+        # 1. Calculate Global BBox
+        all_points = []
+        for s in shapes:
+            all_points.extend(s.get("points", []))
+            
+        if not all_points: return shapes
+
+        xs = [p.get("x", 0) for p in all_points]
+        ys = [p.get("y", 0) for p in all_points]
+        
+        if not xs: return shapes
+        
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        
+        w = max_x - min_x
+        h = max_y - min_y
+        
+        # Avoid division by zero
+        if w == 0: w = 1.0
+        if h == 0: h = 1.0
+        
+        # 2. Determine Scale Factor
+        scale = 1.0
+        
+        # Case A: Logical coordinates (e.g., width=10, height=5)
+        # If the shape fits within a small grid (e.g. 50x50), assume it's logical and KEEP IT.
+        # But if it's TINY (e.g. 0.0 to 1.0), it might need scaling up?
+        # User requested: "return simple coordinates in integers from 0 to 15"
+        # So if we have 0..15 range, we keep it.
+        
+        # Heuristic:
+        # If max dimension > canvas_width -> Scale Down (it's too big)
+        # If max dimension < 1.0 -> Scale Up (it's normalized)
+        # Else -> Keep scale = 1.0 (Assume logical units)
+        
+        max_dim = max(w, h)
+        
+        padding = 0.0 # No padding for logical coords if we are just shifting
+        
+        if max_dim > self.canvas_width:
+             # Too big, fit to canvas
+             scale = (self.canvas_width - 40) / max_dim
+             padding = 20.0
+        elif max_dim < 2.0:
+             # Too small (normalized?), scale to decent size? 
+             # Or maybe user WANTS 0..1? 
+             # Let's assume if it's < 2, it's normalized, scale to 10?
+             # But let's be safe. If user gives 0.5, maybe it's 0.5 units.
+             # Given the "0 to 15" request, 0.5 is valid.
+             pass
+             
+        # 3. Align to Origin (Top-Left)
+        # Just shift so min_x, min_y becomes 0 (or padding)
+        
+        result_shapes = []
+        for s in shapes:
+            new_s = s.copy()
+            new_points = []
+            for p in s.get("points", []):
+                new_p = p.copy()
+                # Shift to 0, scale
+                new_p["x"] = (p["x"] - min_x) * scale + padding
+                new_p["y"] = (p["y"] - min_y) * scale + padding
+                new_points.append(new_p)
+            new_s["points"] = new_points
+            result_shapes.append(new_s)
+            
+        return result_shapes
+
     def repack_shapes(self, shapes: List[Dict], max_attempts: int = 100) -> List[Dict]:
         """
-        Repack existing shapes to avoid overlap, preserving their local geometry.
-        Input: List of dicts, each like {"type": "...", "points": [...], "label": ...}
-        Output: List of dicts with updated "points".
+        Smart repack:
+        1. Try to Normalize (Scale & Center) the whole group.
+        2. Check if the result is valid (no bad overlaps).
+        3. If invalid, fallback to Scattering.
         """
-        self.placed_shapes = []
-        result_shapes = []
+        if not shapes: return []
         
-        for i, shape_data in enumerate(shapes):
-            s_type = shape_data.get("type", "polygon")
-            points = shape_data.get("points", [])
+        # 1. Scale & Center (Normalize)
+        scaled = self._scale_and_center(shapes)
+        
+        # 2. Check Validity
+        if self._is_layout_valid(scaled):
+            logger.info("Layout valid after scaling. Preserving relative positions.")
+            return scaled
             
-            # 1. Calculate BBox and Dimensions from current points
+        # 3. Fallback
+        logger.info("Layout invalid (overlap detected). Scattering shapes.")
+        scattered = self._scatter_shapes(shapes, max_attempts)
+        return scattered
+
+    def _scatter_shapes(self, shapes: List[Dict], max_attempts: int) -> List[Dict]:
+        """
+        Scatter shapes to avoid overlap.
+        Uses the standard generate_layout logic but tries to preserve shape dimensions.
+        """
+        # 1. Extract dimensions and types
+        reqs = []
+        for s in shapes:
+            # Estimate dimensions from points
+            points = s.get("points", [])
             if not points:
-                result_shapes.append(shape_data) # Cannot process empty
+                reqs.append(ShapeConfig(type=s.get("type", "polygon")))
                 continue
                 
-            xs = [p["x"] for p in points if "x" in p]
-            ys = [p["y"] for p in points if "y" in p]
+            xs = [p["x"] for p in points]
+            ys = [p["y"] for p in points]
+            w = max(xs) - min(xs)
+            h = max(ys) - min(ys)
             
-            if not xs or not ys:
-                 result_shapes.append(shape_data)
-                 continue
-
-            min_x, max_x = min(xs), max(xs)
-            min_y, max_y = min(ys), max(ys)
-            w = max_x - min_x
-            h = max_y - min_y
+            # Map types
+            stype = s.get("type", "polygon")
+            if stype == "vector": stype = "line" # Treat vector as line for layout
+            if stype not in ["rectangle", "circle", "polygon"]: stype = "polygon"
             
-            # Local centered coordinates
-            orig_cx = (min_x + max_x) / 2
-            orig_cy = (min_y + max_y) / 2
+            reqs.append(ShapeConfig(
+                type=stype,
+                min_width=w, max_width=w,
+                min_height=h, max_height=h,
+                radius_min=w/2, radius_max=w/2 # Approx for circle
+            ))
             
-            local_points = []
-            for p in points:
-                local_points.append({
-                    "x": p.get("x", 0) - orig_cx,
-                    "y": p.get("y", 0) - orig_cy,
-                    "label": p.get("label"), # Preserve other fields if needed
-                })
-
-            # 2. Try to place in new location
-            placed = False
+        # 2. Generate new layout
+        new_shapes, stats = self.generate_layout(reqs)
+        
+        if not stats.success:
+            # If failed to scatter, return original (maybe scaled)
+            return self._scale_and_center(shapes)
             
-            # Determine placement bounds
-            min_cx = w/2
-            max_cx = self.canvas_width - w/2
-            min_cy = h/2
-            max_cy = self.canvas_height - h/2
+        # 3. Map original shapes to new positions
+        result = []
+        for i, placed in enumerate(new_shapes):
+            if i >= len(shapes): break
+            original = shapes[i]
             
-            # If shape is larger than canvas, just center it and give up on non-overlap
-            if min_cx > max_cx or min_cy > max_cy:
-                cx, cy = self.canvas_width/2, self.canvas_height/2
-                placed = True # Force placement
-            
-            if not placed:
-                for _ in range(max_attempts):
-                    cx = self._get_random_float(min_cx, max_cx)
-                    cy = self._get_random_float(min_cy, max_cy)
-                    
-                    # Create candidate
-                    bbox = self._create_bbox_rect(cx, cy, w, h)
-                    
-                    # Reconstruct absolute points for checking/result
-                    abs_points = []
-                    for lp in local_points:
-                        new_p = {"x": lp["x"] + cx, "y": lp["y"] + cy}
-                        if lp.get("label"): new_p["label"] = lp["label"]
-                        abs_points.append(new_p)
-
-                    candidate = PlacedShape(
-                        id=f"repack_{i}",
-                        type=s_type,
-                        center=Point(x=cx, y=cy),
-                        dimensions={"width": w, "height": h},
-                        coordinates=abs_points,
-                        bbox=bbox
-                    )
-                    
-                    # Check collision
-                    collision = False
-                    for existing in self.placed_shapes:
-                        if self._check_collision(candidate, existing, self.min_distance):
-                            collision = True
-                            break
-                    
-                    if not collision:
-                        self.placed_shapes.append(candidate)
-                        
-                        # Update original shape data with new points
-                        new_shape_data = shape_data.copy()
-                        new_shape_data["points"] = abs_points
-                        result_shapes.append(new_shape_data)
-                        placed = True
-                        break
-            
-            if not placed:
-                # Fallback: keep original or place at random?
-                # If we fail to place, we append original to avoid losing data, 
-                # but it might overlap.
-                result_shapes.append(shape_data)
+            # Original bounds
+            orig_points = original.get("points", [])
+            if not orig_points:
+                result.append(original)
+                continue
                 
-        return result_shapes
+            oxs = [p["x"] for p in orig_points]
+            oys = [p["y"] for p in orig_points]
+            min_x, min_y = min(oxs), min(oys)
+            
+            # New position (top-left of bbox)
+            new_x = placed.bbox.min_x
+            new_y = placed.bbox.min_y
+            
+            # Shift
+            dx = new_x - min_x
+            dy = new_y - min_y
+            
+            new_s = original.copy()
+            new_pts = []
+            for p in orig_points:
+                new_pts.append({
+                    "x": p["x"] + dx,
+                    "y": p["y"] + dy
+                })
+            new_s["points"] = new_pts
+            result.append(new_s)
+            
+        return result
+
 
     def generate_layout(self, requests: List[ShapeConfig], max_attempts_per_shape: int = 100, enforce_proportionality: bool = True) -> Tuple[List[PlacedShape], GenerationStats]:
         start_time = time.time()

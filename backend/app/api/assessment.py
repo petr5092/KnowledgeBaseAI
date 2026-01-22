@@ -7,6 +7,7 @@ from app.config.settings import settings
 from app.api.common import ApiError, StandardResponse
 from app.services.questions import select_examples_for_topics
 import json
+import re
 from enum import Enum
 from app.events.publisher import get_redis
 
@@ -196,19 +197,22 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
                 pass
 
     # Auto-detect visual topics
-    if not is_visual and topic_title:
+    # 2. Choose Type
+    # Enhanced Visual Detection: Check Topic UID as well
+    if not is_visual and (topic_title or topic_uid):
         visual_keywords = [
             "geometry", "triangle", "circle", "graph", "function", "chart", "diagram", 
             "геометр", "треугольн", "график", "функц", "окружн", "угл", "angles", "slope", "derivative", "integral",
             "geometr", "ellips", "figur", "polygon", "mnogougoln", "ugol", "angle", "ploshchad", "area", "volume", "obem", 
             "radius", "diametr", "sechen", "section", "bokov", "lateral", "prizm", "prism", "piramid", "pyramid", 
             "shara", "sphere", "konus", "cone", "cilindr", "cylinder", "vektor", "vector",
-            "эллипс", "фигур", "многоугольн", "площад", "объем", "диаметр", "сечен", "боков", "шар", "конус", "цилиндр", "вектор"
+            "эллипс", "фигур", "многоугольн", "площад", "объем", "диаметр", "сечен", "боков", "шар", "конус", "цилиндр", "вектор",
+            "рисунок", "draw", "image", "canvas"
         ]
-        if any(k in topic_title.lower() for k in visual_keywords):
+        check_str = (str(topic_title) + " " + str(topic_uid)).lower()
+        if any(k in check_str for k in visual_keywords):
             is_visual = True
 
-    # 2. Choose Type
     if is_visual:
         # Prefer structured types for visual tasks to avoid "free_text" complaints
         q_types = ["single_choice", "single_choice", "numeric"]
@@ -239,15 +243,35 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
       * geometric_shape (single shape): [{"x": 0, "y": 0}, {"x": 10, "y": 0}, {"x": 5, "y": 10}]
       * geometric_shape (multiple shapes) - USE THIS FOR COMPARISONS OR MULTIPLE FIGURES:
         [
-          {"type": "polygon", "label": "Figure A", "color": "blue", "points": [{"x": 0, "y": 0}, {"x": 4, "y": 0}, {"x": 0, "y": 3}]},
+          {
+            "type": "polygon", 
+            "label": "Figure A", 
+            "color": "blue", 
+            "points": [{"x": 0, "y": 0}, {"x": 4, "y": 0}, {"x": 0, "y": 3}],
+            "vertex_labels": [{"text": "A", "x": 0, "y": 0}, {"text": "B", "x": 4, "y": 0}, {"text": "C", "x": 0, "y": 3}]
+          },
           {"type": "line", "label": "Segment B", "color": "red", "points": [{"x": 5, "y": 0}, {"x": 9, "y": 0}]}
         ]
+        CRITICAL FOR LABELS:
+        - If the question text mentions specific vertices (e.g. "Triangle ABC", "Side BC", "Angle A"), you MUST include "vertex_labels" in the shape object.
+        - "vertex_labels" is an array of objects: {"text": "Label", "x": number, "y": number}.
+        - Ensure labels are placed exactly at the corresponding points.
+
         CRITICAL FOR GEOMETRY: 
         - For SEGMENTS ("отрезки") or LINES: Use "type": "line" and provide EXACTLY 2 points (start and end). DO NOT use "polygon" for lines.
+        - For VECTORS ("векторы"): Use "type": "vector" and provide EXACTLY 2 points. The FIRST point is the tail (start), and the SECOND point is the head (arrow tip).
         - For POLYGONS (triangles, squares): Use "type": "polygon" and provide 3+ points.
         - The coordinates MUST be mathematically consistent with the problem statement values (scale 1:1). 
         If a side is length 5, the distance between its points must be 5. If a base is 8, the x-difference must be 8.
-        Do not provide arbitrary coordinates. Calculate them to match the problem data exactly.
+        - USE SIMPLE INTEGER COORDINATES: Prefer integer coordinates in range [0, 15]. 
+        Example: Start at (0,0). If vector is (3,4), end at (3,4). DO NOT use arbitrary large numbers like 257.32.
+        Keep coordinates close to (0,0) or small positive integers.
+        
+        CRITICAL CONSISTENCY CHECK:
+        - The text in "prompt" MUST match the "visualization" and "options".
+        - If "prompt" says "На рисунке ДВЕ фигуры" (two figures), then "visualization.coordinates" MUST contain exactly 2 shapes, and "options" must relate to these 2 shapes.
+        - DO NOT generate 4 options (A, B, C, D) if the text explicitly mentions "two figures".
+        - Ensure the number of visual elements matches the textual description EXACTLY.
       * graph (single line): [{"x": -10, "y": ...}, ...]
       * graph (multiple lines/functions) - USE THIS IF PROMPT MENTIONS MULTIPLE FUNCTIONS:
         [
@@ -314,9 +338,13 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
     - "single_choice": 4 options, 1 correct.
     - "numeric": Problem with specific numeric answer.
     - "boolean": True/False statement.
-    - "free_text": Open-ended question.
+    - "free_text": Open-ended question. MUST have a concise, definite answer (1-5 words) that can be automatically validated. Avoid "Essay" or "Discussion" types.
     - GRAMMAR: Use singular form for single objects (e.g. "Фигура A (синяя)", not "синие"). Match gender and number correctly.
     - CONSISTENCY: The question text MUST match the number of objects in the visualization. If you show 4 figures, do not say "two figures".
+    - SELF-CONTAINED: The question MUST be solvable with the information provided. 
+      * IF asking for analysis/calculation: PROVIDE THE DATA (values, table, list of numbers) in the prompt text. 
+      * Do NOT refer to "collected data", "attached file", or "previous year" without giving the actual numbers.
+      * Example: "Given the sales: [10, 20, 15]..." instead of "Analyze the sales data."
     
     JSON Structure:
     {json_structure}
@@ -367,18 +395,46 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
                             # Multi shape: [{"type": "...", "points": [...]}, ...] -> dicts have "points"
                             
                             is_multi = "points" in coords[0]
+
+                            # HEURISTIC: Check if coordinates are already "simple integers" (0-20)
+                            # If so, SKIP repacking to preserve the LLM's precise layout.
+                            is_simple_layout = True
+                            try:
+                                def check_points(pts):
+                                    for p in pts:
+                                        x, y = p.get("x", 0), p.get("y", 0)
+                                        if not (isinstance(x, (int, float)) and isinstance(y, (int, float))):
+                                            return False
+                                        # Allow slightly larger range but focus on integer-like nature
+                                        if x > 30 or y > 30 or x < -10 or y < -10:
+                                            return False
+                                    return True
+
+                                if is_multi:
+                                    for shape in coords:
+                                        if not check_points(shape.get("points", [])):
+                                            is_simple_layout = False
+                                            break
+                                else:
+                                    if not check_points(coords):
+                                        is_simple_layout = False
+                            except:
+                                is_simple_layout = False
                             
-                            if is_multi:
-                                # Repack multiple shapes to avoid overlap
-                                new_shapes = engine.repack_shapes(coords)
-                                vis["coordinates"] = new_shapes
-                            elif "x" in coords[0]:
-                                # Single shape (points list)
-                                # Wrap as one shape, repack (centers it), unwrap
-                                wrapped = [{"type": "polygon", "points": coords}]
-                                repacked = engine.repack_shapes(wrapped)
-                                if repacked:
-                                    vis["coordinates"] = repacked[0]["points"]
+                            if is_simple_layout:
+                                print("Skipping repack_shapes for simple integer layout")
+                            else:
+                                if is_multi:
+                                    # Repack multiple shapes to avoid overlap
+                                    new_shapes = engine.repack_shapes(coords)
+                                    vis["coordinates"] = new_shapes
+                                elif "x" in coords[0]:
+                                    # Single shape (points list)
+                                    # Wrap as one shape, repack (centers it), unwrap
+                                    wrapped = [{"type": "polygon", "points": coords}]
+                                    repacked = engine.repack_shapes(wrapped)
+                                    if repacked:
+                                        vis["coordinates"] = repacked[0]["points"]
                     except Exception as geo_err:
                         print(f"GeometryEngine error (using original coords): {geo_err}")
 
@@ -521,7 +577,9 @@ async def start(payload: StartRequest) -> Dict:
                     "options": first_q.get("options"),
                     "type": first_q.get("type"),
                 }
-            }
+            },
+            "consecutive_junk": 0,
+            "force_stop": False
         }
         if not _save_session(sid, sess_data):
             raise HTTPException(status_code=500, detail="Failed to initialize session storage")
@@ -533,6 +591,40 @@ async def start(payload: StartRequest) -> Dict:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+def _is_junk_answer(answer: AnswerDTO, q_type: str = "free_text") -> bool:
+    """Check if the answer is likely junk/spam/gibberish."""
+    if q_type != "free_text":
+        return False
+        
+    text = answer.text
+    if not text:
+        return False
+        
+    t = str(text).strip().lower()
+    
+    # 1. Length check (too short)
+    if len(t) < 2 and t not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+        return True
+        
+    # 2. Repeating chars (e.g. "aaaa")
+    if re.search(r'(.)\1{3,}', t):
+        return True
+        
+    # 3. Common junk words
+    junk_set = {
+        "asdf", "qwer", "zxcv", "1234", "test", "bla", "blabla", 
+        "idk", "hz", "xz", "qwerty", "йцукен", "фыва", "ячсм", "...", "no", "yes", "нет", "да"
+    }
+    if t in junk_set:
+        return True
+        
+    # 4. Keyboard mash heuristics (len > 6 and no vowels)
+    vowels = "aeiouyаеёиоуыэюя"
+    if len(t) > 6 and not any(char in vowels for char in t):
+        return True
+        
+    return False
 
 def _evaluate(answer: AnswerDTO, question_data: Dict = None) -> float:
     if answer is None:
@@ -555,6 +647,33 @@ def _evaluate(answer: AnswerDTO, question_data: Dict = None) -> float:
         # (Can be improved for partial credit)
         selected = set(answer.selected_option_uids)
         return 1.0 if selected == correct_uids else 0.0
+
+    # 1.5 Fallback: Single Choice but user sent Text (e.g. index "3" or "Option A")
+    # This handles cases where frontend sends text/index instead of UIDs
+    if question_data and question_data.get("type") == "single_choice" and answer.text:
+        text = str(answer.text).strip()
+        options = question_data.get("options", [])
+        matched_uid = None
+        
+        # Try to match text to option text (fuzzy)
+        for opt in options:
+            if str(opt.get("text", "")).strip().lower() == text.lower():
+                matched_uid = opt.get("option_uid")
+                break
+        
+        # Try to match text as Index (1-based)
+        if not matched_uid and text.isdigit():
+            idx = int(text)
+            if 1 <= idx <= len(options):
+                matched_uid = options[idx-1].get("option_uid")
+        
+        if matched_uid:
+            correct_uids = {
+                opt["option_uid"] 
+                for opt in options 
+                if opt.get("is_correct")
+            }
+            return 1.0 if matched_uid in correct_uids else 0.0
 
     # 2. Check Numeric (Value)
     if answer.value is not None:
@@ -699,6 +818,17 @@ async def next_question(payload: NextRequest):
         q_data = None
         if "question_details" in sess and payload.question_uid in sess["question_details"]:
             q_data = sess["question_details"][payload.question_uid]
+        
+        # Validation for junk/fake answers
+        if q_data:
+             if _is_junk_answer(payload.answer, q_data.get("type", "free_text")):
+                 sess["consecutive_junk"] = sess.get("consecutive_junk", 0) + 1
+             else:
+                 sess["consecutive_junk"] = 0
+             
+             if sess.get("consecutive_junk", 0) >= 3:
+                 sess["force_stop"] = True
+                 print(f"Session {sid} stopped due to junk answers: {payload.answer.text}")
             
         score = _evaluate(payload.answer, q_data)
         if score >= 0.5:
@@ -722,11 +852,13 @@ async def next_question(payload: NextRequest):
         
         done_by_min = len(sess["asked"]) >= sess["min_questions"] and _confidence(sess) >= sess["target_confidence"]
         done_by_max = len(sess["asked"]) >= sess["max_questions"]
+        forced = sess.get("force_stop", False)
+
         async def _stream():
             try:
                 yield "event: ack\n"
                 yield "data: {\"items\":[{\"accepted\":true}],\"meta\":{}}\n\n"
-                if done_by_min or done_by_max:
+                if done_by_min or done_by_max or forced:
                     # Precise Score Calculation
                     # Calculate weighted score based on difficulty
                     # Score = Sum(answer_score * difficulty) / Sum(difficulty)
@@ -762,89 +894,99 @@ async def next_question(payload: NextRequest):
                     
                     # Generate LLM Analytics
                     llm_analytics = {}
-                    try:
-                        from app.services.kb.builder import openai_chat_async
-                        
-                        history_text = ""
-                        q_details = sess.get("question_details", {})
-                        
-                        # Sort by order asked if possible, or just iterate
-                        asked_uids = sess.get("asked", [])
-                        
-                        for i, uid in enumerate(asked_uids):
-                             if uid in q_details:
-                                 qd = q_details[uid]
-                                 history_text += f"Q{i+1}: {qd.get('prompt')}\\n"
-                                 history_text += f"User Answer: {qd.get('user_answer')}\\n"
-                                 history_text += f"Correct Data: {qd.get('correct_data')}\\n"
-                                 history_text += f"Score: {qd.get('score')}\\n\\n"
-                        
-                        sys_prompt = (
-                            "You are an expert tutor. Analyze the student's session history detailedly.\\n"
-                            "LANGUAGE: All output text (feedback, comments, recommendations) MUST be in RUSSIAN.\\n"
-                            "1. Re-evaluate every answer. BE LENIENT with formatting errors (e.g. 0.2 vs 2/10, or missing units). If the student shows understanding but failed specific format, give PARTIAL credit (0.5).\\n"
-                            "2. Calculate the precise knowledge level (0-100%) based on ACTUAL correctness. Focus on CONCEPTUAL understanding.\\n"
-                            "3. Provide a specific, constructive feedback for EACH question (why it was right/wrong).\\n"
-                            "4. Identify specific knowledge gaps (e.g. 'confuses radius and diameter').\\n"
-                            "5. Provide a tailored recommendation (NOT just 'next topic', but specific actions).\\n"
-                            "Output JSON format:\\n"
-                            "{\\n"
-                            "  \"questions_analytics\": [\\n"
-                            "    {\"question_uid\": \"...\", \"feedback\": \"...\"}\\n"
-                            "  ],\\n"
-                            "  \"overall_comment\": \"...\",\\n"
-                            "  \"knowledge_level_percent\": 85,\\n"
-                            "  \"specific_gaps\": [\"...\", \"...\"],\\n"
-                            "  \"recommendation\": \"...\"\\n"
-                            "}\\n"
-                            "Return ONLY JSON."
-                        )
-                        
-                        # Call LLM
-                        # We use a lower temperature for analysis
-                        messages = [
-                             {"role": "system", "content": sys_prompt},
-                             {"role": "user", "content": f"Topic: {sess.get('topic_uid')}\\n\\nHistory:\\n{history_text}"}
-                        ]
-                        
-                        llm_resp = await openai_chat_async(messages, temperature=0.3)
-                        
-                        if not llm_resp.get("ok"):
-                             raise Exception(f"LLM Error: {llm_resp.get('error')}")
+                    if not forced:
+                        try:
+                            from app.services.kb.builder import openai_chat_async
+                            
+                            history_text = ""
+                            q_details = sess.get("question_details", {})
+                            
+                            # Sort by order asked if possible, or just iterate
+                            asked_uids = sess.get("asked", [])
+                            
+                            for i, uid in enumerate(asked_uids):
+                                 if uid in q_details:
+                                     qd = q_details[uid]
+                                     history_text += f"Q{i+1}: {qd.get('prompt')}\\n"
+                                     history_text += f"User Answer: {qd.get('user_answer')}\\n"
+                                     history_text += f"Correct Data: {qd.get('correct_data')}\\n"
+                                     history_text += f"Score: {qd.get('score')}\\n\\n"
+                            
+                            sys_prompt = (
+                                "You are an empathetic, highly intelligent AI tutor. Your goal is to provide encouraging, constructive, and flexible feedback.\\n"
+                                "Analyze the student's session history.\\n"
+                                "LANGUAGE: All output text (feedback, comments, recommendations) MUST be in RUSSIAN.\\n"
+                                "1. **RE-EVALUATION**: The 'Score' provided in history is from a strict machine check. IGNORE IT if the user's answer is conceptually correct but has a typo, synonym, or different format (e.g. '0.5' vs '1/2', 'yes' vs 'true'). Give full credit for valid variations.\\n"
+                                "2. **PARTIAL CREDIT**: If the reasoning is correct but calculation is wrong, give partial credit (e.g., 50-80%).\\n"
+                                "3. **FEEDBACK TONE**: Be human, conversational, and specific. Avoid robotic phrases like 'Answer is incorrect'. Instead say: 'Good attempt, but you missed X', 'You're on the right track, however...', 'Correct! Excellent use of formula Y'.\\n"
+                                "4. **GAPS & RECOMMENDATIONS**: Identify *why* they made a mistake (misconception? calculation error? rush?). Suggest specific practice steps.\\n"
+                                "Output JSON format:\\n"
+                                "{\\n"
+                                "  \"questions_analytics\": [\\n"
+                                "    {\"question_uid\": \"...\", \"feedback\": \"...\"}\\n"
+                                "  ],\\n"
+                                "  \"overall_comment\": \"...\",\\n"
+                                "  \"knowledge_level_percent\": 85,\\n"
+                                "  \"specific_gaps\": [\"...\", \"...\"],\\n"
+                                "  \"recommendation\": \"...\"\\n"
+                                "}\\n"
+                                "Return ONLY JSON."
+                            )
+                            
+                            # Call LLM
+                            # We use a lower temperature for analysis
+                            messages = [
+                                 {"role": "system", "content": sys_prompt},
+                                 {"role": "user", "content": f"Topic: {sess.get('topic_uid')}\\n\\nHistory:\\n{history_text}"}
+                            ]
+                            
+                            llm_resp = await openai_chat_async(messages, temperature=0.3)
+                            
+                            if not llm_resp.get("ok"):
+                                 raise Exception(f"LLM Error: {llm_resp.get('error')}")
 
-                        content_str = llm_resp.get("content", "")
-                        # Clean markdown
-                        if "```json" in content_str:
-                            content_str = content_str.split("```json")[1].split("```")[0].strip()
-                        elif "```" in content_str:
-                             content_str = content_str.split("```")[1].split("```")[0].strip()
-                        
-                        llm_analytics = json.loads(content_str)
-                    except Exception as e:
-                        print(f"LLM Analytics failed: {e}")
-                        import traceback
-                        traceback.print_exc()
-                        # Fallback
-                        llm_analytics = {"questions_analytics": [], "overall_comment": "Detailed analysis unavailable due to service error.", "knowledge_level_percent": int(score*100), "specific_gaps": [], "recommendation": "Review the material."}
+                            content_str = llm_resp.get("content", "")
+                            # Clean markdown
+                            if "```json" in content_str:
+                                content_str = content_str.split("```json")[1].split("```")[0].strip()
+                            elif "```" in content_str:
+                                 content_str = content_str.split("```")[1].split("```")[0].strip()
+                            
+                            llm_analytics = json.loads(content_str)
+                        except Exception as e:
+                            print(f"LLM Analytics failed: {e}")
+                            import traceback
+                            traceback.print_exc()
+                            # Fallback
+                            llm_analytics = {"questions_analytics": [], "overall_comment": "Detailed analysis unavailable due to service error.", "knowledge_level_percent": int(score*100), "specific_gaps": [], "recommendation": "Review the material."}
 
                     # Use LLM calculated level if reasonable, else fallback to raw score
                     llm_level = llm_analytics.get("knowledge_level_percent")
                     final_percentage = llm_level if isinstance(llm_level, (int, float)) else int(score * 100)
+                    
+                    if forced:
+                        final_percentage = 0
 
                     # Detailed analytics
                     detailed_analytics = {
                         "gaps": llm_analytics.get("specific_gaps", gaps),
-                        "recommended_focus": llm_analytics.get("recommendation", "Повторить теорию и пройти практику 'We Do'" if score < 0.7 else "Закрепить успех практикой"),
-                        "strength": "Хорошая скорость ответов" if score > 0.8 else "Внимательность к деталям",
+                        "recommended_focus": llm_analytics.get("recommendation", "Повторить теорию и пройти практику 'We Do'" if final_percentage < 70 else "Закрепить успех практикой"),
+                        "strength": "Хорошая скорость ответов" if final_percentage > 80 else "Внимательность к деталям",
                         "current_percentage": final_percentage,
                         "topic_breakdown": [
-                            {"subtopic": "Theory", "mastery": min(100, int(score * 110))},
-                            {"subtopic": "Practice", "mastery": int(score * 100)},
-                            {"subtopic": "Application", "mastery": max(0, int(score * 90))}
+                            {"subtopic": "Theory", "mastery": min(100, int(final_percentage * 1.1))},
+                            {"subtopic": "Practice", "mastery": int(final_percentage)},
+                            {"subtopic": "Application", "mastery": max(0, int(final_percentage * 0.9))}
                         ],
                         "questions_review": llm_analytics.get("questions_analytics", []),
                         "tutor_comment": llm_analytics.get("overall_comment", "")
                     }
+                    
+                    if forced:
+                        detailed_analytics["tutor_comment"] = "Похоже, ответы сейчас не помогают корректно провести тест. Чтобы результат был точным, давай начнём сначала 🙂"
+                        detailed_analytics["recommended_focus"] = "Начать тест заново"
+                        detailed_analytics["strength"] = "Требуется серьезный подход"
+                        detailed_analytics["topic_breakdown"] = [] # Clear breakdown
 
                     res = {
                         "is_completed": True,
@@ -852,7 +994,7 @@ async def next_question(payload: NextRequest):
                             {
                                 "topic_uid": sess["topic_uid"],
                                 "level": "intermediate" if sess["good"] >= sess["bad"] else "basic",
-                                "mastery": {"score": score},
+                                "mastery": {"score": round(final_percentage / 100.0, 2)},
                                 "analytics": detailed_analytics
                             }
                         ],

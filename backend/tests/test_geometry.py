@@ -126,5 +126,99 @@ class TestGeometryEngine(unittest.TestCase):
         self.assertAlmostEqual(w1, 10.0)
         self.assertAlmostEqual(h1, 10.0)
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_composite_figure_preservation(self):
+        """Test that a triangle and a vector on its side are NOT scattered."""
+        # Triangle (0,0) to (10,0) to (0,10)
+        t = {
+            "type": "polygon", 
+            "points": [{"x": 0, "y": 0}, {"x": 10, "y": 0}, {"x": 0, "y": 10}]
+        }
+        # Vector (0,0) to (10,0) (Line coinciding with side)
+        v = {
+            "type": "line", 
+            "points": [{"x": 0, "y": 0}, {"x": 10, "y": 0}]
+        }
+        
+        shapes = [t, v]
+        repacked = self.engine.repack_shapes(shapes)
+        
+        # 1. Verify types are preserved
+        self.assertEqual(repacked[0]["type"], "polygon")
+        self.assertEqual(repacked[1]["type"], "line")
+        
+        # 2. Verify relative positions preserved (Vector should still match Triangle side)
+        t_pts = repacked[0]["points"]
+        v_pts = repacked[1]["points"]
+        
+        self.assertAlmostEqual(v_pts[0]["x"], t_pts[0]["x"])
+        self.assertAlmostEqual(v_pts[0]["y"], t_pts[0]["y"])
+        
+        # 3. Verify they are aligned to Origin (Top-Left), not Centered
+        # The input was (0,0) based. After repack, min_x and min_y should be equal to padding (0 for logical).
+        
+        # Calculate BBox of result
+        xs = [p["x"] for p in t_pts]
+        ys = [p["y"] for p in t_pts]
+        min_x, min_y = min(xs), min(ys)
+        
+        # Padding is 0.0 for logical coords
+        self.assertAlmostEqual(min_x, 0.0, delta=0.1)
+        self.assertAlmostEqual(min_y, 0.0, delta=0.1)
+        
+        # Verify it was NOT scaled (preserved logical coords)
+        # Original size 10 should be preserved
+        w = max(xs) - min(xs)
+        self.assertAlmostEqual(w, 10.0, delta=0.1)
+
+    def test_pile_scattering(self):
+        """Test that identical overlapping polygons are scattered."""
+        # Two identical triangles at (0,0)
+        t1 = {"type": "polygon", "points": [{"x": 0, "y": 0}, {"x": 10, "y": 0}, {"x": 0, "y": 10}]}
+        t2 = {"type": "polygon", "points": [{"x": 0, "y": 0}, {"x": 10, "y": 0}, {"x": 0, "y": 10}]}
+        
+        shapes = [t1, t2]
+        repacked = self.engine.repack_shapes(shapes)
+        
+        # Should overlap? No, logic says scatter.
+        def get_bbox(pts):
+            xs = [p["x"] for p in pts]
+            ys = [p["y"] for p in pts]
+            return min(xs), max(xs), min(ys), max(ys)
+            
+        min_x1, max_x1, min_y1, max_y1 = get_bbox(repacked[0]["points"])
+        min_x2, max_x2, min_y2, max_y2 = get_bbox(repacked[1]["points"])
+        
+        padding = self.engine.min_distance
+        overlap = not (max_x1 + padding < min_x2 or 
+                       min_x1 - padding > max_x2 or 
+                       max_y1 + padding < min_y2 or 
+                       min_y1 - padding > max_y2)
+                       
+        self.assertFalse(overlap, "Identical polygons should be scattered")
+
+    def test_vector_preservation(self):
+        """Test that type='vector' is PRESERVED (frontend handles visualization)."""
+        v = {
+            "type": "vector",
+            "points": [{"x": 0, "y": 0}, {"x": 10, "y": 0}]
+        }
+        
+        shapes = [v]
+        # Repack should NOT expand it, just normalize if needed
+        repacked = self.engine.repack_shapes(shapes)
+        
+        # Expect 1 shape: vector
+        self.assertEqual(len(repacked), 1)
+        self.assertEqual(repacked[0]["type"], "vector")
+        
+        # Check coordinates (should be close to original since they are small/logical)
+        p1 = repacked[0]["points"][0]
+        p2 = repacked[0]["points"][1]
+        
+        # Should start at 0,0 (normalized)
+        self.assertAlmostEqual(p1["x"], 0)
+        self.assertAlmostEqual(p1["y"], 0)
+        
+        # Should end at 10,0 (preserved scale for logical coords)
+        self.assertAlmostEqual(p2["x"], 10)
+        self.assertAlmostEqual(p2["y"], 0)

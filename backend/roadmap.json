@@ -1,0 +1,714 @@
+{
+    "max_score": 69,
+    "total_score": 0,
+    "progress_percentage": 0.0,
+    "nodes": [
+        {
+            "topic_uid": "TOP-SLOZHENIE-I-VYCHITANIE-fce82b",
+            "title": "Сложение и вычитание",
+            "description": "Сложение и вычитание - основные операции, которые помогут вам научиться правильно складывать и вычитать числа в различных ситуациях.",
+            "status": "available",
+            "max_score": 15,
+            "current_score": 0,
+            "progress_percentage": 0.0,
+            "units": [
+                {
+                    "uid": "UNIT-I-DO-SLOZH",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "В этом уроке я покажу, как складывать числа...",
+                        "video_url": "http://video.example/1"
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-WE-DO-SLOZH",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Давайте вместе решим пример: 5 + 7 = ?",
+                        "interactive": true
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-YOU-DO-SLOZH",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Решите самостоятельно: 12 + 15",
+                        "exercises": [
+                            "12+15",
+                            "20-5"
+                        ]
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-SLOZHENIE-I-VYCHITANIE-fce82b-M2-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Вычитание с переходом через десяток. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Вычитание с переходом через десяток",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-SLOZHENIE-I-VYCHITANIE-fce82b-M2-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Вычитание с переходом через десяток. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Вычитание с переходом через десяток",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-SLOZHENIE-I-VYCHITANIE-fce82b-M2-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Вычитание с переходом через десяток. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Вычитание с переходом через десяток",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-SLOZHENIE-I-VYCHITANIE-fce82b-M3-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Свойства сложения. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Свойства сложения",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-SLOZHENIE-I-VYCHITANIE-fce82b-M3-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Свойства сложения. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Свойства сложения",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-SLOZHENIE-I-VYCHITANIE-fce82b-M3-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Свойства сложения. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Свойства сложения",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-SLOZHENIE-I-VYCHITANIE-fce82b-M4-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Решение текстовых задач на сложение. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Решение текстовых задач на сложение",
+                        "order": 4
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-SLOZHENIE-I-VYCHITANIE-fce82b-M4-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Решение текстовых задач на сложение. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Решение текстовых задач на сложение",
+                        "order": 4
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-SLOZHENIE-I-VYCHITANIE-fce82b-M4-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Решение текстовых задач на сложение. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Решение текстовых задач на сложение",
+                        "order": 4
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TEST-SLOZH",
+                    "type": "lesson_test",
+                    "title": "Финальный тест",
+                    "payload": {
+                        "quiz_id": "QZ-001",
+                        "questions_count": 5
+                    },
+                    "is_completed": false
+                }
+            ]
+        },
+        {
+            "topic_uid": "TOP-UMNOZHENIE-I-DELENIE-bb242b",
+            "title": "Умножение и деление",
+            "description": "Умножение и деление - ключевые арифметические операции, которые открывают двери к более сложным вычислениям и задачам.",
+            "status": "locked",
+            "max_score": 15,
+            "current_score": 0,
+            "progress_percentage": 0.0,
+            "units": [
+                {
+                    "uid": "UNIT-I-DO-UMN",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Умножение - это многократное сложение...",
+                        "video_url": "http://video.example/2"
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-WE-DO-UMN",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Попробуем вместе: 3 * 4",
+                        "interactive": true
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-YOU-DO-UMN",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Решите сами: 6 * 7",
+                        "exercises": [
+                            "6*7",
+                            "8*9"
+                        ]
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-UMNOZHENIE-I-DELENIE-bb242b-M2-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Деление с остатком. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Деление с остатком",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-UMNOZHENIE-I-DELENIE-bb242b-M2-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Деление с остатком. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Деление с остатком",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-UMNOZHENIE-I-DELENIE-bb242b-M2-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Деление с остатком. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Деление с остатком",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-UMNOZHENIE-I-DELENIE-bb242b-M3-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Распределительное свойство. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Распределительное свойство",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-UMNOZHENIE-I-DELENIE-bb242b-M3-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Распределительное свойство. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Распределительное свойство",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-UMNOZHENIE-I-DELENIE-bb242b-M3-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Распределительное свойство. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Распределительное свойство",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-UMNOZHENIE-I-DELENIE-bb242b-M4-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Умножение в столбик. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Умножение в столбик",
+                        "order": 4
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-UMNOZHENIE-I-DELENIE-bb242b-M4-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Умножение в столбик. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Умножение в столбик",
+                        "order": 4
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-UMNOZHENIE-I-DELENIE-bb242b-M4-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Умножение в столбик. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Умножение в столбик",
+                        "order": 4
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TEST-UMN",
+                    "type": "lesson_test",
+                    "title": "Финальный тест",
+                    "payload": {
+                        "quiz_id": "QZ-002",
+                        "questions_count": 5
+                    },
+                    "is_completed": false
+                }
+            ]
+        },
+        {
+            "topic_uid": "TOP-RABOTA-S-DROBYAMI-1d735c",
+            "title": "Работа с дробями",
+            "description": "Работа с дробями - важный навык, который необходим для решения множества практических задач, связанных с делением на части.",
+            "status": "locked",
+            "max_score": 15,
+            "current_score": 0,
+            "progress_percentage": 0.0,
+            "units": [
+                {
+                    "uid": "UNIT-I-DO-DROB",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Дроби состоят из числителя и знаменателя...",
+                        "video_url": "http://video.example/3"
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-WE-DO-DROB",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Сложим 1/2 и 1/4",
+                        "interactive": true
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-YOU-DO-DROB",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Вычислите: 3/4 - 1/8",
+                        "exercises": []
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-RABOTA-S-DROBYAMI-1d735c-M2-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Сложение дробей с одинаковыми знаменателями. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Сложение дробей с одинаковыми знаменателями",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-RABOTA-S-DROBYAMI-1d735c-M2-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Сложение дробей с одинаковыми знаменателями. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Сложение дробей с одинаковыми знаменателями",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-RABOTA-S-DROBYAMI-1d735c-M2-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Сложение дробей с одинаковыми знаменателями. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Сложение дробей с одинаковыми знаменателями",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-RABOTA-S-DROBYAMI-1d735c-M3-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Приведение к общему знаменателю. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Приведение к общему знаменателю",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-RABOTA-S-DROBYAMI-1d735c-M3-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Приведение к общему знаменателю. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Приведение к общему знаменателю",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-RABOTA-S-DROBYAMI-1d735c-M3-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Приведение к общему знаменателю. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Приведение к общему знаменателю",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-RABOTA-S-DROBYAMI-1d735c-M4-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Умножение дробей. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Умножение дробей",
+                        "order": 4
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-RABOTA-S-DROBYAMI-1d735c-M4-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Умножение дробей. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Умножение дробей",
+                        "order": 4
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-RABOTA-S-DROBYAMI-1d735c-M4-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Умножение дробей. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Умножение дробей",
+                        "order": 4
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TEST-DROB",
+                    "type": "lesson_test",
+                    "title": "Финальный тест",
+                    "payload": {
+                        "quiz_id": "QZ-003",
+                        "questions_count": 5
+                    },
+                    "is_completed": false
+                }
+            ]
+        },
+        {
+            "topic_uid": "TOP-PROCENTY-I-IH-VYCHISLENI-b55c05",
+            "title": "Проценты и их вычисление",
+            "description": "Проценты и их вычисление - навык, который поможет вам понимать финансовые и экономические задачи в повседневной жизни.",
+            "status": "locked",
+            "max_score": 12,
+            "current_score": 0,
+            "progress_percentage": 0.0,
+            "units": [
+                {
+                    "uid": "UNIT-I-DO-PROC",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Процент - это одна сотая часть...",
+                        "video_url": "http://video.example/4"
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-WE-DO-PROC",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Найдем 10% от 200",
+                        "interactive": true
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-YOU-DO-PROC",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Сколько будет 50% от 80?",
+                        "exercises": []
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-PROCENTY-I-IH-VYCHISLENI-b55c05-M2-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Перевод дробей в проценты. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Перевод дробей в проценты",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-PROCENTY-I-IH-VYCHISLENI-b55c05-M2-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Перевод дробей в проценты. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Перевод дробей в проценты",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-PROCENTY-I-IH-VYCHISLENI-b55c05-M2-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Перевод дробей в проценты. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Перевод дробей в проценты",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-PROCENTY-I-IH-VYCHISLENI-b55c05-M3-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Нахождение процента от числа. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Нахождение процента от числа",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-PROCENTY-I-IH-VYCHISLENI-b55c05-M3-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Нахождение процента от числа. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Нахождение процента от числа",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-PROCENTY-I-IH-VYCHISLENI-b55c05-M3-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Нахождение процента от числа. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Нахождение процента от числа",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TEST-PROC",
+                    "type": "lesson_test",
+                    "title": "Финальный тест",
+                    "payload": {
+                        "quiz_id": "QZ-004",
+                        "questions_count": 5
+                    },
+                    "is_completed": false
+                }
+            ]
+        },
+        {
+            "topic_uid": "TOP-STEPENI-I-KORNI-179a43",
+            "title": "Степени и корни",
+            "description": "Степени и корни - ключевые понятия в математике, которые позволяют вам разобраться в понятийной алгебре и решать разнообразные уравнения.",
+            "status": "locked",
+            "max_score": 12,
+            "current_score": 0,
+            "progress_percentage": 0.0,
+            "units": [
+                {
+                    "uid": "UNIT-I-DO-STEP",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Степень показывает сколько раз число умножается...",
+                        "video_url": "http://video.example/5"
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-WE-DO-STEP",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Возведем 2 в 3 степень",
+                        "interactive": true
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-YOU-DO-STEP",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Вычислите 3 в квадрате",
+                        "exercises": []
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-STEPENI-I-KORNI-179a43-M2-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Свойства степеней. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Свойства степеней",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-STEPENI-I-KORNI-179a43-M2-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Свойства степеней. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Свойства степеней",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-STEPENI-I-KORNI-179a43-M2-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Свойства степеней. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Свойства степеней",
+                        "order": 2
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-STEPENI-I-KORNI-179a43-M3-IDO",
+                    "type": "lesson_i_do",
+                    "title": "Изучение (I Do)",
+                    "payload": {
+                        "text": "Теория: Квадратный корень. Объяснение от учителя (I Do).",
+                        "video_url": "http://video.example.com/1",
+                        "micro_lesson_title": "Квадратный корень",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-STEPENI-I-KORNI-179a43-M3-WEDO",
+                    "type": "lesson_we_do",
+                    "title": "Практика (We Do)",
+                    "payload": {
+                        "text": "Практика: Квадратный корень. Решаем вместе (We Do).",
+                        "micro_lesson_title": "Квадратный корень",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TOP-STEPENI-I-KORNI-179a43-M3-YOUDO",
+                    "type": "lesson_you_do",
+                    "title": "Задание (You Do)",
+                    "payload": {
+                        "text": "Задание: Квадратный корень. Реши самостоятельно (You Do).",
+                        "micro_lesson_title": "Квадратный корень",
+                        "order": 3
+                    },
+                    "is_completed": false
+                },
+                {
+                    "uid": "UNIT-TEST-STEP",
+                    "type": "lesson_test",
+                    "title": "Финальный тест",
+                    "payload": {
+                        "quiz_id": "QZ-005",
+                        "questions_count": 5
+                    },
+                    "is_completed": false
+                }
+            ]
+        }
+    ],
+    "meta": {
+        "source": "kb",
+        "generated_at": "2026-01-22T07:27:19.319023"
+    }
+}
