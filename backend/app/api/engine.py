@@ -162,19 +162,45 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
     # 1. Fetch Candidate Topics (limit 20 to give LLM choices)
     topics = []
     rows = []
+    focus_uid = payload.focus_topic_uid
+    
     if settings.neo4j_uri:
         repo = Neo4jRepo()
-        # Better query: Get all topics, sort by some order (e.g. alphabetical or graph order), then pick 20.
-        query = """
-        MATCH (sub:Subject {uid: $su})
-        MATCH (sub)-[:CONTAINS*]->(t:Topic)
-        OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
-        RETURN t.uid AS uid, t.title AS title, t.description AS description,
-               collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units
-        LIMIT 20
-        """
-        print(f"Running roadmap query for {subject_uid}")
-        rows = repo.read(query, {"su": subject_uid})
+        
+        if focus_uid:
+            # Query prioritizing the focus topic and its neighbors (by PREREQ distance)
+            query = """
+            MATCH (sub:Subject {uid: $su})
+            MATCH (sub)-[:CONTAINS*]->(t:Topic)
+            
+            OPTIONAL MATCH path = shortestPath((t)-[:PREREQ*..3]-(f:Topic {uid: $focus}))
+            WITH t, length(path) as dist
+            
+            OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
+            OPTIONAL MATCH (t)-[:PREREQ]->(p:Topic)
+            WITH t, dist, collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units, collect(p.uid) as prereqs
+            
+            RETURN t.uid AS uid, t.title AS title, t.description AS description, units, prereqs
+            ORDER BY (CASE WHEN dist IS NULL THEN 100 ELSE dist END) ASC, t.title ASC
+            LIMIT 50
+            """
+            print(f"Running roadmap query for {subject_uid} with focus {focus_uid}")
+            rows = repo.read(query, {"su": subject_uid, "focus": focus_uid})
+        else:
+            # Standard query (Alphabetical / Graph order)
+            query = """
+            MATCH (sub:Subject {uid: $su})
+            MATCH (sub)-[:CONTAINS*]->(t:Topic)
+            OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
+            OPTIONAL MATCH (t)-[:PREREQ]->(p:Topic)
+            WITH t, collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units, collect(p.uid) as prereqs
+            RETURN t.uid AS uid, t.title AS title, t.description AS description, units, prereqs
+            ORDER BY t.title ASC
+            LIMIT 50
+            """
+            print(f"Running roadmap query for {subject_uid}")
+            rows = repo.read(query, {"su": subject_uid})
+            
         print(f"Found {len(rows)} rows")
         repo.close()
 
@@ -185,6 +211,11 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
     # Map rows by UID for easy access
     rows_map = {r["uid"]: r for r in rows}
     
+    # Identify focus topic title for LLM context
+    focus_title = ""
+    if focus_uid and focus_uid in rows_map:
+        focus_title = rows_map[focus_uid]["title"]
+    
     # Prepare candidates for LLM
     candidates_info = []
     for r in rows:
@@ -194,7 +225,8 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             "uid": uid,
             "title": r["title"],
             "description": r.get("description") or "",
-            "current_score": score
+            "current_score": score,
+            "prerequisites": r.get("prereqs", [])
         })
 
     used_llm = False
@@ -205,8 +237,13 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             
             prompt = (
                 "You are an adaptive learning AI. Select the best 5 topics for a student roadmap from the list below.\n"
-                "Prioritize topics where 'current_score' is low (< 0.6) to fix learning gaps, then proceed to new topics (score 0.0).\n"
-                "Also, GENERATE a short, engaging description (in Russian) for any topic that has an empty description.\n"
+                f"The student is currently focusing on topic: '{focus_title}' (UID: {focus_uid}).\n"
+                "Rules for Roadmap Construction:\n"
+                "1. **REMEDIATION (Score < 0.6)**: If the focus topic is failed or new, start with its PREREQUISITES.\n"
+                "2. **FOCUS LOOP (Score 0.6 - 0.85)**: If the student understands the basics but lacks mastery (score < 0.85), prioritize THE SAME TOPIC to close gaps.\n"
+                "3. **PROGRESSION (Score > 0.85)**: Only if the focus topic is FULLY MASTERED (>0.85), suggest the NEXT logical topics.\n"
+                "4. If no focus topic is provided, prioritize Remediation -> Foundation -> New Topics.\n"
+                "5. GENERATE a short, engaging description (in Russian) for any topic that has an empty description.\n"
                 "Return a valid JSON object with a key 'selected_topics' containing a list of objects: {'uid': '...', 'description': '...'}.\n"
                 "The list must be ordered by priority (highest priority first).\n\n"
                 f"Candidates: {json.dumps(candidates_info, ensure_ascii=False)}"
@@ -260,7 +297,7 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             
         # Determine status based on progress
         p_val = progress.get(t_uid, 0.0)
-        if p_val >= 0.8:
+        if p_val >= 0.85:
             status = "completed"
         elif p_val > 0:
             status = "available"

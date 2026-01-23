@@ -272,9 +272,10 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
 
     if is_visual:
         # Prefer structured types for visual tasks to avoid "free_text" complaints
-        q_types = ["single_choice", "single_choice", "numeric"]
+        # But allow free_text for coordinate/formula inputs
+        q_types = ["single_choice", "single_choice", "free_text"]
     else:
-        q_types = ["single_choice", "single_choice", "numeric", "free_text", "boolean"]
+        q_types = ["single_choice", "single_choice", "free_text"]
     
     q_type = random.choice(q_types)
     
@@ -337,6 +338,12 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
         ]
         CRITICAL: If the prompt mentions multiple functions (e.g. f(x) and g(x)), you MUST provide an array of objects for "coordinates".
         Do not provide a single array of points if you are describing multiple functions.
+
+        CRITICAL FOR GRAPH CONSISTENCY:
+        - If the question asks for an INTERSECTION point, the lines in "visualization.coordinates" MUST intersect at EXACTLY that point.
+        - You MUST calculate the intersection of the equations (e.g. "y = 1.5x + 0.5" and "y = -x + 5" -> 2.5x = 4.5 -> x=1.8) and ensure the "options" contain this value.
+        - The visual lines MUST pass through the correct intersection point.
+        - DO NOT generate random lines that visually intersect at (2,2) if the correct answer is (5,5).
       * diagram/chart: appropriate JSON representation
     """
 
@@ -393,9 +400,7 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
     Requirements:
     - Output valid JSON only.
     - "single_choice": 4 options, 1 correct.
-    - "numeric": Problem with specific numeric answer.
-    - "boolean": True/False statement.
-    - "free_text": Open-ended question. MUST have a concise, definite answer (1-5 words) that can be automatically validated. Avoid "Essay" or "Discussion" types.
+    - "free_text": Open-ended question or coordinate pairs (e.g. "(2, 3)"). MUST have a concise, definite answer (1-5 words) that can be automatically validated. Avoid "Essay" or "Discussion" types.
     - GRAMMAR: Use singular form for single objects (e.g. "Фигура A (синяя)", not "синие"). Match gender and number correctly.
     - CONSISTENCY: The question text MUST match the number of objects in the visualization. If you show 4 figures, do not say "two figures".
     - SELF-CONTAINED: The question MUST be solvable with the information provided. 
@@ -661,8 +666,8 @@ async def start(payload: StartRequest) -> Dict:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-def _is_junk_answer(answer: AnswerDTO, q_type: str = "free_text") -> bool:
-    """Check if the answer is likely junk/spam/gibberish."""
+async def _is_junk_answer(answer: AnswerDTO, q_type: str = "free_text", prompt_context: str = "") -> bool:
+    """Check if the answer is likely junk/spam/gibberish using Heuristics + LLM."""
     if q_type != "free_text":
         return False
         
@@ -692,7 +697,45 @@ def _is_junk_answer(answer: AnswerDTO, q_type: str = "free_text") -> bool:
     vowels = "aeiouyаеёиоуыэюя"
     if len(t) > 6 and not any(char in vowels for char in t):
         return True
+    
+    # 5. Russian nonsense phrases (User specific)
+    junk_phrases = ["я пишу бред", "ляляял", "блаблабла", "бред", "не знаю", "лень писать"]
+    if any(phrase in t for phrase in junk_phrases):
+        return True
         
+    # 6. LLM Validation (The "Brain" Check)
+    # Only call LLM if answer is long enough to potentially be valid but suspicious, 
+    # or if we want high confidence.
+    try:
+        from app.services.kb.builder import openai_chat_async
+        
+        sys_prompt = (
+            "You are a strict content moderator for an educational platform.\n"
+            "Analyze the USER ANSWER to the QUESTION.\n"
+            "Determine if the answer is 'JUNK' (meaningless, keyboard mash, explicit refusal to answer, trolling, or completely irrelevant gibberish) or 'VALID_ATTEMPT' (even if incorrect).\n"
+            "Rules:\n"
+            "- 'I don't know' or 'Skip' is JUNK in this context (we want them to try).\n"
+            "- 'fsdfsdf', 'blah blah', '123123' is JUNK.\n"
+            "- Incorrect math or reasoning is VALID_ATTEMPT.\n"
+            "- Respond with strictly one word: 'JUNK' or 'VALID'."
+        )
+        
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": f"Question: {prompt_context}\nUser Answer: {text}"}
+        ]
+        
+        # Fast, cheap call
+        res = await openai_chat_async(messages, temperature=0.0, max_tokens=10)
+        if res.get("ok"):
+            decision = res.get("content", "").strip().upper()
+            if "JUNK" in decision:
+                return True
+    except Exception as e:
+        print(f"LLM Junk Check Failed: {e}")
+        # Fail open (allow answer if LLM fails)
+        pass
+
     return False
 
 def _evaluate(answer: AnswerDTO, question_data: Dict = None) -> float:
@@ -890,12 +933,14 @@ async def next_question(payload: NextRequest):
         
         # Validation for junk/fake answers
         if q_data:
-             if _is_junk_answer(payload.answer, q_data.get("type", "free_text")):
+             prompt_text = q_data.get("prompt", "")
+             is_junk = await _is_junk_answer(payload.answer, q_data.get("type", "free_text"), prompt_text)
+             if is_junk:
                  sess["consecutive_junk"] = sess.get("consecutive_junk", 0) + 1
              else:
                  sess["consecutive_junk"] = 0
              
-             if sess.get("consecutive_junk", 0) >= 3:
+             if sess.get("consecutive_junk", 0) >= 1: # Strict mode: Stop on 1st explicit junk for testing
                  sess["force_stop"] = True
                  print(f"Session {sid} stopped due to junk answers: {payload.answer.text}")
             
@@ -994,13 +1039,13 @@ async def next_question(payload: NextRequest):
                                                          selected_texts.append(opt['text'])
                                                  if selected_texts:
                                                      ans_str += f" ({', '.join(selected_texts)})"
-
+                                                     
                                          elif ua.get('text'):
                                              ans_str = f"Text: {ua.get('text')}"
                                          elif ua.get('value') is not None:
                                              ans_str = f"Value: {ua.get('value')}"
                                      
-                                     history_text += f"Q{i+1}: {qd.get('prompt')}\\n"
+                                     history_text += f"Q{i+1} [Diff: {qd.get('difficulty', '?')}/10]: {qd.get('prompt')}\\n"
                                      history_text += f"User Answer: {ans_str}\\n"
                                      history_text += f"Correct Data: {qd.get('correct_data')}\\n"
                                      history_text += f"Score: {qd.get('score')}\\n\\n"
@@ -1009,8 +1054,10 @@ async def next_question(payload: NextRequest):
                                 "You are an empathetic, highly intelligent AI tutor. Your goal is to provide encouraging, constructive, and flexible feedback.\\n"
                                 "Analyze the student's session history.\\n"
                                 "LANGUAGE: All output text (feedback, comments, recommendations) MUST be in RUSSIAN.\\n"
-                                "1. **RE-EVALUATION**: The 'Score' provided in history is from a strict machine check. IGNORE IT if the user's answer is conceptually correct but has a typo, synonym, or different format (e.g. '0.5' vs '1/2', 'yes' vs 'true'). Give full credit for valid variations.\\n"
-                                "2. **PARTIAL CREDIT**: If the reasoning is correct but calculation is wrong, give partial credit (e.g., 50-80%).\\n"
+                                "CRITICAL ASSESSMENT RULES:\\n"
+                                "1. **MASTERY vs DIFFICULTY**: High accuracy on LOW difficulty questions (1-4) does NOT mean high mastery. True mastery (80-100%) requires answering HIGH difficulty (7-10) questions correctly.\\n"
+                                "2. **RE-EVALUATION**: The 'Score' provided in history is from a strict machine check. IGNORE IT if the user's answer is conceptually correct but has a typo, synonym, or different format (e.g. '0.5' vs '1/2', 'yes' vs 'true'). Give full credit for valid variations.\\n"
+                                "3. **PARTIAL CREDIT**: If the reasoning is correct but calculation is wrong, give partial credit (e.g., 50-80%).\\n"
                                 "3. **FEEDBACK TONE**: Be human, conversational, and specific. Avoid robotic phrases like 'Answer is incorrect'. Instead say: 'Good attempt, but you missed X', 'You're on the right track, however...', 'Correct! Excellent use of formula Y'.\\n"
                                 "4. **GAPS & RECOMMENDATIONS**: Identify *why* they made a mistake (misconception? calculation error? rush?). Suggest specific practice steps.\\n"
                                 "Output JSON format:\\n"
