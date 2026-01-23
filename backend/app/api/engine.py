@@ -169,18 +169,28 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
         
         if focus_uid:
             # Query prioritizing the focus topic and its neighbors (by PREREQ distance)
+            # Also determine relationship type: 'self', 'prerequisite' (t -> f), 'dependent' (f -> t)
             query = """
             MATCH (sub:Subject {uid: $su})
             MATCH (sub)-[:CONTAINS*]->(t:Topic)
             
             OPTIONAL MATCH path = shortestPath((t)-[:PREREQ*..3]-(f:Topic {uid: $focus}))
-            WITH t, length(path) as dist
+            WITH t, path
+            
+            WITH t, path,
+                 CASE 
+                   WHEN t.uid = $focus THEN 'self'
+                   WHEN path IS NOT NULL AND startNode(path) = t THEN 'prerequisite'
+                   WHEN path IS NOT NULL AND endNode(path) = t THEN 'dependent'
+                   ELSE 'related'
+                 END AS rel_type,
+                 length(path) as dist
             
             OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
             OPTIONAL MATCH (t)-[:PREREQ]->(p:Topic)
-            WITH t, dist, collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units, collect(p.uid) as prereqs
+            WITH t, rel_type, dist, collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units, collect(p.uid) as prereqs
             
-            RETURN t.uid AS uid, t.title AS title, t.description AS description, units, prereqs
+            RETURN t.uid AS uid, t.title AS title, t.description AS description, units, prereqs, rel_type, dist
             ORDER BY (CASE WHEN dist IS NULL THEN 100 ELSE dist END) ASC, t.title ASC
             LIMIT 50
             """
@@ -205,7 +215,7 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
         repo.close()
 
     # 2. LLM Personalization & Description Generation
-    # We want to select top 5 topics based on gaps (low scores) and generate descriptions if missing.
+    # We want to select top 8 topics based on gaps (low scores) and generate descriptions if missing.
     selected_rows = []
     
     # Map rows by UID for easy access
@@ -226,6 +236,8 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             "title": r["title"],
             "description": r.get("description") or "",
             "current_score": score,
+            "relationship": r.get("rel_type", "unknown"),
+            "distance": r.get("dist", 100),
             "prerequisites": r.get("prereqs", [])
         })
 
@@ -236,12 +248,14 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             client = AsyncOpenAI(api_key=settings.openai_api_key.get_secret_value())
             
             prompt = (
-                "You are an adaptive learning AI. Select the best 5 topics for a student roadmap from the list below.\n"
+                "You are an adaptive learning AI. Select the best 8 topics for a student roadmap from the list below.\n"
                 f"The student is currently focusing on topic: '{focus_title}' (UID: {focus_uid}).\n"
                 "Rules for Roadmap Construction:\n"
-                "1. **REMEDIATION (Score < 0.6)**: If the focus topic is failed or new, start with its PREREQUISITES.\n"
-                "2. **FOCUS LOOP (Score 0.6 - 0.85)**: If the student understands the basics but lacks mastery (score < 0.85), prioritize THE SAME TOPIC to close gaps.\n"
-                "3. **PROGRESSION (Score > 0.85)**: Only if the focus topic is FULLY MASTERED (>0.85), suggest the NEXT logical topics.\n"
+                "1. **REMEDIATION (Score < 0.6)**: If the focus topic is failed or new, select 'prerequisite' topics.\n"
+                "   - **CRITICAL**: Prioritize IMMEDIATE prerequisites (distance=1). DO NOT jump to distant/basic topics (distance > 1) unless immediate ones are also failed.\n"
+                "   - Example: If 'Quadratic Equations' is failed, choose 'Polynomials' (dist=1), NOT 'Addition' (dist=3).\n"
+                "2. **FOCUS LOOP (Score 0.6 - 0.85)**: If score is 0.6-0.85, prioritize THE FOCUS TOPIC ITSELF ('self') to close gaps.\n"
+                "3. **PROGRESSION (Score > 0.85)**: Only if the focus topic is FULLY MASTERED (>0.85), suggest 'dependent' topics (next steps).\n"
                 "4. If no focus topic is provided, prioritize Remediation -> Foundation -> New Topics.\n"
                 "5. GENERATE a short, engaging description (in Russian) for any topic that has an empty description.\n"
                 "Return a valid JSON object with a key 'selected_topics' containing a list of objects: {'uid': '...', 'description': '...'}.\n"
@@ -282,15 +296,27 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
 
     # Fallback if LLM failed or returned nothing
     if not selected_rows:
-        selected_rows = rows[:5]
+        # Fallback Strategy:
+        # 1. Always include focus topic (dist=0)
+        # 2. Then closest neighbors (dist=1)
+        # 3. Then others
+        
+        # Sort rows by distance (dist=0 first)
+        def sort_key(r):
+            d = r.get("dist")
+            if d is None: return 100
+            return d
+            
+        sorted_rows = sorted(rows, key=sort_key)
+        selected_rows = sorted_rows[:8]
     else:
-        # Ensure we have at most 5
-        selected_rows = selected_rows[:5]
+        # Ensure we have at most 8
+        selected_rows = selected_rows[:8]
         
     # 3. Process selected rows to build RoadmapNodes
     count = 0
     for r in selected_rows:
-        if count >= 5:
+        if count >= 8:
             break
         
         t_uid = r["uid"]
