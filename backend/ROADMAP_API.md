@@ -64,10 +64,12 @@
 | `description` | `string` | Описание темы (генерируется LLM, если отсутствует в базе). |
 | `status` | `string` | Статус доступа: `locked` (закрыто), `available` (доступно), `completed` (пройдено). |
 | `max_score` | `integer` | Максимальный балл за эту тему. |
-| `lessons` | `array` | Список микро-уроков (MicroLesson), сгруппированных по порядку. |
+| `current_score` | `float` | Текущий балл пользователя (рассчитанный из прогресса). |
+| `progress_percentage` | `float` | Процент прохождения темы. |
+| `units` | `array` | Список микро-уроков (MicroLesson), сгруппированных по порядку. |
 | `final_test` | `object` | Объект финального теста (LessonUnit), может быть null. |
 
-### Структура `MicroLesson` (элемент массива `lessons`)
+### Структура `MicroLesson` (элемент массива `units`)
 Каждый микро-урок представляет собой законченную учебную единицу, состоящую из трех фаз.
 
 | Поле | Тип | Описание |
@@ -96,7 +98,9 @@
       "title": "Квадратные уравнения",
       "status": "available",
       "max_score": 6,
-      "lessons": [
+      "current_score": 0.0,
+      "progress_percentage": 0.0,
+      "units": [
         {
           "order": 1,
           "title": "Дискриминант",

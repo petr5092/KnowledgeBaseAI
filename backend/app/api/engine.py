@@ -146,7 +146,9 @@ class RoadmapNode(BaseModel):
     description: Optional[str] = None
     status: str = "locked"  # locked, available, completed
     max_score: int = 0
-    lessons: List[MicroLesson] = []
+    current_score: float = 0.0
+    progress_percentage: float = 0.0
+    units: List[MicroLesson] = []
     final_test: Optional[LessonUnit] = None
 
 class RoadmapResponse(BaseModel):
@@ -416,13 +418,18 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             if l.we_do: node_score += 1
             if l.you_do: node_score += 1
         
+        current_score = p_val * node_score
+        progress_percentage = p_val * 100.0
+
         topics.append(RoadmapNode(
             topic_uid=t_uid,
             title=r["title"],
             description=r.get("description"),
             status=status,
             max_score=node_score,
-            lessons=lessons_list,
+            current_score=current_score,
+            progress_percentage=progress_percentage,
+            units=lessons_list,
             final_test=final_test_unit
         ))
         count += 1
