@@ -13,6 +13,7 @@ from app.schemas.context import UserContext
 from app.services.reasoning.gaps import compute_gaps
 from app.services.reasoning.next_best_topic import next_best_topics
 from app.services.reasoning.mastery_update import update_mastery
+from app.services.curriculum.repo import get_graph_view
 
 router = APIRouter()
 
@@ -443,6 +444,7 @@ class TopicsAvailableRequest(BaseModel):
     subject_uid: Optional[str] = None
     subject_title: Optional[str] = None
     user_context: UserContext
+    curriculum_code: Optional[str] = None
 
 class TopicItem(BaseModel):
     topic_uid: str
@@ -481,6 +483,33 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
         age = ctx.attributes.get("age")
     
     resolved = int(user_class) if user_class is not None else _age_to_class(age)
+    
+    # Curriculum Filter Preparation
+    allowed_topics: Optional[Set[str]] = None
+    if payload.curriculum_code:
+        cv = get_graph_view(payload.curriculum_code)
+        if cv.get("ok") and cv.get("nodes"):
+             root_nodes = [n["canonical_uid"] for n in cv["nodes"]]
+             if root_nodes:
+                 repo_cv = Neo4jRepo()
+                 try:
+                     res_cv = repo_cv.read(
+                        "UNWIND $roots AS root MATCH (t:Topic {uid:root})-[:PREREQ*0..]->(p:Topic) RETURN collect(DISTINCT p.uid) AS uids",
+                        {"roots": root_nodes}
+                     )
+                     if res_cv and res_cv[0].get("uids"):
+                         allowed_topics = set(res_cv[0]["uids"])
+                     else:
+                         allowed_topics = set()
+                 except Exception:
+                     allowed_topics = set()
+                 finally:
+                     repo_cv.close()
+        
+        if allowed_topics is None:
+             # Curriculum code provided but invalid or not found -> block all
+             allowed_topics = set()
+
     topics: List[Dict] = []
     su = payload.subject_uid
     if not su and (payload.subject_title or "").strip():
@@ -541,6 +570,11 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
                     ok = ok and resolved >= int(mn)
                 if isinstance(mx, (int, float)):
                     ok = ok and resolved <= int(mx)
+                
+                # Curriculum Whitelist Check
+                if allowed_topics is not None and r.get("topic_uid") not in allowed_topics:
+                    ok = False
+
                 if ok:
                     topics.append(
                         {
@@ -575,6 +609,8 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
                 {"su": su},
             )
             for r in rows or []:
+                if allowed_topics is not None and r.get("topic_uid") not in allowed_topics:
+                    continue
                 topics.append(
                     {
                         "topic_uid": r.get("topic_uid"),
@@ -610,6 +646,8 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
                 {"t": payload.subject_title},
             )
             for r in rows or []:
+                if allowed_topics is not None and r.get("topic_uid") not in allowed_topics:
+                    continue
                 topics.append(
                     {
                         "topic_uid": r.get("topic_uid"),

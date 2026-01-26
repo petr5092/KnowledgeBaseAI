@@ -1,42 +1,33 @@
-{"uid": "SUBSEC-OSNOVNYE-OPERACII-2faf09", "section_uid": "SEC-ARITHMETIC-10f353", "title": "Основные операции", "description": ""}
-{"uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-8bc9db", "section_uid": "SEC-ARITHMETIC-10f353", "title": "Свойства арифметических операций", "description": ""}
-{"uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--32853b", "section_uid": "SEC-ARITHMETIC-10f353", "title": "Применение арифметики в повседневной жизни", "description": ""}
-{"uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-745d8d", "section_uid": "SEC-ALGEBRA-335ed5", "title": "Основные операции с алгебраическими выражениями", "description": ""}
-{"uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-043987", "section_uid": "SEC-ALGEBRA-335ed5", "title": "Решение линейных уравнений", "description": ""}
-{"uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--0e923d", "section_uid": "SEC-ALGEBRA-335ed5", "title": "Квадратные уравнения и их свойства", "description": ""}
-{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-10f643", "section_uid": "SEC-GEOMETRY-423741", "title": "Основные понятия геометрии", "description": ""}
-{"uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-cfdd14", "section_uid": "SEC-GEOMETRY-423741", "title": "Фигуры и их свойства", "description": ""}
-{"uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-b29922", "section_uid": "SEC-GEOMETRY-423741", "title": "Геометрические преобразования", "description": ""}
-{"uid": "SUBSEC-OPREDELENIE-TRIGONOMETRI-1486cf", "section_uid": "SEC-TRIGONOMETRY-2be384", "title": "Определение тригонометрии", "description": ""}
-{"uid": "SUBSEC-OSNOVNYE-TRIGONOMETRICHE-c60956", "section_uid": "SEC-TRIGONOMETRY-2be384", "title": "Основные тригонометрические функции", "description": ""}
-{"uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-18d00e", "section_uid": "SEC-TRIGONOMETRY-2be384", "title": "Тригонометрические уравнения и неравенства", "description": ""}
-{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-96ed38", "section_uid": "SEC-CALCULUS-1e85db", "title": "Основные понятия и определения", "description": ""}
-{"uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-37a1cc", "section_uid": "SEC-CALCULUS-1e85db", "title": "Производные и их применение", "description": ""}
-{"uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-bd6c5e", "section_uid": "SEC-CALCULUS-1e85db", "title": "Интегралы и методы интегрирования", "description": ""}
-{"uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-1b88d0", "section_uid": "SEC-LINEAR-ALGEBRA-09906d", "title": "Векторы и операции с ними", "description": ""}
-{"uid": "SUBSEC-MATRICY-I-OPREDELITELI-18e368", "section_uid": "SEC-LINEAR-ALGEBRA-09906d", "title": "Матрицы и определители", "description": ""}
-{"uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-5c5183", "section_uid": "SEC-LINEAR-ALGEBRA-09906d", "title": "Системы линейных уравнений", "description": ""}
-{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-7679bc", "section_uid": "SEC-PROBABILITY-STATISTICS-1f3f3e", "title": "Основные понятия вероятности", "description": ""}
-{"uid": "SUBSEC-STATISTICHESKIE-METODY-I-bd2714", "section_uid": "SEC-PROBABILITY-STATISTICS-1f3f3e", "title": "Статистические методы и их применение", "description": ""}
-{"uid": "SUBSEC-TEOREMA-BAIESA-I-EE-PRIL-7d7036", "section_uid": "SEC-PROBABILITY-STATISTICS-1f3f3e", "title": "Теорема Байеса и её приложения", "description": ""}
-{"uid": "SUBSEC-OSNOVNYE-OPERACII-ba61bf", "section_uid": "SEC-ARITHMETIC-0240e7", "title": "Основные операции", "description": ""}
-{"uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-743456", "section_uid": "SEC-ARITHMETIC-0240e7", "title": "Свойства арифметических операций", "description": ""}
-{"uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--2b06e2", "section_uid": "SEC-ARITHMETIC-0240e7", "title": "Применение арифметики в повседневной жизни", "description": ""}
-{"uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fd68b1", "section_uid": "SEC-ALGEBRA-855b76", "title": "Основные операции с алгебраическими выражениями", "description": ""}
-{"uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-6d1516", "section_uid": "SEC-ALGEBRA-855b76", "title": "Уравнения и неравенства", "description": ""}
-{"uid": "SUBSEC-FUNKCII-I-IH-GRAFIKI-4c4c91", "section_uid": "SEC-ALGEBRA-855b76", "title": "Функции и их графики", "description": ""}
-{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-4986f8", "section_uid": "SEC-GEOMETRY-5855f7", "title": "Основные понятия геометрии", "description": ""}
-{"uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-818e26", "section_uid": "SEC-GEOMETRY-5855f7", "title": "Фигуры и их свойства", "description": ""}
-{"uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-f16b75", "section_uid": "SEC-GEOMETRY-5855f7", "title": "Геометрические преобразования", "description": ""}
-{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-56a146", "section_uid": "SEC-TRIGONOMETRY-c3f237", "title": "Основные понятия тригонометрии", "description": ""}
-{"uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-62f082", "section_uid": "SEC-TRIGONOMETRY-c3f237", "title": "Тригонометрические функции", "description": ""}
-{"uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-86af03", "section_uid": "SEC-TRIGONOMETRY-c3f237", "title": "Применение тригонометрии в геометрии", "description": ""}
-{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-7bdc10", "section_uid": "SEC-CALCULUS-7097bb", "title": "Основные понятия и определения в исчислении", "description": ""}
-{"uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-de8c96", "section_uid": "SEC-CALCULUS-7097bb", "title": "Производные и их применение", "description": ""}
-{"uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-074e82", "section_uid": "SEC-CALCULUS-7097bb", "title": "Интегралы и методы интегрирования", "description": ""}
-{"uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-949e7c", "section_uid": "SEC-LINEAR-ALGEBRA-49e6d4", "title": "Векторы и операции с ними", "description": ""}
-{"uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-4a7572", "section_uid": "SEC-LINEAR-ALGEBRA-49e6d4", "title": "Матрицы и их свойства", "description": ""}
-{"uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-4371f8", "section_uid": "SEC-LINEAR-ALGEBRA-49e6d4", "title": "Системы линейных уравнений", "description": ""}
-{"uid": "SUBSEC-OSNOVY-TEORII-VEROYATNOS-8dcd2f", "section_uid": "SEC-PROBABILITY-STATISTICS-d5f818", "title": "Основы теории вероятностей", "description": ""}
-{"uid": "SUBSEC-STATISTICHESKIE-METODY-I-6e25bd", "section_uid": "SEC-PROBABILITY-STATISTICS-d5f818", "title": "Статистические методы и их применение", "description": ""}
-{"uid": "SUBSEC-RASPREDELENIYA-VEROYATNO-5ebd31", "section_uid": "SEC-PROBABILITY-STATISTICS-d5f818", "title": "Распределения вероятностей", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "section_uid": "SEC-ARITHMETIC-0183d4", "title": "Основные операции", "description": ""}
+{"uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "section_uid": "SEC-ARITHMETIC-0183d4", "title": "Свойства арифметических операций", "description": ""}
+{"uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "section_uid": "SEC-ARITHMETIC-0183d4", "title": "Применение арифметики в повседневной жизни", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "section_uid": "SEC-ALGEBRA-3d3be8", "title": "Основные операции с алгебраическими выражениями", "description": ""}
+{"uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "section_uid": "SEC-ALGEBRA-3d3be8", "title": "Решение линейных уравнений", "description": ""}
+{"uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "section_uid": "SEC-ALGEBRA-3d3be8", "title": "Квадратные уравнения и их свойства", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "section_uid": "SEC-GEOMETRY-515b79", "title": "Основные понятия геометрии", "description": ""}
+{"uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "section_uid": "SEC-GEOMETRY-515b79", "title": "Фигуры и их свойства", "description": ""}
+{"uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "section_uid": "SEC-GEOMETRY-515b79", "title": "Применение геометрии в реальной жизни", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "section_uid": "SEC-TRIGONOMETRY-7bf5b1", "title": "Основные понятия тригонометрии", "description": ""}
+{"uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "section_uid": "SEC-TRIGONOMETRY-7bf5b1", "title": "Тригонометрические функции и их свойства", "description": ""}
+{"uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "section_uid": "SEC-TRIGONOMETRY-7bf5b1", "title": "Применение тригонометрии в решении задач", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "section_uid": "SEC-CALCULUS-262f4d", "title": "Основные понятия предела", "description": ""}
+{"uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "section_uid": "SEC-CALCULUS-262f4d", "title": "Производные и их применение", "description": ""}
+{"uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "section_uid": "SEC-CALCULUS-262f4d", "title": "Интегралы и методы интегрирования", "description": ""}
+{"uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "section_uid": "SEC-LINEAR-ALGEBRA-e53697", "title": "Векторы и операции с ними", "description": ""}
+{"uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "section_uid": "SEC-LINEAR-ALGEBRA-e53697", "title": "Матрицы и их свойства", "description": ""}
+{"uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "section_uid": "SEC-LINEAR-ALGEBRA-e53697", "title": "Системы линейных уравнений", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "section_uid": "SEC-PROBABILITY-646e1f", "title": "Основные понятия вероятности", "description": ""}
+{"uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "section_uid": "SEC-PROBABILITY-646e1f", "title": "Законы вероятности", "description": ""}
+{"uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "section_uid": "SEC-PROBABILITY-646e1f", "title": "Применение теории вероятностей", "description": ""}
+{"uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "section_uid": "SEC-STATISTICS-842410", "title": "Введение в статистику", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "section_uid": "SEC-STATISTICS-842410", "title": "Основные методы описательной статистики", "description": ""}
+{"uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "section_uid": "SEC-STATISTICS-842410", "title": "Вероятностные распределения и их применение", "description": ""}
+{"uid": "SUBSEC-KOMBINATORIKA-1f065a", "section_uid": "SEC-DISCRETE-MATH-d14956", "title": "Комбинаторика", "description": ""}
+{"uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "section_uid": "SEC-DISCRETE-MATH-d14956", "title": "Теория графов", "description": ""}
+{"uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "section_uid": "SEC-DISCRETE-MATH-d14956", "title": "Логика и булева алгебра", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "section_uid": "SEC-NUMBER-THEORY-6ba469", "title": "Основные понятия теории чисел", "description": ""}
+{"uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "section_uid": "SEC-NUMBER-THEORY-6ba469", "title": "Делимость и простые числа", "description": ""}
+{"uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "section_uid": "SEC-NUMBER-THEORY-6ba469", "title": "Диофантовы уравнения и их решения", "description": ""}
+{"uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "section_uid": "SEC-SET-THEORY-36cc56", "title": "Основные понятия теории множеств", "description": ""}
+{"uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "section_uid": "SEC-SET-THEORY-36cc56", "title": "Операции над множествами", "description": ""}
+{"uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "section_uid": "SEC-SET-THEORY-36cc56", "title": "Отношения и функции в теории множеств", "description": ""}

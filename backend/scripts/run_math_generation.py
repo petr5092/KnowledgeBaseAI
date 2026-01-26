@@ -227,11 +227,14 @@ async def main():
         subject_uid="MATH-FULL-V1",
         subject_title="Mathematics",
         language="ru",
-        sections_seed=SEEDS,
-        topics_per_subsection=6,
-        skills_per_topic=2,
-        methods_per_skill=1,
-        examples_per_topic=1,
+        sections_seed=[
+            "Arithmetic","Algebra","Geometry","Trigonometry","Calculus",
+            "Linear Algebra","Probability","Statistics","Discrete Math","Number Theory","Set Theory","Logic"
+        ],
+        topics_per_subsection=12,
+        skills_per_topic=3,
+        methods_per_skill=2,
+        examples_per_topic=3,
         concurrency=5
     )
     

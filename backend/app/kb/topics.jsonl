@@ -1,252 +1,396 @@
-{"uid": "TOP-SLOZHENIE-I-VYCHITANIE-fce82b", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-2faf09", "title": "Сложение и вычитание", "description": ""}
-{"uid": "TOP-UMNOZHENIE-I-DELENIE-bb242b", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-2faf09", "title": "Умножение и деление", "description": ""}
-{"uid": "TOP-RABOTA-S-DROBYAMI-1d735c", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-2faf09", "title": "Работа с дробями", "description": ""}
-{"uid": "TOP-PROCENTY-I-IH-VYCHISLENI-b55c05", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-2faf09", "title": "Проценты и их вычисление", "description": ""}
-{"uid": "TOP-STEPENI-I-KORNI-179a43", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-2faf09", "title": "Степени и корни", "description": ""}
-{"uid": "TOP-ALGEBRAICHESKIE-VYRAZHEN-66ffd6", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-2faf09", "title": "Алгебраические выражения", "description": ""}
-{"uid": "TOP-KOMMUTATIVNOST-SLOZHENIY-301b90", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-8bc9db", "title": "Коммутативность сложения", "description": ""}
-{"uid": "TOP-ASSOCIATIVNOST-SLOZHENIY-762768", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-8bc9db", "title": "Ассоциативность сложения", "description": ""}
-{"uid": "TOP-KOMMUTATIVNOST-UMNOZHENI-5bc9c8", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-8bc9db", "title": "Коммутативность умножения", "description": ""}
-{"uid": "TOP-ASSOCIATIVNOST-UMNOZHENI-7449e4", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-8bc9db", "title": "Ассоциативность умножения", "description": ""}
-{"uid": "TOP-DISTRIBUTIVNOST-UMNOZHEN-ad4285", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-8bc9db", "title": "Дистрибутивность умножения относительно сложения", "description": ""}
-{"uid": "TOP-NEITRALNYE-ELEMENTY-SLOZ-3b109a", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-8bc9db", "title": "Нейтральные элементы сложения и умножения", "description": ""}
-{"uid": "TOP-BYUDZHETIROVANIE-I-UPRAV-0fb820", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--32853b", "title": "Бюджетирование и управление финансами", "description": ""}
-{"uid": "TOP-KULINARNYE-RASCHETY-PROP-6cc956", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--32853b", "title": "Кулинарные расчеты: пропорции и порции", "description": ""}
-{"uid": "TOP-IZMERENIE-I-RASCHET-PLOS-820d97", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--32853b", "title": "Измерение и расчет площади и объема", "description": ""}
-{"uid": "TOP-SRAVNENIE-CEN-I-VYBOR-VY-7cc033", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--32853b", "title": "Сравнение цен и выбор выгодных предложений", "description": ""}
-{"uid": "TOP-RASCHET-VREMENI-PLANIROV-a19346", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--32853b", "title": "Расчет времени: планирование и расписание", "description": ""}
-{"uid": "TOP-ANALIZ-DANNYH-STATISTIKA-bbdd1d", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--32853b", "title": "Анализ данных: статистика в повседневной жизни", "description": ""}
-{"uid": "TOP-SLOZHENIE-I-VYCHITANIE-A-7c0292", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-745d8d", "title": "Сложение и вычитание алгебраических выражений", "description": ""}
-{"uid": "TOP-UMNOZHENIE-I-DELENIE-ALG-dd5c83", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-745d8d", "title": "Умножение и деление алгебраических выражений", "description": ""}
-{"uid": "TOP-PRIVEDENIE-PODOBNYH-CHLE-602683", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-745d8d", "title": "Приведение подобных членов", "description": ""}
-{"uid": "TOP-FAKTORIZACIYA-ALGEBRAICH-7204e0", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-745d8d", "title": "Факторизация алгебраических выражений", "description": ""}
-{"uid": "TOP-UPROSCHENIE-ALGEBRAICHES-9bd707", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-745d8d", "title": "Упрощение алгебраических выражений", "description": ""}
-{"uid": "TOP-RESHENIE-URAVNENII-S-ALG-fab330", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-745d8d", "title": "Решение уравнений с алгебраическими выражениями", "description": ""}
-{"uid": "TOP-METODY-RESHENIYA-LINEINY-c3ccb1", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-043987", "title": "Методы решения линейных уравнений", "description": ""}
-{"uid": "TOP-SISTEMY-LINEINYH-URAVNEN-0ba04f", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-043987", "title": "Системы линейных уравнений", "description": ""}
-{"uid": "TOP-GEOMETRICHESKAYA-INTERPR-f35f0f", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-043987", "title": "Геометрическая интерпретация линейных уравнений", "description": ""}
-{"uid": "TOP-PRIMENENIE-LINEINYH-URAV-118e4f", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-043987", "title": "Применение линейных уравнений в экономике", "description": ""}
-{"uid": "TOP-CHISLENNYE-METODY-RESHEN-b46aac", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-043987", "title": "Численные методы решения линейных уравнений", "description": ""}
-{"uid": "TOP-LINEINYE-URAVNENIYA-V-MN-e0e4ec", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-043987", "title": "Линейные уравнения в многомерном пространстве", "description": ""}
-{"uid": "TOP-OPREDELENIE-KVADRATNOGO--14ec50", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--0e923d", "title": "Определение квадратного уравнения", "description": ""}
-{"uid": "TOP-FORMULA-KORNEI-KVADRATNO-6067b3", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--0e923d", "title": "Формула корней квадратного уравнения", "description": ""}
-{"uid": "TOP-DISKRIMINANT-I-EGO-ZNACH-6fe240", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--0e923d", "title": "Дискриминант и его значение", "description": ""}
-{"uid": "TOP-GRAFIK-KVADRATNOI-FUNKCI-4e7b29", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--0e923d", "title": "График квадратной функции", "description": ""}
-{"uid": "TOP-SVOISTVA-KORNEI-KVADRATN-1f5690", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--0e923d", "title": "Свойства корней квадратного уравнения", "description": ""}
-{"uid": "TOP-PRIMENENIE-KVADRATNYH-UR-f6222d", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--0e923d", "title": "Применение квадратных уравнений в задачах", "description": ""}
-{"uid": "TOP-TOCHKI-I-PRYAMYE-254683", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-10f643", "title": "Точки и прямые", "description": ""}
-{"uid": "TOP-UGLY-I-IH-IZMERENIE-738f16", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-10f643", "title": "Углы и их измерение", "description": ""}
-{"uid": "TOP-PLOSKOSTI-I-IH-SVOISTVA-16dc25", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-10f643", "title": "Плоскости и их свойства", "description": ""}
-{"uid": "TOP-FIGURY-NA-PLOSKOSTI-edcc6b", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-10f643", "title": "Фигуры на плоскости", "description": ""}
-{"uid": "TOP-PERIMETR-I-PLOSCHAD-FIGU-a172ed", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-10f643", "title": "Периметр и площадь фигур", "description": ""}
-{"uid": "TOP-OBEM-I-PLOSCHAD-POVERHNO-28f87a", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-10f643", "title": "Объем и площадь поверхности тел", "description": ""}
-{"uid": "TOP-OPREDELENIE-I-KLASSIFIKA-7ad40f", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-cfdd14", "title": "Определение и классификация фигур", "description": ""}
-{"uid": "TOP-SVOISTVA-TREUGOLNIKOV-c5807c", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-cfdd14", "title": "Свойства треугольников", "description": ""}
-{"uid": "TOP-SVOISTVA-CHETYREHUGOLNIK-9fe26c", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-cfdd14", "title": "Свойства четырехугольников", "description": ""}
-{"uid": "TOP-PARALLELNYE-I-PERPENDIKU-102ce8", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-cfdd14", "title": "Параллельные и перпендикулярные линии", "description": ""}
-{"uid": "TOP-SVOISTVA-KRUGOV-I-OKRUZH-7ef91c", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-cfdd14", "title": "Свойства кругов и окружностей", "description": ""}
-{"uid": "TOP-PLOSCHAD-I-PERIMETR-FIGU-0057ad", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-cfdd14", "title": "Площадь и периметр фигур", "description": ""}
-{"uid": "TOP-PARALLELNYI-PERENOS-eceffc", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-b29922", "title": "Параллельный перенос", "description": ""}
-{"uid": "TOP-POVOROT-dee292", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-b29922", "title": "Поворот", "description": ""}
-{"uid": "TOP-OTRAZHENIE-e28ad4", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-b29922", "title": "Отражение", "description": ""}
-{"uid": "TOP-MASSHTABIROVANIE-2f886d", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-b29922", "title": "Масштабирование", "description": ""}
-{"uid": "TOP-KOMPOZICIYA-PREOBRAZOVAN-39b6ac", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-b29922", "title": "Композиция преобразований", "description": ""}
-{"uid": "TOP-PRIMENENIE-GEOMETRICHESK-8b88bd", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-b29922", "title": "Применение геометрических преобразований", "description": ""}
-{"uid": "TOP-ISTORIYA-TRIGONOMETRII-572320", "section_uid": "SUBSEC-OPREDELENIE-TRIGONOMETRI-1486cf", "title": "История тригонометрии", "description": ""}
-{"uid": "TOP-OSNOVNYE-FUNKCII-TRIGONO-7eb8af", "section_uid": "SUBSEC-OPREDELENIE-TRIGONOMETRI-1486cf", "title": "Основные функции тригонометрии", "description": ""}
-{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-29bbb0", "section_uid": "SUBSEC-OPREDELENIE-TRIGONOMETRI-1486cf", "title": "Применение тригонометрии в геометрии", "description": ""}
-{"uid": "TOP-SVYAZ-TRIGONOMETRII-S-AL-097e94", "section_uid": "SUBSEC-OPREDELENIE-TRIGONOMETRI-1486cf", "title": "Связь тригонометрии с алгеброй", "description": ""}
-{"uid": "TOP-TRIGONOMETRICHESKIE-URAV-ef3f30", "section_uid": "SUBSEC-OPREDELENIE-TRIGONOMETRI-1486cf", "title": "Тригонометрические уравнения", "description": ""}
-{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-1bf5b7", "section_uid": "SUBSEC-OPREDELENIE-TRIGONOMETRI-1486cf", "title": "Графики тригонометрических функций", "description": ""}
-{"uid": "TOP-OPREDELENIE-SINUSA-I-KOS-c65dc1", "section_uid": "SUBSEC-OSNOVNYE-TRIGONOMETRICHE-c60956", "title": "Определение синуса и косинуса", "description": ""}
-{"uid": "TOP-TANGENS-I-KOTANGENS-OPRE-d3a338", "section_uid": "SUBSEC-OSNOVNYE-TRIGONOMETRICHE-c60956", "title": "Тангенс и котангенс: определение и свойства", "description": ""}
-{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-e220a6", "section_uid": "SUBSEC-OSNOVNYE-TRIGONOMETRICHE-c60956", "title": "Графики тригонометрических функций", "description": ""}
-{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-522f62", "section_uid": "SUBSEC-OSNOVNYE-TRIGONOMETRICHE-c60956", "title": "Основные тригонометрические тождества", "description": ""}
-{"uid": "TOP-OBRATNYE-TRIGONOMETRICHE-b7394b", "section_uid": "SUBSEC-OSNOVNYE-TRIGONOMETRICHE-c60956", "title": "Обратные тригонометрические функции", "description": ""}
-{"uid": "TOP-PRIMENENIE-TRIGONOMETRIC-ce97ce", "section_uid": "SUBSEC-OSNOVNYE-TRIGONOMETRICHE-c60956", "title": "Применение тригонометрических функций в задачах", "description": ""}
-{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-c24a83", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-18d00e", "title": "Основные тригонометрические функции", "description": ""}
-{"uid": "TOP-RESHENIE-TRIGONOMETRICHE-0ba3ed", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-18d00e", "title": "Решение тригонометрических уравнений", "description": ""}
-{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-0d5e3c", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-18d00e", "title": "Графики тригонометрических функций", "description": ""}
-{"uid": "TOP-TRIGONOMETRICHESKIE-NERA-48772a", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-18d00e", "title": "Тригонометрические неравенства", "description": ""}
-{"uid": "TOP-PRIMENENIE-TRIGONOMETRIC-715e79", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-18d00e", "title": "Применение тригонометрических уравнений в задачах", "description": ""}
-{"uid": "TOP-SLOZHNYE-TRIGONOMETRICHE-7cd8b0", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-URAV-18d00e", "title": "Сложные тригонометрические уравнения", "description": ""}
-{"uid": "TOP-VVEDENIE-V-OSNOVNYE-PONY-c95bc5", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-96ed38", "title": "Введение в основные понятия", "description": ""}
-{"uid": "TOP-OPREDELENIE-KLYUCHEVYH-T-263a94", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-96ed38", "title": "Определение ключевых терминов", "description": ""}
-{"uid": "TOP-TIPY-DANNYH-I-IH-HARAKTE-966d43", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-96ed38", "title": "Типы данных и их характеристики", "description": ""}
-{"uid": "TOP-STRUKTURY-DANNYH-OSNOVY-9b5c90", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-96ed38", "title": "Структуры данных: основы", "description": ""}
-{"uid": "TOP-ALGORITMY-BAZOVYE-KONCEP-e34c17", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-96ed38", "title": "Алгоритмы: базовые концепции", "description": ""}
-{"uid": "TOP-SLOZHNOST-ALGORITMOV-f50acf", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-96ed38", "title": "Сложность алгоритмов", "description": ""}
-{"uid": "TOP-OPREDELENIE-PROIZVODNOI-72dfff", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-37a1cc", "title": "Определение производной", "description": ""}
-{"uid": "TOP-PRAVILA-DIFFERENCIROVANI-e37922", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-37a1cc", "title": "Правила дифференцирования", "description": ""}
-{"uid": "TOP-PROIZVODNYE-VYSSHIH-PORY-4ba014", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-37a1cc", "title": "Производные высших порядков", "description": ""}
-{"uid": "TOP-PRIMENENIE-PROIZVODNYH-V-214a07", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-37a1cc", "title": "Применение производных в задачах оптимизации", "description": ""}
-{"uid": "TOP-ISSLEDOVANIE-FUNKCII-S-P-217a45", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-37a1cc", "title": "Исследование функций с помощью производных", "description": ""}
-{"uid": "TOP-PROIZVODNYE-V-FIZIKE-2a805d", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-37a1cc", "title": "Производные в физике", "description": ""}
-{"uid": "TOP-OPREDELENNYI-INTEGRAL-f9b7c0", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-bd6c5e", "title": "Определенный интеграл", "description": ""}
-{"uid": "TOP-NEOPREDELENNYI-INTEGRAL-e27b6c", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-bd6c5e", "title": "Неопределенный интеграл", "description": ""}
-{"uid": "TOP-METOD-PODSTANOVKI-df6002", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-bd6c5e", "title": "Метод подстановки", "description": ""}
-{"uid": "TOP-METOD-INTEGRIROVANIYA-PO-91920c", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-bd6c5e", "title": "Метод интегрирования по частям", "description": ""}
-{"uid": "TOP-INTEGRALY-TRIGONOMETRICH-58d201", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-bd6c5e", "title": "Интегралы тригонометрических функций", "description": ""}
-{"uid": "TOP-PRIMENENIE-INTEGRALOV-V--d7229f", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-bd6c5e", "title": "Применение интегралов в геометрии", "description": ""}
-{"uid": "TOP-OPREDELENIE-VEKTOROV-88d6ed", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-1b88d0", "title": "Определение векторов", "description": ""}
-{"uid": "TOP-SLOZHENIE-I-VYCHITANIE-V-e9d223", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-1b88d0", "title": "Сложение и вычитание векторов", "description": ""}
-{"uid": "TOP-UMNOZHENIE-VEKTORA-NA-CH-a22850", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-1b88d0", "title": "Умножение вектора на число", "description": ""}
-{"uid": "TOP-SKALYARNOE-PROIZVEDENIE--9f7a9c", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-1b88d0", "title": "Скалярное произведение векторов", "description": ""}
-{"uid": "TOP-VEKTORNOE-PROIZVEDENIE-V-848467", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-1b88d0", "title": "Векторное произведение векторов", "description": ""}
-{"uid": "TOP-PRIMENENIE-VEKTOROV-V-GE-80d43b", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-1b88d0", "title": "Применение векторов в геометрии", "description": ""}
-{"uid": "TOP-VVEDENIE-V-MATRICY-dc7044", "section_uid": "SUBSEC-MATRICY-I-OPREDELITELI-18e368", "title": "Введение в матрицы", "description": ""}
-{"uid": "TOP-OPERACII-S-MATRICAMI-920012", "section_uid": "SUBSEC-MATRICY-I-OPREDELITELI-18e368", "title": "Операции с матрицами", "description": ""}
-{"uid": "TOP-OPREDELITEL-MATRICY-f8cd26", "section_uid": "SUBSEC-MATRICY-I-OPREDELITELI-18e368", "title": "Определитель матрицы", "description": ""}
-{"uid": "TOP-SVOISTVA-OPREDELITELEI-68e33f", "section_uid": "SUBSEC-MATRICY-I-OPREDELITELI-18e368", "title": "Свойства определителей", "description": ""}
-{"uid": "TOP-OBRATNAYA-MATRICA-3493a6", "section_uid": "SUBSEC-MATRICY-I-OPREDELITELI-18e368", "title": "Обратная матрица", "description": ""}
-{"uid": "TOP-PRIMENENIE-MATRIC-V-SIST-a5661e", "section_uid": "SUBSEC-MATRICY-I-OPREDELITELI-18e368", "title": "Применение матриц в системах линейных уравнений", "description": ""}
-{"uid": "TOP-OPREDELENIE-SISTEM-LINEI-1004c0", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-5c5183", "title": "Определение систем линейных уравнений", "description": ""}
-{"uid": "TOP-METODY-RESHENIYA-SISTEM--204719", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-5c5183", "title": "Методы решения систем линейных уравнений", "description": ""}
-{"uid": "TOP-GEOMETRICHESKAYA-INTERPR-10370c", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-5c5183", "title": "Геометрическая интерпретация систем линейных уравнений", "description": ""}
-{"uid": "TOP-KRITERII-SOVMESTNOSTI-SI-a5fe3b", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-5c5183", "title": "Критерии совместности систем линейных уравнений", "description": ""}
-{"uid": "TOP-PRIMENENIE-MATRIC-V-SIST-462442", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-5c5183", "title": "Применение матриц в системах линейных уравнений", "description": ""}
-{"uid": "TOP-CHISLENNYE-METODY-RESHEN-0af819", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-5c5183", "title": "Численные методы решения систем линейных уравнений", "description": ""}
-{"uid": "TOP-OPREDELENIE-VEROYATNOSTI-c7fe1e", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-7679bc", "title": "Определение вероятности", "description": ""}
-{"uid": "TOP-SVOISTVA-VEROYATNOSTI-311305", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-7679bc", "title": "Свойства вероятности", "description": ""}
-{"uid": "TOP-SOBYTIYA-I-IH-KLASSIFIKA-4835cb", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-7679bc", "title": "События и их классификация", "description": ""}
-{"uid": "TOP-USLOVNAYA-VEROYATNOST-e6cd4b", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-7679bc", "title": "Условная вероятность", "description": ""}
-{"uid": "TOP-NEZAVISIMYE-SOBYTIYA-4aa35a", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-7679bc", "title": "Независимые события", "description": ""}
-{"uid": "TOP-ZAKON-BOLSHIH-CHISEL-5d73c9", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-7679bc", "title": "Закон больших чисел", "description": ""}
-{"uid": "TOP-VVEDENIE-V-STATISTIKU-8e2d77", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-bd2714", "title": "Введение в статистику", "description": ""}
-{"uid": "TOP-OPISATELNAYA-STATISTIKA-5a5e8a", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-bd2714", "title": "Описательная статистика", "description": ""}
-{"uid": "TOP-VEROYATNOSTNYE-RASPREDEL-2d493f", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-bd2714", "title": "Вероятностные распределения", "description": ""}
-{"uid": "TOP-PARAMETRICHESKAYA-STATIS-5ab823", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-bd2714", "title": "Параметрическая статистика", "description": ""}
-{"uid": "TOP-NEPARAMETRICHESKAYA-STAT-9f5b1c", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-bd2714", "title": "Непараметрическая статистика", "description": ""}
-{"uid": "TOP-PRIMENENIE-STATISTICHESK-26ab10", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-bd2714", "title": "Применение статистических методов в исследованиях", "description": ""}
-{"uid": "TOP-VVEDENIE-V-TEOREMU-BAIES-7bc558", "section_uid": "SUBSEC-TEOREMA-BAIESA-I-EE-PRIL-7d7036", "title": "Введение в теорему Байеса", "description": ""}
-{"uid": "TOP-USLOVNAYA-VEROYATNOST-2e40b5", "section_uid": "SUBSEC-TEOREMA-BAIESA-I-EE-PRIL-7d7036", "title": "Условная вероятность", "description": ""}
-{"uid": "TOP-PRIMENENIE-TEOREMY-BAIES-5b9f2f", "section_uid": "SUBSEC-TEOREMA-BAIESA-I-EE-PRIL-7d7036", "title": "Применение теоремы Байеса в медицине", "description": ""}
-{"uid": "TOP-BAIESOVSKIE-SETI-b2e719", "section_uid": "SUBSEC-TEOREMA-BAIESA-I-EE-PRIL-7d7036", "title": "Байесовские сети", "description": ""}
-{"uid": "TOP-PRIMENENIE-TEOREMY-BAIES-3a50aa", "section_uid": "SUBSEC-TEOREMA-BAIESA-I-EE-PRIL-7d7036", "title": "Применение теоремы Байеса в машинном обучении", "description": ""}
-{"uid": "TOP-KRITIKA-I-OGRANICHENIYA--f60212", "section_uid": "SUBSEC-TEOREMA-BAIESA-I-EE-PRIL-7d7036", "title": "Критика и ограничения теоремы Байеса", "description": ""}
-{"uid": "TOP-SLOZHENIE-I-VYCHITANIE-b8bcd7", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-ba61bf", "title": "Сложение и вычитание", "description": ""}
-{"uid": "TOP-UMNOZHENIE-I-DELENIE-dda13c", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-ba61bf", "title": "Умножение и деление", "description": ""}
-{"uid": "TOP-RABOTA-S-DROBYAMI-07bd77", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-ba61bf", "title": "Работа с дробями", "description": ""}
-{"uid": "TOP-PROCENTY-I-IH-VYCHISLENI-3a4d9b", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-ba61bf", "title": "Проценты и их вычисление", "description": ""}
-{"uid": "TOP-ALGEBRAICHESKIE-OPERACII-58b3cd", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-ba61bf", "title": "Алгебраические операции", "description": ""}
-{"uid": "TOP-RABOTA-S-URAVNENIYAMI-26bcb3", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-ba61bf", "title": "Работа с уравнениями", "description": ""}
-{"uid": "TOP-KOMMUTATIVNOST-SLOZHENIY-16f668", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-743456", "title": "Коммутативность сложения", "description": ""}
-{"uid": "TOP-ASSOCIATIVNOST-SLOZHENIY-f039eb", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-743456", "title": "Ассоциативность сложения", "description": ""}
-{"uid": "TOP-KOMMUTATIVNOST-UMNOZHENI-8eb58b", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-743456", "title": "Коммутативность умножения", "description": ""}
-{"uid": "TOP-ASSOCIATIVNOST-UMNOZHENI-ba3f1a", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-743456", "title": "Ассоциативность умножения", "description": ""}
-{"uid": "TOP-DISTRIBUTIVNOST-UMNOZHEN-bcc8b0", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-743456", "title": "Дистрибутивность умножения относительно сложения", "description": ""}
-{"uid": "TOP-SVOISTVA-NULYA-I-EDINICY-6248e5", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-743456", "title": "Свойства нуля и единицы в арифметических операциях", "description": ""}
-{"uid": "TOP-BYUDZHETIROVANIE-I-UPRAV-0590c4", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--2b06e2", "title": "Бюджетирование и управление финансами", "description": ""}
-{"uid": "TOP-IZMERENIE-I-RASCHET-PLOS-5dc3dc", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--2b06e2", "title": "Измерение и расчет площадей", "description": ""}
-{"uid": "TOP-KULINARNYE-RECEPTY-I-PRO-02b5d4", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--2b06e2", "title": "Кулинарные рецепты и пропорции", "description": ""}
-{"uid": "TOP-PUTESHESTVIYA-I-RASCHETY-185a8a", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--2b06e2", "title": "Путешествия и расчеты времени", "description": ""}
-{"uid": "TOP-SRAVNENIE-CEN-I-VYBOR-TO-7beb44", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--2b06e2", "title": "Сравнение цен и выбор товаров", "description": ""}
-{"uid": "TOP-RASCHET-RASSTOYANII-I-VR-74d1ea", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--2b06e2", "title": "Расчет расстояний и времени в пути", "description": ""}
-{"uid": "TOP-SLOZHENIE-I-VYCHITANIE-A-86ff90", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fd68b1", "title": "Сложение и вычитание алгебраических выражений", "description": ""}
-{"uid": "TOP-UMNOZHENIE-I-DELENIE-ALG-cc941d", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fd68b1", "title": "Умножение и деление алгебраических выражений", "description": ""}
-{"uid": "TOP-PRIVEDENIE-PODOBNYH-CHLE-0d78f5", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fd68b1", "title": "Приведение подобных членов", "description": ""}
-{"uid": "TOP-FAKTORIZACIYA-ALGEBRAICH-5454d6", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fd68b1", "title": "Факторизация алгебраических выражений", "description": ""}
-{"uid": "TOP-UPROSCHENIE-ALGEBRAICHES-ef4f09", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fd68b1", "title": "Упрощение алгебраических выражений", "description": ""}
-{"uid": "TOP-RESHENIE-PROSTYH-URAVNEN-dd701c", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fd68b1", "title": "Решение простых уравнений с алгебраическими выражениями", "description": ""}
-{"uid": "TOP-LINEINYE-URAVNENIYA-ed5441", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-6d1516", "title": "Линейные уравнения", "description": ""}
-{"uid": "TOP-KVADRATNYE-URAVNENIYA-b72a3d", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-6d1516", "title": "Квадратные уравнения", "description": ""}
-{"uid": "TOP-SISTEMY-URAVNENII-d06e8f", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-6d1516", "title": "Системы уравнений", "description": ""}
-{"uid": "TOP-NERAVENSTVA-PERVOI-STEPE-39dc07", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-6d1516", "title": "Неравенства первой степени", "description": ""}
-{"uid": "TOP-NERAVENSTVA-VTOROI-STEPE-52f2bb", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-6d1516", "title": "Неравенства второй степени", "description": ""}
-{"uid": "TOP-SISTEMY-NERAVENSTV-7fa9ec", "section_uid": "SUBSEC-URAVNENIYA-I-NERAVENSTVA-6d1516", "title": "Системы неравенств", "description": ""}
-{"uid": "TOP-OPREDELENIE-FUNKCII-03fa00", "section_uid": "SUBSEC-FUNKCII-I-IH-GRAFIKI-4c4c91", "title": "Определение функции", "description": ""}
-{"uid": "TOP-TIPY-FUNKCII-dbbc30", "section_uid": "SUBSEC-FUNKCII-I-IH-GRAFIKI-4c4c91", "title": "Типы функций", "description": ""}
-{"uid": "TOP-GRAFIKI-FUNKCII-e20741", "section_uid": "SUBSEC-FUNKCII-I-IH-GRAFIKI-4c4c91", "title": "Графики функций", "description": ""}
-{"uid": "TOP-SVOISTVA-FUNKCII-6997b6", "section_uid": "SUBSEC-FUNKCII-I-IH-GRAFIKI-4c4c91", "title": "Свойства функций", "description": ""}
-{"uid": "TOP-PREOBRAZOVANIYA-GRAFIKOV-8e0db6", "section_uid": "SUBSEC-FUNKCII-I-IH-GRAFIKI-4c4c91", "title": "Преобразования графиков функций", "description": ""}
-{"uid": "TOP-PRIMENENIE-FUNKCII-V-REA-c31c21", "section_uid": "SUBSEC-FUNKCII-I-IH-GRAFIKI-4c4c91", "title": "Применение функций в реальных задачах", "description": ""}
-{"uid": "TOP-TOCHKI-I-PRYAMYE-5cf171", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-4986f8", "title": "Точки и прямые", "description": ""}
-{"uid": "TOP-UGLY-I-IH-IZMERENIE-7a7c0d", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-4986f8", "title": "Углы и их измерение", "description": ""}
-{"uid": "TOP-PLOSKOSTI-I-MNOGOGRANNIK-a86ae2", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-4986f8", "title": "Плоскости и многогранники", "description": ""}
-{"uid": "TOP-FIGURY-NA-PLOSKOSTI-92cb8d", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-4986f8", "title": "Фигуры на плоскости", "description": ""}
-{"uid": "TOP-PARALLELNOST-I-PERPENDIK-1137fe", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-4986f8", "title": "Параллельность и перпендикулярность", "description": ""}
-{"uid": "TOP-SIMMETRIYA-I-PREOBRAZOVA-71b106", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-4986f8", "title": "Симметрия и преобразования", "description": ""}
-{"uid": "TOP-OPREDELENIE-GEOMETRICHES-4edf8e", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-818e26", "title": "Определение геометрических фигур", "description": ""}
-{"uid": "TOP-SVOISTVA-TREUGOLNIKOV-fa0a17", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-818e26", "title": "Свойства треугольников", "description": ""}
-{"uid": "TOP-SVOISTVA-CHETYREHUGOLNIK-8d1070", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-818e26", "title": "Свойства четырехугольников", "description": ""}
-{"uid": "TOP-PARALLELNYE-I-PERPENDIKU-1036d0", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-818e26", "title": "Параллельные и перпендикулярные линии", "description": ""}
-{"uid": "TOP-SVOISTVA-KRUGOV-becec4", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-818e26", "title": "Свойства кругов", "description": ""}
-{"uid": "TOP-PLOSCHAD-I-PERIMETR-FIGU-ff3e15", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-818e26", "title": "Площадь и периметр фигур", "description": ""}
-{"uid": "TOP-PARALLELNYI-PERENOS-9df833", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-f16b75", "title": "Параллельный перенос", "description": ""}
-{"uid": "TOP-POVOROT-d1d229", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-f16b75", "title": "Поворот", "description": ""}
-{"uid": "TOP-OTRAZHENIE-18e8d4", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-f16b75", "title": "Отражение", "description": ""}
-{"uid": "TOP-MASSHTABIROVANIE-f0405a", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-f16b75", "title": "Масштабирование", "description": ""}
-{"uid": "TOP-KOMPOZICIYA-PREOBRAZOVAN-49ba18", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-f16b75", "title": "Композиция преобразований", "description": ""}
-{"uid": "TOP-OBRATNYE-PREOBRAZOVANIYA-9018da", "section_uid": "SUBSEC-GEOMETRICHESKIE-PREOBRAZ-f16b75", "title": "Обратные преобразования", "description": ""}
-{"uid": "TOP-OPREDELENIE-TRIGONOMETRI-43d64c", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-56a146", "title": "Определение тригонометрических функций", "description": ""}
-{"uid": "TOP-TRIGONOMETRICHESKIE-TOZH-f94956", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-56a146", "title": "Тригонометрические тождества", "description": ""}
-{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-52998c", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-56a146", "title": "Графики тригонометрических функций", "description": ""}
-{"uid": "TOP-OBRATNYE-TRIGONOMETRICHE-7680e3", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-56a146", "title": "Обратные тригонометрические функции", "description": ""}
-{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-4c185f", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-56a146", "title": "Применение тригонометрии в задачах", "description": ""}
-{"uid": "TOP-RESHENIE-TREUGOLNIKOV-58b000", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-56a146", "title": "Решение треугольников", "description": ""}
-{"uid": "TOP-OPREDELENIE-TRIGONOMETRI-a26c35", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-62f082", "title": "Определение тригонометрических функций", "description": ""}
-{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-88d721", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-62f082", "title": "Графики тригонометрических функций", "description": ""}
-{"uid": "TOP-SVOISTVA-TRIGONOMETRICHE-fe62d5", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-62f082", "title": "Свойства тригонометрических функций", "description": ""}
-{"uid": "TOP-TRIGONOMETRICHESKIE-URAV-8df4fe", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-62f082", "title": "Тригонометрические уравнения", "description": ""}
-{"uid": "TOP-PRIMENENIE-TRIGONOMETRIC-13e082", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-62f082", "title": "Применение тригонометрических функций в задачах", "description": ""}
-{"uid": "TOP-OBRATNYE-TRIGONOMETRICHE-9a65d7", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-62f082", "title": "Обратные тригонометрические функции", "description": ""}
-{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-06e097", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-86af03", "title": "Основные тригонометрические функции", "description": ""}
-{"uid": "TOP-SINUS-I-KOSINUS-V-PRYAMO-5f3579", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-86af03", "title": "Синус и косинус в прямоугольном треугольнике", "description": ""}
-{"uid": "TOP-TRIGONOMETRICHESKIE-TOZH-d80a6b", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-86af03", "title": "Тригонометрические тождества", "description": ""}
-{"uid": "TOP-PLOSCHAD-TREUGOLNIKA-CHE-e6fcf0", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-86af03", "title": "Площадь треугольника через тригонометрические функции", "description": ""}
-{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-7f8dda", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-86af03", "title": "Применение тригонометрии в нахождении углов", "description": ""}
-{"uid": "TOP-TRIGONOMETRIYA-V-OKRUZHN-a399d4", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-86af03", "title": "Тригонометрия в окружности", "description": ""}
-{"uid": "TOP-PREDEL-FUNKCII-8a3a7f", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-7bdc10", "title": "Предел функции", "description": ""}
-{"uid": "TOP-NEPRERYVNOST-FUNKCII-c90c68", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-7bdc10", "title": "Непрерывность функции", "description": ""}
-{"uid": "TOP-PROIZVODNAYA-FUNKCII-4dee78", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-7bdc10", "title": "Производная функции", "description": ""}
-{"uid": "TOP-INTEGRAL-FUNKCII-ea93ea", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-7bdc10", "title": "Интеграл функции", "description": ""}
-{"uid": "TOP-OSNOVNYE-TEOREMY-ISCHISL-8b825e", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-7bdc10", "title": "Основные теоремы исчисления", "description": ""}
-{"uid": "TOP-PRIMENENIE-PROIZVODNOI-I-312c5e", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-I-OPR-7bdc10", "title": "Применение производной и интеграла", "description": ""}
-{"uid": "TOP-OPREDELENIE-PROIZVODNOI-19d065", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-de8c96", "title": "Определение производной", "description": ""}
-{"uid": "TOP-PRAVILA-DIFFERENCIROVANI-9c9d7c", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-de8c96", "title": "Правила дифференцирования", "description": ""}
-{"uid": "TOP-PRIMENENIE-PROIZVODNOI-V-9c0507", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-de8c96", "title": "Применение производной в нахождении экстремумов", "description": ""}
-{"uid": "TOP-PROIZVODNYE-VYSSHIH-PORY-822592", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-de8c96", "title": "Производные высших порядков", "description": ""}
-{"uid": "TOP-ISSLEDOVANIE-FUNKCII-S-P-46cfe7", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-de8c96", "title": "Исследование функций с помощью производной", "description": ""}
-{"uid": "TOP-PRIMENENIE-PROIZVODNOI-V-83b50b", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-de8c96", "title": "Применение производной в физике", "description": ""}
-{"uid": "TOP-OPREDELENNYI-INTEGRAL-ea631b", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-074e82", "title": "Определенный интеграл", "description": ""}
-{"uid": "TOP-NEOPREDELENNYI-INTEGRAL-75249e", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-074e82", "title": "Неопределенный интеграл", "description": ""}
-{"uid": "TOP-METOD-PODSTANOVKI-9ac5a1", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-074e82", "title": "Метод подстановки", "description": ""}
-{"uid": "TOP-METOD-INTEGRIROVANIYA-PO-c87cfb", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-074e82", "title": "Метод интегрирования по частям", "description": ""}
-{"uid": "TOP-INTEGRALY-TRIGONOMETRICH-7ba052", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-074e82", "title": "Интегралы тригонометрических функций", "description": ""}
-{"uid": "TOP-PRIMENENIE-INTEGRALOV-V--be6bb2", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-074e82", "title": "Применение интегралов в задачах о площадях", "description": ""}
-{"uid": "TOP-OPREDELENIE-VEKTORA-ead07b", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-949e7c", "title": "Определение вектора", "description": ""}
-{"uid": "TOP-SLOZHENIE-I-VYCHITANIE-V-800a97", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-949e7c", "title": "Сложение и вычитание векторов", "description": ""}
-{"uid": "TOP-UMNOZHENIE-VEKTORA-NA-SK-71b5ed", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-949e7c", "title": "Умножение вектора на скаляр", "description": ""}
-{"uid": "TOP-SKALYARNOE-PROIZVEDENIE--f13be9", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-949e7c", "title": "Скалярное произведение векторов", "description": ""}
-{"uid": "TOP-VEKTORNOE-PROIZVEDENIE-V-740f0a", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-949e7c", "title": "Векторное произведение векторов", "description": ""}
-{"uid": "TOP-DLINA-I-NAPRAVLENIE-VEKT-23dedd", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-949e7c", "title": "Длина и направление вектора", "description": ""}
-{"uid": "TOP-OPREDELENIE-MATRICY-f7f9e3", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-4a7572", "title": "Определение матрицы", "description": ""}
-{"uid": "TOP-OPERACII-NAD-MATRICAMI-6b2be7", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-4a7572", "title": "Операции над матрицами", "description": ""}
-{"uid": "TOP-RANG-MATRICY-8eea7a", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-4a7572", "title": "Ранг матрицы", "description": ""}
-{"uid": "TOP-OBRATNAYA-MATRICA-257117", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-4a7572", "title": "Обратная матрица", "description": ""}
-{"uid": "TOP-SISTEMY-LINEINYH-URAVNEN-b696b6", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-4a7572", "title": "Системы линейных уравнений", "description": ""}
-{"uid": "TOP-SOBSTVENNYE-ZNACHENIYA-I-45e62a", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-4a7572", "title": "Собственные значения и собственные векторы", "description": ""}
-{"uid": "TOP-OPREDELENIE-SISTEM-LINEI-2476f2", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-4371f8", "title": "Определение систем линейных уравнений", "description": ""}
-{"uid": "TOP-METODY-RESHENIYA-SISTEM--de172d", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-4371f8", "title": "Методы решения систем линейных уравнений", "description": ""}
-{"uid": "TOP-GEOMETRICHESKAYA-INTERPR-143333", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-4371f8", "title": "Геометрическая интерпретация систем линейных уравнений", "description": ""}
-{"uid": "TOP-KRITERII-SOVMESTNOSTI-SI-0a0e92", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-4371f8", "title": "Критерии совместности систем линейных уравнений", "description": ""}
-{"uid": "TOP-PRIMENENIE-MATRIC-V-SIST-6a85b9", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-4371f8", "title": "Применение матриц в системах линейных уравнений", "description": ""}
-{"uid": "TOP-SISTEMY-LINEINYH-URAVNEN-f07c10", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-4371f8", "title": "Системы линейных уравнений с параметрами", "description": ""}
-{"uid": "TOP-VVEDENIE-V-TEORIYU-VEROY-08bf75", "section_uid": "SUBSEC-OSNOVY-TEORII-VEROYATNOS-8dcd2f", "title": "Введение в теорию вероятностей", "description": ""}
-{"uid": "TOP-ELEMENTY-KOMBINATORIKI-a1853b", "section_uid": "SUBSEC-OSNOVY-TEORII-VEROYATNOS-8dcd2f", "title": "Элементы комбинаторики", "description": ""}
-{"uid": "TOP-SLUCHAINYE-SOBYTIYA-I-IH-76e0ee", "section_uid": "SUBSEC-OSNOVY-TEORII-VEROYATNOS-8dcd2f", "title": "Случайные события и их свойства", "description": ""}
-{"uid": "TOP-VEROYATNOSTNYE-RASPREDEL-7a1ad2", "section_uid": "SUBSEC-OSNOVY-TEORII-VEROYATNOS-8dcd2f", "title": "Вероятностные распределения", "description": ""}
-{"uid": "TOP-MATEMATICHESKOE-OZHIDANI-a32d95", "section_uid": "SUBSEC-OSNOVY-TEORII-VEROYATNOS-8dcd2f", "title": "Математическое ожидание и дисперсия", "description": ""}
-{"uid": "TOP-ZAKON-BOLSHIH-CHISEL-59f64b", "section_uid": "SUBSEC-OSNOVY-TEORII-VEROYATNOS-8dcd2f", "title": "Закон больших чисел", "description": ""}
-{"uid": "TOP-OSNOVY-OPISATELNOI-STATI-aa623b", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-6e25bd", "title": "Основы описательной статистики", "description": ""}
-{"uid": "TOP-VEROYATNOSTNYE-RASPREDEL-a52ea3", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-6e25bd", "title": "Вероятностные распределения", "description": ""}
-{"uid": "TOP-PARAMETRICHESKAYA-I-NEPA-301947", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-6e25bd", "title": "Параметрическая и непараметрическая статистика", "description": ""}
-{"uid": "TOP-METODY-PROVERKI-GIPOTEZ-5c172a", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-6e25bd", "title": "Методы проверки гипотез", "description": ""}
-{"uid": "TOP-REGRESSIONNYI-ANALIZ-5498dc", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-6e25bd", "title": "Регрессионный анализ", "description": ""}
-{"uid": "TOP-PRIMENENIE-STATISTICHESK-c20d2d", "section_uid": "SUBSEC-STATISTICHESKIE-METODY-I-6e25bd", "title": "Применение статистических методов в реальных задачах", "description": ""}
-{"uid": "TOP-VVEDENIE-V-RASPREDELENIY-251663", "section_uid": "SUBSEC-RASPREDELENIYA-VEROYATNO-5ebd31", "title": "Введение в распределения вероятностей", "description": ""}
-{"uid": "TOP-DISKRETNYE-RASPREDELENIY-e46c03", "section_uid": "SUBSEC-RASPREDELENIYA-VEROYATNO-5ebd31", "title": "Дискретные распределения: биномиальное и пуассоновское", "description": ""}
-{"uid": "TOP-NEPRERYVNYE-RASPREDELENI-8da7ba", "section_uid": "SUBSEC-RASPREDELENIYA-VEROYATNO-5ebd31", "title": "Непрерывные распределения: нормальное и экспоненциальное", "description": ""}
-{"uid": "TOP-SVOISTVA-RASPREDELENII-V-9d066a", "section_uid": "SUBSEC-RASPREDELENIYA-VEROYATNO-5ebd31", "title": "Свойства распределений вероятностей", "description": ""}
-{"uid": "TOP-CENTRALNAYA-PREDELNAYA-T-018d9d", "section_uid": "SUBSEC-RASPREDELENIYA-VEROYATNO-5ebd31", "title": "Центральная предельная теорема", "description": ""}
-{"uid": "TOP-PRIMENENIE-RASPREDELENII-a08e54", "section_uid": "SUBSEC-RASPREDELENIYA-VEROYATNO-5ebd31", "title": "Применение распределений в статистике", "description": ""}
+{"uid": "TOP-SLOZHENIE-I-VYCHITANIE-d5bb4e", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Сложение и вычитание", "description": ""}
+{"uid": "TOP-UMNOZHENIE-I-DELENIE-debe5e", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Умножение и деление", "description": ""}
+{"uid": "TOP-RABOTA-S-DROBYAMI-fc0657", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Работа с дробями", "description": ""}
+{"uid": "TOP-PROCENTY-I-IH-VYCHISLENI-96650b", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Проценты и их вычисление", "description": ""}
+{"uid": "TOP-STEPENI-I-KORNI-d4f86d", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Степени и корни", "description": ""}
+{"uid": "TOP-ALGEBRAICHESKIE-VYRAZHEN-12da7c", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Алгебраические выражения", "description": ""}
+{"uid": "TOP-URAVNENIYA-PERVOI-STEPEN-5b7432", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Уравнения первой степени", "description": ""}
+{"uid": "TOP-NERAVENSTVA-0e9294", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Неравенства", "description": ""}
+{"uid": "TOP-SISTEMY-URAVNENII-5d5dcf", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Системы уравнений", "description": ""}
+{"uid": "TOP-FUNKCII-I-IH-GRAFIKI-7f68ce", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Функции и их графики", "description": ""}
+{"uid": "TOP-KOORDINATNAYA-PLOSKOST-75ffac", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Координатная плоскость", "description": ""}
+{"uid": "TOP-PARAMETRICHESKIE-URAVNEN-8fb850", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-495124", "title": "Параметрические уравнения", "description": ""}
+{"uid": "TOP-KOMMUTATIVNOST-SLOZHENIY-b60370", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Коммутативность сложения", "description": ""}
+{"uid": "TOP-ASSOCIATIVNOST-SLOZHENIY-d325d3", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Ассоциативность сложения", "description": ""}
+{"uid": "TOP-KOMMUTATIVNOST-UMNOZHENI-baf17b", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Коммутативность умножения", "description": ""}
+{"uid": "TOP-ASSOCIATIVNOST-UMNOZHENI-93ba9d", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Ассоциативность умножения", "description": ""}
+{"uid": "TOP-DISTRIBUTIVNOST-UMNOZHEN-26b222", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Дистрибутивность умножения относительно сложения", "description": ""}
+{"uid": "TOP-NALICHIE-NEITRALNOGO-ELE-a8bece", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Наличие нейтрального элемента для сложения", "description": ""}
+{"uid": "TOP-NALICHIE-NEITRALNOGO-ELE-e1cbab", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Наличие нейтрального элемента для умножения", "description": ""}
+{"uid": "TOP-SVOISTVO-OBRATNOGO-ELEME-95bfec", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Свойство обратного элемента для сложения", "description": ""}
+{"uid": "TOP-SVOISTVO-OBRATNOGO-ELEME-718b00", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Свойство обратного элемента для умножения", "description": ""}
+{"uid": "TOP-SRAVNENIE-CHISEL-203bbf", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Сравнение чисел", "description": ""}
+{"uid": "TOP-PORYADOK-OPERACII-2a432f", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Порядок операций", "description": ""}
+{"uid": "TOP-SVOISTVA-NULYA-I-EDINICY-86fd64", "section_uid": "SUBSEC-SVOISTVA-ARIFMETICHESKIH-693267", "title": "Свойства нуля и единицы", "description": ""}
+{"uid": "TOP-BYUDZHETIROVANIE-I-UPRAV-98931d", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Бюджетирование и управление финансами", "description": ""}
+{"uid": "TOP-IZMERENIE-I-RASCHET-PLOS-7a6694", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Измерение и расчет площади", "description": ""}
+{"uid": "TOP-KULINARNYE-RECEPTY-I-PRO-a47fb9", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Кулинарные рецепты и пропорции", "description": ""}
+{"uid": "TOP-PLANIROVANIE-POEZDOK-I-R-730f92", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Планирование поездок и расстояний", "description": ""}
+{"uid": "TOP-SRAVNENIE-CEN-I-VYBOR-TO-cab048", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Сравнение цен и выбор товаров", "description": ""}
+{"uid": "TOP-RASCHET-VREMENI-I-RASPIS-84f7c1", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Расчет времени и расписаний", "description": ""}
+{"uid": "TOP-OPREDELENIE-SKIDOK-I-AKC-a9370d", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Определение скидок и акций", "description": ""}
+{"uid": "TOP-RASCHET-NALOGOV-I-SBOROV-f6fe8b", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Расчет налогов и сборов", "description": ""}
+{"uid": "TOP-FINANSOVYE-INVESTICII-I--9f8102", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Финансовые инвестиции и доходность", "description": ""}
+{"uid": "TOP-STATISTIKA-I-ANALIZ-DANN-fc9c3e", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Статистика и анализ данных", "description": ""}
+{"uid": "TOP-PLANIROVANIE-MEROPRIYATI-6d44e5", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Планирование мероприятий и бюджета", "description": ""}
+{"uid": "TOP-OPTIMIZACIYA-POKUPOK-I-E-a925bc", "section_uid": "SUBSEC-PRIMENENIE-ARIFMETIKI-V--c46639", "title": "Оптимизация покупок и экономия", "description": ""}
+{"uid": "TOP-SLOZHENIE-ALGEBRAICHESKI-200ef2", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Сложение алгебраических выражений", "description": ""}
+{"uid": "TOP-VYCHITANIE-ALGEBRAICHESK-192f92", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Вычитание алгебраических выражений", "description": ""}
+{"uid": "TOP-UMNOZHENIE-ALGEBRAICHESK-d73152", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Умножение алгебраических выражений", "description": ""}
+{"uid": "TOP-DELENIE-ALGEBRAICHESKIH--2d1b9b", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Деление алгебраических выражений", "description": ""}
+{"uid": "TOP-PRIVEDENIE-PODOBNYH-CHLE-a3739e", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Приведение подобных членов", "description": ""}
+{"uid": "TOP-FAKTORIZACIYA-ALGEBRAICH-d0bcd2", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Факторизация алгебраических выражений", "description": ""}
+{"uid": "TOP-RASKRYTIE-SKOBOK-32c0f8", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Раскрытие скобок", "description": ""}
+{"uid": "TOP-UPROSCHENIE-ALGEBRAICHES-6edc94", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Упрощение алгебраических выражений", "description": ""}
+{"uid": "TOP-RABOTA-S-DROBNYMI-ALGEBR-bda6ad", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Работа с дробными алгебраическими выражениями", "description": ""}
+{"uid": "TOP-RESHENIE-URAVNENII-S-ALG-bac34e", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Решение уравнений с алгебраическими выражениями", "description": ""}
+{"uid": "TOP-GRAFICHESKOE-PREDSTAVLEN-1d901a", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Графическое представление алгебраических выражений", "description": ""}
+{"uid": "TOP-PRIMENENIE-ALGEBRAICHESK-69d0d4", "section_uid": "SUBSEC-OSNOVNYE-OPERACII-S-ALGE-fff442", "title": "Применение алгебраических выражений в задачах", "description": ""}
+{"uid": "TOP-OSNOVY-LINEINYH-URAVNENI-0e21ae", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Основы линейных уравнений", "description": ""}
+{"uid": "TOP-METODY-RESHENIYA-LINEINY-fc68a8", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Методы решения линейных уравнений", "description": ""}
+{"uid": "TOP-GRAFICHESKOE-PREDSTAVLEN-04a5b1", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Графическое представление линейных уравнений", "description": ""}
+{"uid": "TOP-SISTEMY-LINEINYH-URAVNEN-97b5c2", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Системы линейных уравнений", "description": ""}
+{"uid": "TOP-METOD-PODSTANOVKI-a17803", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Метод подстановки", "description": ""}
+{"uid": "TOP-METOD-ISKLYUCHENIYA-6b65e3", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Метод исключения", "description": ""}
+{"uid": "TOP-MATRICY-I-LINEINYE-URAVN-c93789", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Матрицы и линейные уравнения", "description": ""}
+{"uid": "TOP-OPREDELITELI-I-IH-PRIMEN-7ce845", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Определители и их применение", "description": ""}
+{"uid": "TOP-KRAMEROVO-PRAVILO-fa39e3", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Крамерово правило", "description": ""}
+{"uid": "TOP-LINEINYE-URAVNENIYA-S-PA-5693b9", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Линейные уравнения с параметрами", "description": ""}
+{"uid": "TOP-PRIMENENIE-LINEINYH-URAV-494973", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Применение линейных уравнений в реальных задачах", "description": ""}
+{"uid": "TOP-CHISLENNYE-METODY-RESHEN-25eeda", "section_uid": "SUBSEC-RESHENIE-LINEINYH-URAVNE-21c021", "title": "Численные методы решения линейных уравнений", "description": ""}
+{"uid": "TOP-OPREDELENIE-KVADRATNOGO--3868ed", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Определение квадратного уравнения", "description": ""}
+{"uid": "TOP-FORMULA-KORNEI-KVADRATNO-9a6a46", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Формула корней квадратного уравнения", "description": ""}
+{"uid": "TOP-DISKRIMINANT-I-EGO-ZNACH-0a7587", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Дискриминант и его значение", "description": ""}
+{"uid": "TOP-TIPY-KORNEI-KVADRATNOGO--743503", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Типы корней квадратного уравнения", "description": ""}
+{"uid": "TOP-GRAFIK-KVADRATNOI-FUNKCI-862494", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "График квадратной функции", "description": ""}
+{"uid": "TOP-SVOISTVA-PARABOLY-e09bb8", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Свойства параболы", "description": ""}
+{"uid": "TOP-METODY-RESHENIYA-KVADRAT-9934a7", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Методы решения квадратных уравнений", "description": ""}
+{"uid": "TOP-PRIMENENIE-KVADRATNYH-UR-0e216b", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Применение квадратных уравнений в задачах", "description": ""}
+{"uid": "TOP-SISTEMY-KVADRATNYH-URAVN-119047", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Системы квадратных уравнений", "description": ""}
+{"uid": "TOP-KVADRATNYE-URAVNENIYA-S--04abfe", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Квадратные уравнения с параметрами", "description": ""}
+{"uid": "TOP-NERAVENSTVA-S-KVADRATNYM-604dc5", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Неравенства с квадратными уравнениями", "description": ""}
+{"uid": "TOP-ISTORICHESKII-ASPEKT-KVA-6ca0a5", "section_uid": "SUBSEC-KVADRATNYE-URAVNENIYA-I--ef503f", "title": "Исторический аспект квадратных уравнений", "description": ""}
+{"uid": "TOP-TOCHKI-I-PRYAMYE-95368a", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Точки и прямые", "description": ""}
+{"uid": "TOP-OTREZKI-I-LUCHI-a31232", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Отрезки и лучи", "description": ""}
+{"uid": "TOP-UGLY-I-IH-IZMERENIE-4ab449", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Углы и их измерение", "description": ""}
+{"uid": "TOP-PARALLELNYE-I-PERPENDIKU-ddb800", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Параллельные и перпендикулярные прямые", "description": ""}
+{"uid": "TOP-TREUGOLNIKI-f5ae54", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Треугольники", "description": ""}
+{"uid": "TOP-SUMMA-UGLOV-TREUGOLNIKA-a9ae74", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Сумма углов треугольника", "description": ""}
+{"uid": "TOP-CHETYREHUGOLNIKI-ccd88b", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Четырехугольники", "description": ""}
+{"uid": "TOP-PLOSCHAD-FIGUR-84e088", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Площадь фигур", "description": ""}
+{"uid": "TOP-KRUG-I-EGO-ELEMENTY-6e18ce", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Круг и его элементы", "description": ""}
+{"uid": "TOP-SIMMETRIYA-FIGUR-2ee87b", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Симметрия фигур", "description": ""}
+{"uid": "TOP-MNOGOUGOLNIKI-432c92", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Многоугольники", "description": ""}
+{"uid": "TOP-PROPORCII-I-PODOBIE-FIGU-98983f", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-GEOME-8ad81b", "title": "Пропорции и подобие фигур", "description": ""}
+{"uid": "TOP-OPREDELENIE-GEOMETRICHES-f9f279", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Определение геометрических фигур", "description": ""}
+{"uid": "TOP-SVOISTVA-TREUGOLNIKOV-5df73f", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Свойства треугольников", "description": ""}
+{"uid": "TOP-SUMMA-UGLOV-TREUGOLNIKA-1ec190", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Сумма углов треугольника", "description": ""}
+{"uid": "TOP-KLASSIFIKACIYA-TREUGOLNI-15a219", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Классификация треугольников", "description": ""}
+{"uid": "TOP-SVOISTVA-CHETYREHUGOLNIK-0de69e", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Свойства четырехугольников", "description": ""}
+{"uid": "TOP-SUMMA-UGLOV-CHETYREHUGOL-bdf165", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Сумма углов четырехугольника", "description": ""}
+{"uid": "TOP-KLASSIFIKACIYA-CHETYREHU-92cb6f", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Классификация четырехугольников", "description": ""}
+{"uid": "TOP-PARALLELNYE-I-PERPENDIKU-1389e9", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Параллельные и перпендикулярные линии", "description": ""}
+{"uid": "TOP-SVOISTVA-OKRUZHNOSTI-ae7545", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Свойства окружности", "description": ""}
+{"uid": "TOP-DLINA-OKRUZHNOSTI-I-PLOS-1d4431", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Длина окружности и площадь круга", "description": ""}
+{"uid": "TOP-PLOSCHAD-TREUGOLNIKA-ed2406", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Площадь треугольника", "description": ""}
+{"uid": "TOP-PLOSCHAD-CHETYREHUGOLNIK-06bb5d", "section_uid": "SUBSEC-FIGURY-I-IH-SVOISTVA-6a3464", "title": "Площадь четырехугольника", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-ARHITEKTURE-596d18", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в архитектуре", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-ISKUSSTVE-324bd2", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в искусстве", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-INZHENERII-dfb93c", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в инженерии", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-NAVIGACII-82f0d7", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в навигации", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-DIZAINE-INT-15e0fd", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в дизайне интерьеров", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-KARTOGRAFII-eab0a7", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в картографии", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-FIZIKE-184c2f", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в физике", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-KOMPYUTERNO-3e454d", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в компьютерной графике", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-MEDICINE-7fa8cf", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в медицине", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-SPORTE-4291de", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в спорте", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-EKOLOGII-fc686e", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в экологии", "description": ""}
+{"uid": "TOP-GEOMETRIYA-V-ASTRONOMII-30b875", "section_uid": "SUBSEC-PRIMENENIE-GEOMETRII-V-R-a5a4fc", "title": "Геометрия в астрономии", "description": ""}
+{"uid": "TOP-OPREDELENIE-TRIGONOMETRI-62ce3d", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Определение тригонометрических функций", "description": ""}
+{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-0166bb", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Основные тригонометрические тождества", "description": ""}
+{"uid": "TOP-UGLY-I-IH-IZMERENIE-04bb98", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Углы и их измерение", "description": ""}
+{"uid": "TOP-SINUS-KOSINUS-I-TANGENS--bd0f37", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Синус, косинус и тангенс угла", "description": ""}
+{"uid": "TOP-OBRATNYE-TRIGONOMETRICHE-159058", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Обратные тригонометрические функции", "description": ""}
+{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-5166b9", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Графики тригонометрических функций", "description": ""}
+{"uid": "TOP-PERIODICHNOST-TRIGONOMET-17536a", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Периодичность тригонометрических функций", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-URAV-b278f6", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Тригонометрические уравнения", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-NERA-5ff525", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Тригонометрические неравенства", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-225735", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Применение тригонометрии в геометрии", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-FUNK-376500", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Тригонометрические функции в прямоугольном треугольнике", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-FUNK-589803", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TRIGO-988959", "title": "Тригонометрические функции в круге", "description": ""}
+{"uid": "TOP-OPREDELENIE-TRIGONOMETRI-ae4931", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Определение тригонометрических функций", "description": ""}
+{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-faf4e2", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Графики тригонометрических функций", "description": ""}
+{"uid": "TOP-PERIODICHNOST-TRIGONOMET-c441c3", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Периодичность тригонометрических функций", "description": ""}
+{"uid": "TOP-OSNOVNYE-TRIGONOMETRICHE-43d761", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Основные тригонометрические тождества", "description": ""}
+{"uid": "TOP-OBRATNYE-TRIGONOMETRICHE-2cbb8b", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Обратные тригонометрические функции", "description": ""}
+{"uid": "TOP-SVOISTVA-SINUSA-I-KOSINU-369d66", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Свойства синуса и косинуса", "description": ""}
+{"uid": "TOP-SVOISTVA-TANGENSA-I-KOTA-4a9f0e", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Свойства тангенса и котангенса", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-FUNK-0a28eb", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Тригонометрические функции углов", "description": ""}
+{"uid": "TOP-FORMULY-SLOZHENIYA-I-RAZ-dcb5f7", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Формулы сложения и разности", "description": ""}
+{"uid": "TOP-FORMULY-DVOINOGO-UGLA-2b2079", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Формулы двойного угла", "description": ""}
+{"uid": "TOP-FORMULY-POLOVINNOGO-UGLA-20ca81", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Формулы половинного угла", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRIC-fc55a2", "section_uid": "SUBSEC-TRIGONOMETRICHESKIE-FUNK-0b6a1b", "title": "Применение тригонометрических функций в задачах", "description": ""}
+{"uid": "TOP-OSNOVY-TRIGONOMETRII-e5bc81", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Основы тригонометрии", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-FUNK-a9ac9e", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Тригонометрические функции и их свойства", "description": ""}
+{"uid": "TOP-RESHENIE-TREUGOLNIKOV-f42fc5", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Решение треугольников", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-70446f", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Применение тригонометрии в физике", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-URAV-ccf18a", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Тригонометрические уравнения", "description": ""}
+{"uid": "TOP-GRAFIKI-TRIGONOMETRICHES-2334e1", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Графики тригонометрических функций", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-IDEN-77b54f", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Тригонометрические идентичности", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-38b518", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Применение тригонометрии в инженерии", "description": ""}
+{"uid": "TOP-TRIGONOMETRICHESKIE-FORM-78ae50", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Тригонометрические формулы для сумм и разностей", "description": ""}
+{"uid": "TOP-PRIMENENIE-TRIGONOMETRII-53893e", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Применение тригонометрии в астрономии", "description": ""}
+{"uid": "TOP-TRIGONOMETRIYA-V-NAVIGAC-631208", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Тригонометрия в навигации", "description": ""}
+{"uid": "TOP-MODELIROVANIE-S-POMOSCHY-6dcf85", "section_uid": "SUBSEC-PRIMENENIE-TRIGONOMETRII-29101d", "title": "Моделирование с помощью тригонометрических функций", "description": ""}
+{"uid": "TOP-OPREDELENIE-PREDELA-FUNK-155914", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Определение предела функции", "description": ""}
+{"uid": "TOP-SVOISTVA-PREDELOV-ec7e53", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Свойства пределов", "description": ""}
+{"uid": "TOP-ODNOSTORONNIE-PREDELY-0b4a6a", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Односторонние пределы", "description": ""}
+{"uid": "TOP-PREDELY-POSLEDOVATELNOST-ee804a", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Пределы последовательностей", "description": ""}
+{"uid": "TOP-SRAVNENIE-PREDELOV-173646", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Сравнение пределов", "description": ""}
+{"uid": "TOP-PREDELY-BESKONECHNOSTI-333f0d", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Пределы бесконечности", "description": ""}
+{"uid": "TOP-PREDELY-V-TOCHKAH-RAZRYV-8b159b", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Пределы в точках разрыва", "description": ""}
+{"uid": "TOP-NEPRERYVNOST-FUNKCII-b9dcc8", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Непрерывность функции", "description": ""}
+{"uid": "TOP-PRAVILO-ZAMENY-PEREMENNO-723f37", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Правило замены переменной", "description": ""}
+{"uid": "TOP-LIMIT-I-PROIZVODNAYA-443d28", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Лимит и производная", "description": ""}
+{"uid": "TOP-PRIMENENIE-PREDELOV-V-AN-6cb955", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Применение пределов в анализе", "description": ""}
+{"uid": "TOP-PREDELY-I-INTEGRALY-2cd115", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-PREDE-3daba9", "title": "Пределы и интегралы", "description": ""}
+{"uid": "TOP-OPREDELENIE-PROIZVODNOI-f14529", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Определение производной", "description": ""}
+{"uid": "TOP-PRAVILA-DIFFERENCIROVANI-a8beac", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Правила дифференцирования", "description": ""}
+{"uid": "TOP-PROIZVODNYE-ELEMENTARNYH-3e3e84", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Производные элементарных функций", "description": ""}
+{"uid": "TOP-GEOMETRICHESKII-SMYSL-PR-f9ffff", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Геометрический смысл производной", "description": ""}
+{"uid": "TOP-PRIMENENIE-PROIZVODNOI-V-c877b5", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Применение производной в нахождении экстремумов", "description": ""}
+{"uid": "TOP-PROIZVODNAYA-VYSSHIH-POR-7670f9", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Производная высших порядков", "description": ""}
+{"uid": "TOP-TEOREMA-ROLLYA-fc0feb", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Теорема Ролля", "description": ""}
+{"uid": "TOP-TEOREMA-LAGRANZHA-87b737", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Теорема Лагранжа", "description": ""}
+{"uid": "TOP-PRIMENENIE-PROIZVODNOI-V-a992fa", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Применение производной в физике", "description": ""}
+{"uid": "TOP-KRIVYE-I-IH-SVOISTVA-3e02e9", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Кривые и их свойства", "description": ""}
+{"uid": "TOP-ISSLEDOVANIE-FUNKCII-S-P-d58e65", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Исследование функций с помощью производной", "description": ""}
+{"uid": "TOP-PREDELY-I-NEPRERYVNOST-F-85d961", "section_uid": "SUBSEC-PROIZVODNYE-I-IH-PRIMENE-197436", "title": "Пределы и непрерывность функций", "description": ""}
+{"uid": "TOP-OPREDELENNYI-INTEGRAL-d8de53", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Определенный интеграл", "description": ""}
+{"uid": "TOP-NEOPREDELENNYI-INTEGRAL-abff55", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Неопределенный интеграл", "description": ""}
+{"uid": "TOP-METOD-PODSTANOVKI-ef309f", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Метод подстановки", "description": ""}
+{"uid": "TOP-METOD-INTEGRIROVANIYA-PO-4a1dc2", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Метод интегрирования по частям", "description": ""}
+{"uid": "TOP-INTEGRALY-TRIGONOMETRICH-9b47d9", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Интегралы тригонометрических функций", "description": ""}
+{"uid": "TOP-INTEGRALY-RACIONALNYH-FU-ff3fbb", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Интегралы рациональных функций", "description": ""}
+{"uid": "TOP-INTEGRALY-IRRACIONALNYH--9d877d", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Интегралы иррациональных функций", "description": ""}
+{"uid": "TOP-PARAMETRICHESKIE-INTEGRA-dbd319", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Параметрические интегралы", "description": ""}
+{"uid": "TOP-PRIMENENIE-INTEGRALOV-V--ef9a58", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Применение интегралов в геометрии", "description": ""}
+{"uid": "TOP-INTEGRALY-V-FIZIKE-a90059", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Интегралы в физике", "description": ""}
+{"uid": "TOP-CHISLENNYE-METODY-INTEGR-2aaf33", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Численные методы интегрирования", "description": ""}
+{"uid": "TOP-SVOISTVA-INTEGRALOV-b75ac5", "section_uid": "SUBSEC-INTEGRALY-I-METODY-INTEG-205252", "title": "Свойства интегралов", "description": ""}
+{"uid": "TOP-OPREDELENIE-VEKTOROV-8d1cc3", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Определение векторов", "description": ""}
+{"uid": "TOP-SLOZHENIE-I-VYCHITANIE-V-45b3a4", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Сложение и вычитание векторов", "description": ""}
+{"uid": "TOP-UMNOZHENIE-VEKTORA-NA-SK-427fbf", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Умножение вектора на скаляр", "description": ""}
+{"uid": "TOP-SKALYARNOE-PROIZVEDENIE--1407b4", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Скалярное произведение векторов", "description": ""}
+{"uid": "TOP-VEKTORNOE-PROIZVEDENIE-V-48f4e0", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Векторное произведение векторов", "description": ""}
+{"uid": "TOP-DLINA-VEKTORA-6d97f6", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Длина вектора", "description": ""}
+{"uid": "TOP-NORMALIZACIYA-VEKTORA-5c5b22", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Нормализация вектора", "description": ""}
+{"uid": "TOP-KOORDINATY-VEKTORA-V-PRO-5af120", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Координаты вектора в пространстве", "description": ""}
+{"uid": "TOP-UGOL-MEZHDU-VEKTORAMI-8437e3", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Угол между векторами", "description": ""}
+{"uid": "TOP-PRIMENENIE-VEKTOROV-V-FI-81b35e", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Применение векторов в физике", "description": ""}
+{"uid": "TOP-VEKTORNYE-FUNKCII-4894f1", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Векторные функции", "description": ""}
+{"uid": "TOP-PRIMENENIE-VEKTOROV-V-KO-f50476", "section_uid": "SUBSEC-VEKTORY-I-OPERACII-S-NIM-7b11c9", "title": "Применение векторов в компьютерной графике", "description": ""}
+{"uid": "TOP-VVEDENIE-V-MATRICY-f9c4df", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Введение в матрицы", "description": ""}
+{"uid": "TOP-OPERACII-S-MATRICAMI-f69c80", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Операции с матрицами", "description": ""}
+{"uid": "TOP-OPREDELITEL-MATRICY-540e1e", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Определитель матрицы", "description": ""}
+{"uid": "TOP-OBRATNAYA-MATRICA-599ff0", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Обратная матрица", "description": ""}
+{"uid": "TOP-RANG-MATRICY-023ab2", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Ранг матрицы", "description": ""}
+{"uid": "TOP-SISTEMY-LINEINYH-URAVNEN-961640", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Системы линейных уравнений", "description": ""}
+{"uid": "TOP-SOBSTVENNYE-ZNACHENIYA-I-64a1f8", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Собственные значения и собственные векторы", "description": ""}
+{"uid": "TOP-SIMMETRICHNYE-MATRICY-2108c1", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Симметричные матрицы", "description": ""}
+{"uid": "TOP-USLOVIYA-SUSCHESTVOVANIY-be35b8", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Условия существования обратной матрицы", "description": ""}
+{"uid": "TOP-PRIMENENIE-MATRIC-V-GEOM-92b48a", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Применение матриц в геометрии", "description": ""}
+{"uid": "TOP-MATRICY-V-KOMPYUTERNOI-G-453ef2", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Матрицы в компьютерной графике", "description": ""}
+{"uid": "TOP-CHISLOVYE-METODY-RABOTY--d26a43", "section_uid": "SUBSEC-MATRICY-I-IH-SVOISTVA-fefebd", "title": "Числовые методы работы с матрицами", "description": ""}
+{"uid": "TOP-OPREDELENIE-SISTEM-LINEI-70f286", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Определение систем линейных уравнений", "description": ""}
+{"uid": "TOP-METODY-RESHENIYA-SISTEM--40900a", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Методы решения систем линейных уравнений", "description": ""}
+{"uid": "TOP-GEOMETRICHESKAYA-INTERPR-e6e2cd", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Геометрическая интерпретация систем линейных уравнений", "description": ""}
+{"uid": "TOP-SVOISTVA-MATRIC-I-IH-ROL-96b3ac", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Свойства матриц и их роль в системах линейных уравнений", "description": ""}
+{"uid": "TOP-METOD-GAUSSA-6f4686", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Метод Гаусса", "description": ""}
+{"uid": "TOP-OBRATNAYA-MATRICA-I-EE-P-2c6ec1", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Обратная матрица и её применение", "description": ""}
+{"uid": "TOP-KRITERII-SOVMESTNOSTI-SI-d01f87", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Критерий совместности систем линейных уравнений", "description": ""}
+{"uid": "TOP-RANG-MATRICY-I-EGO-ZNACH-cc8947", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Ранг матрицы и его значение", "description": ""}
+{"uid": "TOP-SISTEMY-LINEINYH-URAVNEN-12ae50", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Системы линейных уравнений с параметрами", "description": ""}
+{"uid": "TOP-CHISLENNYE-METODY-RESHEN-006e23", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Численные методы решения систем линейных уравнений", "description": ""}
+{"uid": "TOP-PRIMENENIE-SISTEM-LINEIN-1f4eb5", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Применение систем линейных уравнений в реальных задачах", "description": ""}
+{"uid": "TOP-SRAVNENIE-RAZLICHNYH-MET-c5a77c", "section_uid": "SUBSEC-SISTEMY-LINEINYH-URAVNEN-f36b5e", "title": "Сравнение различных методов решения систем линейных уравнений", "description": ""}
+{"uid": "TOP-OPREDELENIE-VEROYATNOSTI-f1aab2", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Определение вероятности", "description": ""}
+{"uid": "TOP-SVOISTVA-VEROYATNOSTI-51b7ce", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Свойства вероятности", "description": ""}
+{"uid": "TOP-SOBYTIYA-I-IH-KLASSIFIKA-97f448", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "События и их классификация", "description": ""}
+{"uid": "TOP-NEZAVISIMYE-SOBYTIYA-bdea5e", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Независимые события", "description": ""}
+{"uid": "TOP-USLOVNAYA-VEROYATNOST-27b150", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Условная вероятность", "description": ""}
+{"uid": "TOP-FORMULA-BAIESA-e37b07", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Формула Байеса", "description": ""}
+{"uid": "TOP-KOMBINATORIKA-V-VEROYATN-88900f", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Комбинаторика в вероятности", "description": ""}
+{"uid": "TOP-SLUCHAINYE-VELICHINY-90d9e2", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Случайные величины", "description": ""}
+{"uid": "TOP-RASPREDELENIE-VEROYATNOS-4c5863", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Распределение вероятностей", "description": ""}
+{"uid": "TOP-MATEMATICHESKOE-OZHIDANI-d5d8c8", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Математическое ожидание", "description": ""}
+{"uid": "TOP-DISPERSIYA-I-STANDARTNOE-15d0f1", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Дисперсия и стандартное отклонение", "description": ""}
+{"uid": "TOP-ZAKON-BOLSHIH-CHISEL-efc36b", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-VEROY-5ad527", "title": "Закон больших чисел", "description": ""}
+{"uid": "TOP-OSNOVNYE-PONYATIYA-VEROY-4e7293", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Основные понятия вероятности", "description": ""}
+{"uid": "TOP-SVOISTVA-VEROYATNOSTI-3cec9a", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Свойства вероятности", "description": ""}
+{"uid": "TOP-SLOZHENIE-VEROYATNOSTEI-c57df5", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Сложение вероятностей", "description": ""}
+{"uid": "TOP-UMNOZHENIE-VEROYATNOSTEI-bba179", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Умножение вероятностей", "description": ""}
+{"uid": "TOP-USLOVNAYA-VEROYATNOST-ad3af7", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Условная вероятность", "description": ""}
+{"uid": "TOP-FORMULA-BAIESA-9c555a", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Формула Байеса", "description": ""}
+{"uid": "TOP-NEZAVISIMYE-SOBYTIYA-ad63d6", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Независимые события", "description": ""}
+{"uid": "TOP-ZAKON-BOLSHIH-CHISEL-6a40c5", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Закон больших чисел", "description": ""}
+{"uid": "TOP-KOMBINATORIKA-V-VEROYATN-f416a6", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Комбинаторика в вероятности", "description": ""}
+{"uid": "TOP-SLUCHAINYE-VELICHINY-fb444f", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Случайные величины", "description": ""}
+{"uid": "TOP-RASPREDELENIYA-VEROYATNO-700a71", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Распределения вероятностей", "description": ""}
+{"uid": "TOP-PRIMENENIE-ZAKONOV-VEROY-ab9ad7", "section_uid": "SUBSEC-ZAKONY-VEROYATNOSTI-373b32", "title": "Применение законов вероятности", "description": ""}
+{"uid": "TOP-OSNOVY-TEORII-VEROYATNOS-c8e176", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Основы теории вероятностей", "description": ""}
+{"uid": "TOP-KOMBINATORIKA-I-EE-PRIME-65abac", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Комбинаторика и ее применение", "description": ""}
+{"uid": "TOP-USLOVNYE-VEROYATNOSTI-05cc41", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Условные вероятности", "description": ""}
+{"uid": "TOP-SLUCHAINYE-VELICHINY-3dd793", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Случайные величины", "description": ""}
+{"uid": "TOP-RASPREDELENIYA-VEROYATNO-23553c", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Распределения вероятностей", "description": ""}
+{"uid": "TOP-MATEMATICHESKOE-OZHIDANI-aec8a0", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Математическое ожидание и дисперсия", "description": ""}
+{"uid": "TOP-ZAKON-BOLSHIH-CHISEL-c0d9da", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Закон больших чисел", "description": ""}
+{"uid": "TOP-CENTRALNAYA-PREDELNAYA-T-cc7742", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Центральная предельная теорема", "description": ""}
+{"uid": "TOP-STATISTICHESKIE-METODY-52400d", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Статистические методы", "description": ""}
+{"uid": "TOP-IGRY-S-NULEVOI-SUMMOI-ba62e7", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Игры с нулевой суммой", "description": ""}
+{"uid": "TOP-MARKOVSKIE-PROCESSY-c23bf6", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Марковские процессы", "description": ""}
+{"uid": "TOP-PRIMENENIE-TEORII-VEROYA-7b1fa6", "section_uid": "SUBSEC-PRIMENENIE-TEORII-VEROYA-b97800", "title": "Применение теории вероятностей в экономике", "description": ""}
+{"uid": "TOP-OSNOVNYE-PONYATIYA-STATI-2d24ef", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Основные понятия статистики", "description": ""}
+{"uid": "TOP-TIPY-DANNYH-I-UROVNI-IZM-c9a86a", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Типы данных и уровни измерения", "description": ""}
+{"uid": "TOP-SBOR-DANNYH-METODY-I-INS-60afe1", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Сбор данных: методы и инструменты", "description": ""}
+{"uid": "TOP-OPISANIE-DANNYH-MERY-CEN-4cff59", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Описание данных: меры центральной тенденции", "description": ""}
+{"uid": "TOP-OPISANIE-DANNYH-MERY-RAZ-65807e", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Описание данных: меры разброса", "description": ""}
+{"uid": "TOP-VIZUALIZACIYA-DANNYH-GRA-d211d6", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Визуализация данных: графики и диаграммы", "description": ""}
+{"uid": "TOP-VEROYATNOST-OSNOVY-I-PRA-c389da", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Вероятность: основы и правила", "description": ""}
+{"uid": "TOP-STATISTICHESKIE-RASPREDE-6d7711", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Статистические распределения", "description": ""}
+{"uid": "TOP-VYBORKA-I-POPULYACIYA-381244", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Выборка и популяция", "description": ""}
+{"uid": "TOP-GIPOTEZY-I-STATISTICHESK-b6c25a", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Гипотезы и статистические тесты", "description": ""}
+{"uid": "TOP-KORRELYACIYA-I-REGRESSIY-43dd38", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Корреляция и регрессия", "description": ""}
+{"uid": "TOP-PRIMENENIE-STATISTIKI-V--dcd30e", "section_uid": "SUBSEC-VVEDENIE-V-STATISTIKU-6b08ad", "title": "Применение статистики в реальных задачах", "description": ""}
+{"uid": "TOP-VVEDENIE-V-OPISATELNUYU--a52049", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Введение в описательную статистику", "description": ""}
+{"uid": "TOP-MERY-CENTRALNOI-TENDENCI-75dcdc", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Меры центральной тенденции", "description": ""}
+{"uid": "TOP-MERY-RAZBROSA-c487ac", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Меры разброса", "description": ""}
+{"uid": "TOP-GRAFICHESKOE-PREDSTAVLEN-c2da9b", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Графическое представление данных", "description": ""}
+{"uid": "TOP-SVODNYE-TABLICY-c6cff5", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Сводные таблицы", "description": ""}
+{"uid": "TOP-KOEFFICIENTY-ASIMMETRII--55d6ee", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Коэффициенты асимметрии и эксцесса", "description": ""}
+{"uid": "TOP-KORRELYACIONNYI-ANALIZ-d5a590", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Корреляционный анализ", "description": ""}
+{"uid": "TOP-NORMALNOE-RASPREDELENIE-ce0938", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Нормальное распределение", "description": ""}
+{"uid": "TOP-PROVERKA-GIPOTEZ-9511b6", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Проверка гипотез", "description": ""}
+{"uid": "TOP-VYBORKA-I-POPULYACIYA-471a66", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Выборка и популяция", "description": ""}
+{"uid": "TOP-OSHIBKI-VYBORKI-024504", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Ошибки выборки", "description": ""}
+{"uid": "TOP-INTERPRETACIYA-STATISTIC-460db0", "section_uid": "SUBSEC-OSNOVNYE-METODY-OPISATEL-6b4b22", "title": "Интерпретация статистических данных", "description": ""}
+{"uid": "TOP-VVEDENIE-V-VEROYATNOSTNY-e344b3", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Введение в вероятностные распределения", "description": ""}
+{"uid": "TOP-DISKRETNYE-VEROYATNOSTNY-450411", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Дискретные вероятностные распределения", "description": ""}
+{"uid": "TOP-NEPRERYVNYE-VEROYATNOSTN-236631", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Непрерывные вероятностные распределения", "description": ""}
+{"uid": "TOP-RASPREDELENIE-BERNULLI-I-2654ca", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Распределение Бернулли и биномиальное распределение", "description": ""}
+{"uid": "TOP-RASPREDELENIE-PUASSONA-66bdaa", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Распределение Пуассона", "description": ""}
+{"uid": "TOP-NORMALNOE-RASPREDELENIE-b5ffa4", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Нормальное распределение", "description": ""}
+{"uid": "TOP-EKSPONENCIALNOE-RASPREDE-a30410", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Экспоненциальное распределение", "description": ""}
+{"uid": "TOP-CENTRALNAYA-PREDELNAYA-T-b48f16", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Центральная предельная теорема", "description": ""}
+{"uid": "TOP-PRIMENENIE-VEROYATNOSTNY-3216ba", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Применение вероятностных распределений в статистике", "description": ""}
+{"uid": "TOP-MODELIROVANIE-SLUCHAINYH-ddc404", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Моделирование случайных процессов", "description": ""}
+{"uid": "TOP-OCENKA-PARAMETROV-RASPRE-f0b295", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Оценка параметров распределений", "description": ""}
+{"uid": "TOP-TESTIROVANIE-GIPOTEZ-S-I-83526e", "section_uid": "SUBSEC-VEROYATNOSTNYE-RASPREDEL-dc4c25", "title": "Тестирование гипотез с использованием распределений", "description": ""}
+{"uid": "TOP-OSNOVNYE-PONYATIYA-KOMBI-aa9083", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Основные понятия комбинаторики", "description": ""}
+{"uid": "TOP-FAKTORIALY-I-IH-SVOISTVA-2a88bd", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Факториалы и их свойства", "description": ""}
+{"uid": "TOP-PERESTANOVKI-I-IH-KOLICH-5d7055", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Перестановки и их количество", "description": ""}
+{"uid": "TOP-SOCHETANIYA-I-IH-KOLICHE-718acd", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Сочетания и их количество", "description": ""}
+{"uid": "TOP-RAZMESCHENIYA-I-IH-KOLIC-35d6b1", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Размещения и их количество", "description": ""}
+{"uid": "TOP-PRINCIP-VKLYUCHENIYA-ISK-9e93fb", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Принцип включения-исключения", "description": ""}
+{"uid": "TOP-BINOMIALNYE-KOEFFICIENTY-f4c72e", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Биномиальные коэффициенты", "description": ""}
+{"uid": "TOP-KOMBINATORNYE-IGRY-dfb73a", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Комбинаторные игры", "description": ""}
+{"uid": "TOP-GRAFY-I-KOMBINATORIKA-e9e142", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Графы и комбинаторика", "description": ""}
+{"uid": "TOP-KOMBINATORNYE-DOKAZATELS-3e3161", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Комбинаторные доказательства", "description": ""}
+{"uid": "TOP-PRIMENENIE-KOMBINATORIKI-65051e", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Применение комбинаторики в вероятности", "description": ""}
+{"uid": "TOP-ALGEBRAICHESKIE-METODY-V-89f612", "section_uid": "SUBSEC-KOMBINATORIKA-1f065a", "title": "Алгебраические методы в комбинаторике", "description": ""}
+{"uid": "TOP-VVEDENIE-V-TEORIYU-GRAFO-32e385", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Введение в теорию графов", "description": ""}
+{"uid": "TOP-TIPY-GRAFOV-b8b070", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Типы графов", "description": ""}
+{"uid": "TOP-PREDSTAVLENIE-GRAFOV-530a5b", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Представление графов", "description": ""}
+{"uid": "TOP-OSNOVNYE-ALGORITMY-NA-GR-dddf75", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Основные алгоритмы на графах", "description": ""}
+{"uid": "TOP-POISK-V-GLUBINU-I-SHIRIN-a91633", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Поиск в глубину и ширину", "description": ""}
+{"uid": "TOP-MINIMALNYE-OSTOVNYE-DERE-9e7643", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Минимальные остовные деревья", "description": ""}
+{"uid": "TOP-ALGORITM-DEIKSTRY-231b2f", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Алгоритм Дейкстры", "description": ""}
+{"uid": "TOP-ALGORITM-FLOIDA-UORSHELL-f048e0", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Алгоритм Флойда-Уоршелла", "description": ""}
+{"uid": "TOP-TOPOLOGICHESKAYA-SORTIRO-d52660", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Топологическая сортировка", "description": ""}
+{"uid": "TOP-KOMPONENTY-SVYAZNOSTI-d01eaa", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Компоненты связности", "description": ""}
+{"uid": "TOP-CIKLY-V-GRAFAH-b96e90", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Циклы в графах", "description": ""}
+{"uid": "TOP-PRILOZHENIYA-TEORII-GRAF-674447", "section_uid": "SUBSEC-TEORIYA-GRAFOV-f7389c", "title": "Приложения теории графов", "description": ""}
+{"uid": "TOP-OSNOVNYE-PONYATIYA-LOGIK-4c3896", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Основные понятия логики", "description": ""}
+{"uid": "TOP-BULEVY-OPERACII-2dd176", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Булевы операции", "description": ""}
+{"uid": "TOP-TABLICY-ISTINNOSTI-fc4b17", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Таблицы истинности", "description": ""}
+{"uid": "TOP-ZAKONY-LOGIKI-5932b8", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Законы логики", "description": ""}
+{"uid": "TOP-LOGICHESKIE-VYRAZHENIYA-093f93", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Логические выражения", "description": ""}
+{"uid": "TOP-KVANTORY-I-IH-PRIMENENIE-7e088d", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Кванторы и их применение", "description": ""}
+{"uid": "TOP-LOGICHESKIE-FUNKCII-95a8be", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Логические функции", "description": ""}
+{"uid": "TOP-SLOZHNYE-LOGICHESKIE-VYR-e1ff02", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Сложные логические выражения", "description": ""}
+{"uid": "TOP-DOKAZATELSTVA-V-LOGIKE-d26089", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Доказательства в логике", "description": ""}
+{"uid": "TOP-PRIMENENIE-BULEVOI-ALGEB-69b2d5", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Применение булевой алгебры", "description": ""}
+{"uid": "TOP-MINIMIZACIYA-LOGICHESKIH-e9484d", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Минимизация логических выражений", "description": ""}
+{"uid": "TOP-PROGRAMMIROVANIE-LOGICHE-e47f43", "section_uid": "SUBSEC-LOGIKA-I-BULEVA-ALGEBRA-b04c2f", "title": "Программирование логических схем", "description": ""}
+{"uid": "TOP-VVEDENIE-V-TEORIYU-CHISE-ca87eb", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Введение в теорию чисел", "description": ""}
+{"uid": "TOP-CELYE-CHISLA-I-IH-SVOIST-02fb6c", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Целые числа и их свойства", "description": ""}
+{"uid": "TOP-DELIMOST-I-DELITELI-59f441", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Делимость и делители", "description": ""}
+{"uid": "TOP-PROSTYE-CHISLA-I-IH-RASP-8250ea", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Простые числа и их распределение", "description": ""}
+{"uid": "TOP-ALGORITM-EVKLIDA-858ddb", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Алгоритм Евклида", "description": ""}
+{"uid": "TOP-MODULNAYA-ARIFMETIKA-67c2e5", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Модульная арифметика", "description": ""}
+{"uid": "TOP-TEOREMA-FERMA-fc75e0", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Теорема Ферма", "description": ""}
+{"uid": "TOP-KRITERII-PROSTOTY-c162b1", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Критерии простоты", "description": ""}
+{"uid": "TOP-SOVERSHENNYE-CHISLA-I-CH-3bd6ec", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Совершенные числа и числа Мерсенна", "description": ""}
+{"uid": "TOP-TEOREMA-O-OSTATKAH-e859cc", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Теорема о остатках", "description": ""}
+{"uid": "TOP-FUNKCIYA-EILERA-cf8faa", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Функция Эйлера", "description": ""}
+{"uid": "TOP-PRIMENENIYA-TEORII-CHISE-6475eb", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-af9394", "title": "Применения теории чисел", "description": ""}
+{"uid": "TOP-OPREDELENIE-DELIMOSTI-2aa9e6", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Определение делимости", "description": ""}
+{"uid": "TOP-PROSTYE-I-SOSTAVNYE-CHIS-3dcbfe", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Простые и составные числа", "description": ""}
+{"uid": "TOP-KRITERII-DELIMOSTI-0d8f3e", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Критерии делимости", "description": ""}
+{"uid": "TOP-NAIMENSHEE-OBSCHEE-KRATN-9ff845", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Наименьшее общее кратное", "description": ""}
+{"uid": "TOP-NAIBOLSHII-OBSCHII-DELIT-21585f", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Наибольший общий делитель", "description": ""}
+{"uid": "TOP-SVOISTVA-PROSTYH-CHISEL-726581", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Свойства простых чисел", "description": ""}
+{"uid": "TOP-TEOREMA-O-BESKONECHNOSTI-a9db9a", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Теорема о бесконечности простых чисел", "description": ""}
+{"uid": "TOP-RAZLOZHENIE-NA-PROSTYE-M-70f7dd", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Разложение на простые множители", "description": ""}
+{"uid": "TOP-PROSTYE-CHISLA-V-ARIFMET-cebbb9", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Простые числа в арифметической прогрессии", "description": ""}
+{"uid": "TOP-TEOREMA-FERMA-O-MALYH-CH-5e66bc", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Теорема Ферма о малых числах", "description": ""}
+{"uid": "TOP-SISTEMA-CHISEL-I-DELIMOS-75cbf4", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Система чисел и делимость", "description": ""}
+{"uid": "TOP-PRIMENENIE-PROSTYH-CHISE-8deb9a", "section_uid": "SUBSEC-DELIMOST-I-PROSTYE-CHISL-b6d38f", "title": "Применение простых чисел в криптографии", "description": ""}
+{"uid": "TOP-OPREDELENIE-DIOFANTOVYH--fd236e", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Определение Диофантовых уравнений", "description": ""}
+{"uid": "TOP-METODY-RESHENIYA-LINEINY-332bd4", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Методы решения линейных Диофантовых уравнений", "description": ""}
+{"uid": "TOP-NELINEINYE-DIOFANTOVY-UR-ccb4c3", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Нелинейные Диофантовы уравнения", "description": ""}
+{"uid": "TOP-PRIMENENIE-TEOREMY-BEKKE-7e0930", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Применение теоремы Беккера", "description": ""}
+{"uid": "TOP-METOD-PEREBORA-V-RESHENI-59cf80", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Метод перебора в решении Диофантовых уравнений", "description": ""}
+{"uid": "TOP-ALGORITM-EVKLIDA-I-EGO-P-c22959", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Алгоритм Евклида и его применение", "description": ""}
+{"uid": "TOP-CELOCHISLENNYE-RESHENIYA-eaa07f", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Целочисленные решения и их свойства", "description": ""}
+{"uid": "TOP-PRIMERY-KLASSICHESKIH-DI-1c70a0", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Примеры классических Диофантовых уравнений", "description": ""}
+{"uid": "TOP-SVYAZ-S-TEORIEI-CHISEL-044bd0", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Связь с теорией чисел", "description": ""}
+{"uid": "TOP-METODY-FAKTORIZACII-V-RE-001c5b", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Методы факторизации в решении уравнений", "description": ""}
+{"uid": "TOP-OBOBSCHENNYE-DIOFANTOVY--834af2", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Обобщенные Диофантовы уравнения", "description": ""}
+{"uid": "TOP-PRIMENENIE-DIOFANTOVYH-U-225956", "section_uid": "SUBSEC-DIOFANTOVY-URAVNENIYA-I--6a7bdf", "title": "Применение Диофантовых уравнений в криптографии", "description": ""}
+{"uid": "TOP-OPREDELENIE-MNOZHESTVA-cb75d6", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Определение множества", "description": ""}
+{"uid": "TOP-ELEMENTY-I-PODMNOZHESTVA-c73d20", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Элементы и подмножества", "description": ""}
+{"uid": "TOP-OPERACII-NAD-MNOZHESTVAM-87099a", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Операции над множествами", "description": ""}
+{"uid": "TOP-PERESECHENIE-I-OBEDINENI-0ae700", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Пересечение и объединение множеств", "description": ""}
+{"uid": "TOP-RAZNOST-I-SIMMETRICHESKA-b56b92", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Разность и симметрическая разность", "description": ""}
+{"uid": "TOP-DEKARTOVO-PROIZVEDENIE-5a6b4d", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Декартово произведение", "description": ""}
+{"uid": "TOP-MNOZHESTVA-I-IH-PREDSTAV-ddb75b", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Множества и их представление", "description": ""}
+{"uid": "TOP-BESKONECHNYE-MNOZHESTVA-c08f41", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Бесконечные множества", "description": ""}
+{"uid": "TOP-MOSCHNOST-MNOZHESTVA-7854f0", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Мощность множества", "description": ""}
+{"uid": "TOP-OTNOSHENIYA-MEZHDU-MNOZH-3f6f86", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Отношения между множествами", "description": ""}
+{"uid": "TOP-AKSIOMY-TEORII-MNOZHESTV-257c4e", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Аксиомы теории множеств", "description": ""}
+{"uid": "TOP-PRIMENENIE-TEORII-MNOZHE-7fe745", "section_uid": "SUBSEC-OSNOVNYE-PONYATIYA-TEORI-d228ea", "title": "Применение теории множеств в математике", "description": ""}
+{"uid": "TOP-OBSCHIE-PONYATIYA-O-MNOZ-aeb134", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Общие понятия о множествах", "description": ""}
+{"uid": "TOP-OBEDINENIE-MNOZHESTV-befb71", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Объединение множеств", "description": ""}
+{"uid": "TOP-PERESECHENIE-MNOZHESTV-1db448", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Пересечение множеств", "description": ""}
+{"uid": "TOP-RAZNOST-MNOZHESTV-b71e0b", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Разность множеств", "description": ""}
+{"uid": "TOP-SIMMETRICHESKAYA-RAZNOST-7c87b6", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Симметрическая разность множеств", "description": ""}
+{"uid": "TOP-PODMNOZHESTVA-I-NADMNOZH-8e0d6b", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Подмножества и надмножества", "description": ""}
+{"uid": "TOP-DEKARTOVO-PROIZVEDENIE-M-356fcf", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Декартово произведение множеств", "description": ""}
+{"uid": "TOP-SVOISTVA-OPERACII-NAD-MN-16bc0c", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Свойства операций над множествами", "description": ""}
+{"uid": "TOP-ZAKONY-DE-MORGANA-d3551e", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Законы де Моргана", "description": ""}
+{"uid": "TOP-PRIMENENIE-OPERACII-NAD--90e140", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Применение операций над множествами в программировании", "description": ""}
+{"uid": "TOP-MNOZHESTVA-V-TEORII-VERO-7cc27c", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Множества в теории вероятностей", "description": ""}
+{"uid": "TOP-MNOZHESTVA-I-GRAFY-4d821b", "section_uid": "SUBSEC-OPERACII-NAD-MNOZHESTVAM-e4d648", "title": "Множества и графы", "description": ""}
+{"uid": "TOP-OPREDELENIE-OTNOSHENII-92e731", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Определение отношений", "description": ""}
+{"uid": "TOP-SVOISTVA-OTNOSHENII-b7bdc4", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Свойства отношений", "description": ""}
+{"uid": "TOP-FUNKCII-KAK-OSOBYE-OTNOS-af4fd6", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Функции как особые отношения", "description": ""}
+{"uid": "TOP-OBLAST-OPREDELENIYA-I-OB-fc7963", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Область определения и область значений функции", "description": ""}
+{"uid": "TOP-SOSTAVLENIE-FUNKCII-5e2640", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Составление функций", "description": ""}
+{"uid": "TOP-OBRATNYE-FUNKCII-f3b59f", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Обратные функции", "description": ""}
+{"uid": "TOP-KOMPOZICIYA-OTNOSHENII-bf1f6f", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Композиция отношений", "description": ""}
+{"uid": "TOP-KOMPOZICIYA-FUNKCII-b6be4c", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Композиция функций", "description": ""}
+{"uid": "TOP-INEKTIVNYE-SYUREKTIVNYE--12014a", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Инъективные, сюръективные и биективные функции", "description": ""}
+{"uid": "TOP-OTNOSHENIYA-EKVIVALENTNO-30e1fc", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Отношения эквивалентности", "description": ""}
+{"uid": "TOP-KLASSY-EKVIVALENTNOSTI-b1fac9", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Классы эквивалентности", "description": ""}
+{"uid": "TOP-FUNKCII-I-IH-GRAFIKI-bc8ea6", "section_uid": "SUBSEC-OTNOSHENIYA-I-FUNKCII-V--610ae9", "title": "Функции и их графики", "description": ""}
