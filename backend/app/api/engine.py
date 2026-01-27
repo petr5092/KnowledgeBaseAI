@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Dict, List, Optional, Any, Set
+from enum import Enum
 import json
 from app.services.graph.neo4j_repo import relation_context, neighbors, get_node_details, get_driver, Neo4jRepo
 from app.config.settings import settings
@@ -440,11 +441,31 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
 
 # --- Knowledge / Topics ---
 
+class GoalType(str, Enum):
+    exam = "exam"
+    improve_grade = "improve_grade"
+    study_topics = "study_topics"
+    homework = "homework"
+
+class ExamType(str, Enum):
+    oge = "ОГЭ"
+    ege_profile = "ЕГЭ Профиль"
+    ege_base = "ЕГЭ БАЗА"
+
 class TopicsAvailableRequest(BaseModel):
     subject_uid: Optional[str] = None
     subject_title: Optional[str] = None
     user_context: UserContext
     curriculum_code: Optional[str] = None
+    goal_type: Optional[GoalType] = None
+    exam_type: Optional[ExamType] = None
+
+    @field_validator('exam_type', mode='before')
+    @classmethod
+    def empty_string_to_none(cls, v: Any) -> Any:
+        if v == "":
+            return None
+        return v
 
 class TopicItem(BaseModel):
     topic_uid: str
@@ -468,6 +489,57 @@ def _age_to_class(age: Optional[int]) -> int:
     if a > 17:
         return 11
     return a - 6
+
+def _filter_rows(rows: List[Dict], allowed_topics: Optional[Set[str]], payload: TopicsAvailableRequest, resolved: int) -> List[Dict]:
+    results = []
+    for r in rows or []:
+        mn = r.get("user_class_min")
+        mx = r.get("user_class_max")
+        
+        include = True
+        
+        # Curriculum Whitelist Check
+        if allowed_topics is not None and r.get("topic_uid") not in allowed_topics:
+            include = False
+        
+        if include:
+            # Goal / Class Filtering
+            is_exam = (payload.goal_type == GoalType.exam)
+            
+            if is_exam:
+                # Exam Logic
+                if payload.exam_type == ExamType.oge:
+                    # OGE: Grade 9 limit
+                    # If min class is unknown (None), strictly exclude to prevent leaking advanced topics
+                    if mn is None or (isinstance(mn, (int, float)) and int(mn) > 9):
+                        include = False
+                elif payload.exam_type in [ExamType.ege_base, ExamType.ege_profile]:
+                    # EGE: Grade 11 limit
+                    # Allow None (unknown class) for EGE, as it might be advanced/general topic
+                    if mn is not None and isinstance(mn, (int, float)) and int(mn) > 11:
+                        include = False
+            else:
+                # Standard / Study Topics / Homework / Improve Grade
+                # Filter by resolved user class
+                try:
+                    # FIX: Force cast to int to handle string inputs from DB (e.g. "5")
+                    if mn is not None and resolved < int(mn):
+                        include = False
+                    if mx is not None and resolved > int(mx):
+                        include = False
+                except (ValueError, TypeError):
+                    pass
+        
+        if include:
+            results.append({
+                "topic_uid": r.get("topic_uid"),
+                "title": r.get("title"),
+                "user_class_min": int(mn) if isinstance(mn, (int, float)) else None,
+                "user_class_max": int(mx) if isinstance(mx, (int, float)) else None,
+                "difficulty_band": r.get("difficulty_band") or "standard",
+                "prereq_topic_uids": [p for p in (r.get("prereq_topic_uids") or []) if p],
+            })
+    return results
 
 @router.post("/topics/available", response_model=StandardResponse)
 async def topics_available(payload: TopicsAvailableRequest) -> Dict:
@@ -562,30 +634,7 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
                     ),
                     {"t": payload.subject_title},
                 )
-            for r in rows or []:
-                mn = r.get("user_class_min")
-                mx = r.get("user_class_max")
-                ok = True
-                if isinstance(mn, (int, float)):
-                    ok = ok and resolved >= int(mn)
-                if isinstance(mx, (int, float)):
-                    ok = ok and resolved <= int(mx)
-                
-                # Curriculum Whitelist Check
-                if allowed_topics is not None and r.get("topic_uid") not in allowed_topics:
-                    ok = False
-
-                if ok:
-                    topics.append(
-                        {
-                            "topic_uid": r.get("topic_uid"),
-                            "title": r.get("title"),
-                            "user_class_min": int(mn) if isinstance(mn, (int, float)) else None,
-                            "user_class_max": int(mx) if isinstance(mx, (int, float)) else None,
-                            "difficulty_band": r.get("difficulty_band") or "standard",
-                            "prereq_topic_uids": [p for p in (r.get("prereq_topic_uids") or []) if p],
-                        }
-                    )
+            topics.extend(_filter_rows(rows, allowed_topics, payload, resolved))
             repo.close()
         except Exception:
             topics = []
@@ -608,19 +657,7 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
                 ),
                 {"su": su},
             )
-            for r in rows or []:
-                if allowed_topics is not None and r.get("topic_uid") not in allowed_topics:
-                    continue
-                topics.append(
-                    {
-                        "topic_uid": r.get("topic_uid"),
-                        "title": r.get("title"),
-                        "user_class_min": r.get("user_class_min"),
-                        "user_class_max": r.get("user_class_max"),
-                        "difficulty_band": r.get("difficulty_band") or "standard",
-                        "prereq_topic_uids": [p for p in (r.get("prereq_topic_uids") or []) if p],
-                    }
-                )
+            topics.extend(_filter_rows(rows, allowed_topics, payload, resolved))
             repo.close()
         except Exception:
             ...
@@ -645,23 +682,12 @@ async def topics_available(payload: TopicsAvailableRequest) -> Dict:
                 ),
                 {"t": payload.subject_title},
             )
-            for r in rows or []:
-                if allowed_topics is not None and r.get("topic_uid") not in allowed_topics:
-                    continue
-                topics.append(
-                    {
-                        "topic_uid": r.get("topic_uid"),
-                        "title": r.get("title"),
-                        "user_class_min": r.get("user_class_min"),
-                        "user_class_max": r.get("user_class_max"),
-                        "difficulty_band": r.get("difficulty_band") or "standard",
-                        "prereq_topic_uids": [p for p in (r.get("prereq_topic_uids") or []) if p],
-                    }
-                )
+            topics.extend(_filter_rows(rows, allowed_topics, payload, resolved))
             repo.close()
         except Exception:
             ...
-    if not topics:
+    if not topics and not (payload.subject_uid or payload.subject_title or payload.goal_type):
+        # Fallback to all examples only if no specific context was requested
         for tu in all_topic_uids_from_examples():
             topics.append(
                 {

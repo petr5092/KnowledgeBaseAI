@@ -5,6 +5,30 @@ import asyncio
 from app.config.settings import settings
 from app.services.kb.jsonl_io import load_jsonl, get_path
 from app.services.graph.neo4j_repo import Neo4jRepo
+import os
+
+def load_all_jsonl(filename: str) -> List[dict]:
+    """Recursively find and load all jsonl files with the given name in app/kb."""
+    # Assuming get_path returns path inside KB_DIR, we can deduce KB_DIR
+    # or just assume specific path relative to this file
+    # This file is app/services/ai_engine/ai_engine.py
+    # KB dir is app/kb
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../kb'))
+    all_data = []
+    
+    # Also check the root KB dir (as get_path does)
+    root_file = os.path.join(base_dir, filename)
+    if os.path.exists(root_file):
+        all_data.extend(load_jsonl(root_file))
+        
+    for root, dirs, files in os.walk(base_dir):
+        if filename in files:
+            path = os.path.join(root, filename)
+            # Avoid double loading if root_file is covered by walk (it usually is)
+            if path != root_file:
+                 all_data.extend(load_jsonl(path))
+    
+    return all_data
 
 class GeneratedConcept(BaseModel):
     title: str
@@ -43,7 +67,7 @@ async def populate_graph():
     print("Connected to Neo4j")
 
     # 1. Subjects
-    subjects = load_jsonl(get_path('subjects.jsonl'))
+    subjects = load_all_jsonl('subjects.jsonl')
     print(f"Loading {len(subjects)} subjects...")
     for s in subjects:
         params = s.copy()
@@ -57,7 +81,7 @@ async def populate_graph():
         """, params)
 
     # 2. Sections
-    sections = load_jsonl(get_path('sections.jsonl'))
+    sections = load_all_jsonl('sections.jsonl')
     print(f"Loading {len(sections)} sections...")
     for s in sections:
         params = s.copy()
@@ -71,7 +95,7 @@ async def populate_graph():
         """, params)
 
     # 3. Subsections
-    subsections = load_jsonl(get_path('subsections.jsonl'))
+    subsections = load_all_jsonl('subsections.jsonl')
     print(f"Loading {len(subsections)} subsections...")
     for s in subsections:
         params = s.copy()
@@ -85,7 +109,7 @@ async def populate_graph():
         """, params)
 
     # 4. Topics
-    topics = load_jsonl(get_path('topics.jsonl'))
+    topics = load_all_jsonl('topics.jsonl')
     print(f"Loading {len(topics)} topics...")
     for t in topics:
         params = t.copy()
@@ -106,7 +130,7 @@ async def populate_graph():
         """, params)
         
     # 5. Skills
-    skills = load_jsonl(get_path('skills.jsonl'))
+    skills = load_all_jsonl('skills.jsonl')
     print(f"Loading {len(skills)} skills...")
     for s in skills:
         params = s.copy()
@@ -117,7 +141,7 @@ async def populate_graph():
         """, params)
         
     # 6. Topic-Skills
-    topic_skills = load_jsonl(get_path('topic_skills.jsonl'))
+    topic_skills = load_all_jsonl('topic_skills.jsonl')
     print(f"Loading {len(topic_skills)} topic-skill links...")
     for ts in topic_skills:
         params = ts.copy()
@@ -131,7 +155,7 @@ async def populate_graph():
         """, params)
 
     # 7. Content Units
-    units = load_jsonl(get_path('content_units.jsonl'))
+    units = load_all_jsonl('content_units.jsonl')
     print(f"Loading {len(units)} content units...")
     for u in units:
         payload_str = json.dumps(u.get('payload', {}), ensure_ascii=False)

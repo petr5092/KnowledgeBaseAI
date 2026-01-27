@@ -304,7 +304,7 @@ def node_by_uid(uid: str, tenant_id: str) -> Dict:
             except Exception:
                 ...
     if not data:
-        data = {"uid": uid, "lifecycle_status": "ACTIVE", "labels": ["Concept"]}
+        data = {"uid": uid, "lifecycle_status": "ACTIVE", "labels": []}
     else:
         if not data.get("lifecycle_status"):
             data["lifecycle_status"] = "ACTIVE"
@@ -312,7 +312,7 @@ def node_by_uid(uid: str, tenant_id: str) -> Dict:
             from datetime import datetime
             data["created_at"] = datetime.utcnow().isoformat()
         if not data.get("labels"):
-            data["labels"] = ["Concept"]
+            data["labels"] = []
     if "created_at" not in data or not data.get("created_at"):
         from datetime import datetime
         data["created_at"] = datetime.utcnow().isoformat()

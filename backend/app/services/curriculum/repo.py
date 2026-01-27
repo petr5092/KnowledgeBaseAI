@@ -41,6 +41,39 @@ def add_curriculum_nodes(code: str, nodes: List[Dict]) -> Dict:
     conn.close()
     return {"ok": True}
 
+
+def get_curriculum(code: str) -> Optional[Dict]:
+    conn = get_conn()
+    if conn is None:
+        return None
+    res = None
+    with conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, title, standard, language, status FROM curricula WHERE code=%s", (code,))
+            row = cur.fetchone()
+            if row:
+                cid = row[0]
+                res = {
+                    "code": code,
+                    "title": row[1],
+                    "standard": row[2],
+                    "language": row[3],
+                    "status": row[4],
+                    "items": []
+                }
+                # Fetch nodes
+                cur.execute("SELECT kind, canonical_uid, order_index, is_required FROM curriculum_nodes WHERE curriculum_id=%s ORDER BY order_index ASC", (cid,))
+                nodes = cur.fetchall()
+                for n in nodes:
+                    res["items"].append({
+                        "kind": n[0],
+                        "canonical_uid": n[1],
+                        "order_index": n[2],
+                        "is_required": n[3]
+                    })
+    conn.close()
+    return res
+
 def get_graph_view(code: str) -> Dict:
     # 1. Get curriculum definition
     curr = get_curriculum(code)
@@ -60,3 +93,23 @@ def get_graph_view(code: str) -> Dict:
         "meta": {"title": curr.get("title")}
     }
 
+def list_curricula() -> List[Dict]:
+    conn = get_conn()
+    if conn is None:
+        return []
+    items = []
+    with conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, code, title, standard, language, status FROM curricula ORDER BY id DESC")
+            rows = cur.fetchall()
+            for r in rows:
+                items.append({
+                    "id": r[0],
+                    "code": r[1],
+                    "title": r[2],
+                    "standard": r[3],
+                    "language": r[4],
+                    "status": r[5]
+                })
+    conn.close()
+    return items

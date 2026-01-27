@@ -2,10 +2,14 @@ from fastapi import APIRouter, Depends, Header, Security
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from app.services.curriculum.repo import create_curriculum, add_curriculum_nodes, get_graph_view
+from app.services.curriculum.repo import create_curriculum, add_curriculum_nodes, get_graph_view, list_curricula
 from app.api.deps import require_admin
 
 router = APIRouter(prefix="/v1/admin", dependencies=[Depends(require_admin), Security(HTTPBearer())], tags=["Админка: учебные планы"])
+
+@router.get("/curriculum", summary="Список учебных планов", description="Возвращает список всех учебных планов.")
+async def admin_list_curricula() -> Dict:
+    return {"ok": True, "items": list_curricula()}
 
 class CreateCurriculumInput(BaseModel):
     code: str
