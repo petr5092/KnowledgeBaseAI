@@ -1,0 +1,25 @@
+START
+
+1. Check setup: bash test_migrations.sh
+
+2. Start database: ENV_FILE=.env.dev docker-compose up -d postgres redis
+
+3. Start app with migrations: ENV_FILE=.env.dev docker-compose up -d fastapi-dev
+
+4. Check migrations ran: docker-compose logs fastapi-dev | grep -E "Running|Migrations done|ERROR"
+
+5. Verify app is running: curl http://localhost:8000/docs
+
+TROUBLESHOOTING (when have a trouble)
+
+Check full logs: docker-compose logs fastapi-dev
+
+Check DB connection: docker-compose exec postgres psql -U postgres -d knowledgebase -c "SELECT version();"
+
+Check migrations status: docker-compose exec fastapi-dev alembic current
+
+Stop everything: docker-compose down
+
+Start without migrations: SKIP_MIGRATIONS=true ENV_FILE=.env.dev docker-compose up -d fastapi-dev
+
+Rebuild after script change: ENV_FILE=.env.dev docker-compose up -d --build fastapi-dev

@@ -122,9 +122,14 @@ services:
       PG_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NEO4J_URI: bolt://neo4j:7687
       QDRANT_URL: http://qdrant:6333
+      DB_WAIT_TIMEOUT: 60
+      DB_WAIT_INTERVAL: 2
+      SKIP_MIGRATIONS: ${SKIP_MIGRATIONS:-false}
     volumes:
       - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      postgres:
+        condition: service_started
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.fastapi-svc.loadbalancer.server.port=8000"
@@ -157,11 +162,16 @@ services:
       PG_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NEO4J_URI: bolt://neo4j:7687
       QDRANT_URL: http://qdrant:6333
+      DB_WAIT_TIMEOUT: 60
+      DB_WAIT_INTERVAL: 2
+      SKIP_MIGRATIONS: ${SKIP_MIGRATIONS:-false}
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      postgres:
+        condition: service_started
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.fastapi-dev-svc.loadbalancer.server.port=8000"
@@ -194,7 +204,7 @@ services:
       - "traefik.enable=false"
 
   prometheus:
-    profiles: ["infra","monitoring"]
+    profiles: ["infra", "monitoring"]
     user: "0"
     platform: linux/amd64
     image: prom/prometheus:latest
@@ -224,7 +234,7 @@ services:
       - --web.enable-remote-write-receiver
 
   grafana:
-    profiles: ["infra","monitoring"]
+    profiles: ["infra", "monitoring"]
     platform: linux/amd64
     image: grafana/grafana:10.4.2-ubuntu
     restart: unless-stopped
