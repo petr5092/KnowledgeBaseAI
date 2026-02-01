@@ -5,6 +5,14 @@ import sys
 # Add backend to path
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 
+from dotenv import load_dotenv
+# Try to load .env.prod explicitly since we are in a containerized prod env
+# Assuming script is run from project root or backend/scripts
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+load_dotenv(os.path.join(project_root, ".env.prod"))
+# Fallback to standard .env
+load_dotenv(os.path.join(project_root, ".env"))
+
 # --- CONFIGURATION HACK FOR DEMO ---
 # Try to load .env manually or set defaults
 if not os.getenv("PG_DSN"):

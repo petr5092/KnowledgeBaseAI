@@ -74,6 +74,32 @@ def ensure_tables():
             )
             """
         )
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS curricula (
+              id SERIAL PRIMARY KEY,
+              code TEXT UNIQUE NOT NULL,
+              title TEXT NOT NULL,
+              standard TEXT NOT NULL,
+              language TEXT NOT NULL,
+              status TEXT NOT NULL DEFAULT 'draft',
+              created_at TIMESTAMP DEFAULT NOW()
+            )
+            """
+        )
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS curriculum_nodes (
+              id SERIAL PRIMARY KEY,
+              curriculum_id INTEGER REFERENCES curricula(id) ON DELETE CASCADE,
+              kind TEXT NOT NULL,
+              canonical_uid TEXT NOT NULL,
+              order_index INTEGER NOT NULL,
+              is_required BOOLEAN DEFAULT TRUE
+            )
+            """
+        )
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_curriculum_nodes_curriculum_id ON curriculum_nodes (curriculum_id)")
     conn.close()
     try:
         conn = get_conn()
