@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 from app.services.curriculum.repo import create_curriculum, add_curriculum_nodes, get_graph_view, list_curricula
+from app.services.curriculum.builder import generate_curriculum_llm
 from app.api.deps import require_admin
 
 router = APIRouter(prefix="/v1/admin", dependencies=[Depends(require_admin), Security(HTTPBearer())], tags=["Админка: учебные планы"])
