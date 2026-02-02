@@ -1167,3 +1167,10 @@
 {"uid": "SKL-SVOISTVA-OBRATNYH-FUNKCI-3da136", "subject_uid": "MATH-FULL-V1", "title": "Свойства обратных функций", "definition": "Обратные функции сохраняют свойства: если f и g — обратные функции, то f(g(y)) = y и g(f(x)) = x для всех x и y в области определения."}
 {"uid": "SKL-KONFLIKTNOE-RAZRESHENIE-31ab72", "subject_uid": "MATH-FULL-V1", "title": "Конфликтное разрешение", "definition": "Способность эффективно управлять и разрешать конфликты в отношениях, используя конструктивные подходы и стратегии."}
 {"uid": "SKL-GRAFIK-OBRATNOI-FUNKCII-50b5ef", "subject_uid": "MATH-FULL-V1", "title": "График обратной функции", "definition": "График обратной функции можно получить путем отражения графика оригинальной функции относительно линии y = x."}
+{"uid": "SKL-RASPOZNAVANIE-FIGUR-001", "subject_uid": "MATH-FULL-V1", "title": "Распознавание фигур", "definition": "Умение различать и называть геометрические фигуры."}
+{"uid": "SKL-PEREVOD-EDINITSY-002", "subject_uid": "MATH-FULL-V1", "title": "Перевод единиц измерения", "definition": "Умение переводить одни единицы измерения в другие (см в мм, кг в г)."}
+{"uid": "SKL-VYCHISLENIE-PERIMETRA-003", "subject_uid": "MATH-FULL-V1", "title": "Вычисление периметра", "definition": "Применение формулы периметра прямоугольника P = 2(a+b)."}
+{"uid": "SKL-VYCHISLENIE-PLOSHCHADI-004", "subject_uid": "MATH-FULL-V1", "title": "Вычисление площади", "definition": "Применение формулы площади прямоугольника S = a*b."}
+{"uid": "SKL-ANALIZ-USLOVIYA-ZADACHI-005", "subject_uid": "MATH-FULL-V1", "title": "Анализ условия задачи", "definition": "Умение выделять известное и неизвестное в текстовой задаче."}
+{"uid": "SKL-CHTENIE-TABLITS-006", "subject_uid": "MATH-FULL-V1", "title": "Чтение таблиц", "definition": "Извлечение информации из простых таблиц."}
+{"uid": "SKL-PRIORITET-OPERATSIJ-007", "subject_uid": "MATH-FULL-V1", "title": "Приоритет операций", "definition": "Знание порядка выполнения действий (скобки, умножение/деление, сложение/вычитание)."}

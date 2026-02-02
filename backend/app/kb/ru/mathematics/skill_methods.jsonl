@@ -2314,3 +2314,10 @@
 {"skill_uid": "SKL-AKTIVNOE-SLUSHANIE-681bb8", "method_uid": "MET-METOD-UTOCHNYAYUSCHIH-VO-f2f013", "weight": "linked", "confidence": 0.9, "is_auto_generated": true}
 {"skill_uid": "SKL-SVOISTVA-OBRATNYH-FUNKCI-3da136", "method_uid": "MET-OPREDELENIE-OBRATNOI-FUN-585be5", "weight": "linked", "confidence": 0.9, "is_auto_generated": true}
 {"skill_uid": "SKL-SVOISTVA-OBRATNYH-FUNKCI-3da136", "method_uid": "MET-GRAFICHESKII-METOD-e78972", "weight": "linked", "confidence": 0.9, "is_auto_generated": true}
+{"skill_uid": "SKL-RASPOZNAVANIE-FIGUR-001", "method_uid": "MET-VIZUALIZATSIYA-FIGUR-001", "weight": "primary", "confidence": 1.0, "is_auto_generated": false}
+{"skill_uid": "SKL-PEREVOD-EDINITSY-002", "method_uid": "MET-LINEJKA-I-VESY-002", "weight": "primary", "confidence": 1.0, "is_auto_generated": false}
+{"skill_uid": "SKL-VYCHISLENIE-PERIMETRA-003", "method_uid": "MET-FORMULA-PERIMETRA-003", "weight": "primary", "confidence": 1.0, "is_auto_generated": false}
+{"skill_uid": "SKL-VYCHISLENIE-PLOSHCHADI-004", "method_uid": "MET-FORMULA-PLOSHCHADI-004", "weight": "primary", "confidence": 1.0, "is_auto_generated": false}
+{"skill_uid": "SKL-ANALIZ-USLOVIYA-ZADACHI-005", "method_uid": "MET-KRATKAYA-ZAPIS-005", "weight": "primary", "confidence": 1.0, "is_auto_generated": false}
+{"skill_uid": "SKL-CHTENIE-TABLITS-006", "method_uid": "MET-CHTENIE-DIAGRAMM-006", "weight": "primary", "confidence": 1.0, "is_auto_generated": false}
+{"skill_uid": "SKL-PRIORITET-OPERATSIJ-007", "method_uid": "MET-PRAVILO-SKOBOK-007", "weight": "primary", "confidence": 1.0, "is_auto_generated": false}

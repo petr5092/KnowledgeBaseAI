@@ -1,11 +1,12 @@
-{"uid": "SEC-ARITHMETIC-0183d4", "subject_uid": "MATH-FULL-V1", "title": "Arithmetic", "description": ""}
-{"uid": "SEC-ALGEBRA-3d3be8", "subject_uid": "MATH-FULL-V1", "title": "Algebra", "description": ""}
-{"uid": "SEC-GEOMETRY-515b79", "subject_uid": "MATH-FULL-V1", "title": "Geometry", "description": ""}
-{"uid": "SEC-TRIGONOMETRY-7bf5b1", "subject_uid": "MATH-FULL-V1", "title": "Trigonometry", "description": ""}
-{"uid": "SEC-CALCULUS-262f4d", "subject_uid": "MATH-FULL-V1", "title": "Calculus", "description": ""}
-{"uid": "SEC-LINEAR-ALGEBRA-e53697", "subject_uid": "MATH-FULL-V1", "title": "Linear Algebra", "description": ""}
-{"uid": "SEC-PROBABILITY-646e1f", "subject_uid": "MATH-FULL-V1", "title": "Probability", "description": ""}
-{"uid": "SEC-STATISTICS-842410", "subject_uid": "MATH-FULL-V1", "title": "Statistics", "description": ""}
-{"uid": "SEC-DISCRETE-MATH-d14956", "subject_uid": "MATH-FULL-V1", "title": "Discrete Math", "description": ""}
-{"uid": "SEC-NUMBER-THEORY-6ba469", "subject_uid": "MATH-FULL-V1", "title": "Number Theory", "description": ""}
-{"uid": "SEC-SET-THEORY-36cc56", "subject_uid": "MATH-FULL-V1", "title": "Set Theory", "description": ""}
+{"uid": "SEC-MATEMATICHESKIE-OSNOVANIYA-e4015a", "subject_uid": "MATH-FULL-V1", "title": "Математические основания", "description": ""}
+{"uid": "SEC-CHISLA-I-STRUKTURY-31625b", "subject_uid": "MATH-FULL-V1", "title": "Числа и структуры", "description": ""}
+{"uid": "SEC-ALGEBRA-cb4e35", "subject_uid": "MATH-FULL-V1", "title": "Алгебра", "description": ""}
+{"uid": "SEC-FUNKTSII-c76858", "subject_uid": "MATH-FULL-V1", "title": "Функции", "description": ""}
+{"uid": "SEC-GEOMETRIYA-ebc5dd", "subject_uid": "MATH-FULL-V1", "title": "Геометрия", "description": ""}
+{"uid": "SEC-ANALITICHESKAYA-GEOMETRIYA-309688", "subject_uid": "MATH-FULL-V1", "title": "Аналитическая геометрия", "description": ""}
+{"uid": "SEC-TRIGONOMETRIYA-f64640", "subject_uid": "MATH-FULL-V1", "title": "Тригонометрия", "description": ""}
+{"uid": "SEC-KOMBINATORIKA-I-VEROYATNOST-3a7d69", "subject_uid": "MATH-FULL-V1", "title": "Комбинаторика и вероятность", "description": ""}
+{"uid": "SEC-STATISTIKA-5e3753", "subject_uid": "MATH-FULL-V1", "title": "Статистика", "description": ""}
+{"uid": "SEC-LINEJNAYA-ALGEBRA-1b54b2", "subject_uid": "MATH-FULL-V1", "title": "Линейная алгебра", "description": ""}
+{"uid": "SEC-MATEMATICHESKIJ-ANALIZ-2877ee", "subject_uid": "MATH-FULL-V1", "title": "Математический анализ", "description": ""}
+{"uid": "SEC-DISKRETNAYA-MATEMATIKA-371a47", "subject_uid": "MATH-FULL-V1", "title": "Дискретная математика", "description": ""}

@@ -2314,3 +2314,10 @@
 {"uid": "MET-METOD-UTOCHNYAYUSCHIH-VO-f2f013", "title": "Метод уточняющих вопросов", "method_text": "Задавайте открытые вопросы, чтобы углубить понимание и прояснить детали, которые могут быть неясны.", "applicability_types": []}
 {"uid": "MET-OPREDELENIE-OBRATNOI-FUN-585be5", "title": "Определение обратной функции", "method_text": "Для нахождения обратной функции f(x), необходимо выразить x через y, где y = f(x). После этого, поменять местами x и y, чтобы получить f^(-1)(x).", "applicability_types": []}
 {"uid": "MET-GRAFICHESKII-METOD-e78972", "title": "Графический метод", "method_text": "Построить график функции f(x) и отразить его относительно прямой y = x. Полученный график будет графиком обратной функции f^(-1)(x).", "applicability_types": []}
+{"uid": "MET-VIZUALIZATSIYA-FIGUR-001", "title": "Визуализация фигур", "method_text": "Использование рисунков и моделей для изучения фигур.", "applicability_types": []}
+{"uid": "MET-LINEJKA-I-VESY-002", "title": "Использование инструментов измерения", "method_text": "Практическое измерение длины линейкой и массы весами.", "applicability_types": []}
+{"uid": "MET-FORMULA-PERIMETRA-003", "title": "Формула периметра", "method_text": "Сложение длин всех сторон.", "applicability_types": []}
+{"uid": "MET-FORMULA-PLOSHCHADI-004", "title": "Формула площади", "method_text": "Умножение длины на ширину.", "applicability_types": []}
+{"uid": "MET-KRATKAYA-ZAPIS-005", "title": "Краткая запись условия", "method_text": "Запись условия задачи в виде схемы или краткого текста.", "applicability_types": []}
+{"uid": "MET-CHTENIE-DIAGRAMM-006", "title": "Чтение диаграмм", "method_text": "Определение значений по высоте столбцов.", "applicability_types": []}
+{"uid": "MET-PRAVILO-SKOBOK-007", "title": "Правило скобок", "method_text": "Действия в скобках выполняются первыми.", "applicability_types": []}

@@ -5,7 +5,7 @@ import json
 from typing import List, Dict
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-KB_DIR = os.path.join(BASE_DIR, 'kb')
+KB_DIR = os.path.join(BASE_DIR, 'app/kb/ru/mathematics')
 
 
 def load_jsonl(filename: str) -> List[Dict]:
