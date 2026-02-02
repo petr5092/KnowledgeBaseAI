@@ -89,3 +89,4 @@ class CurriculumNode(Base):
     kind = Column(String(16), nullable=False)
     order_index = Column(Integer, nullable=True)
     is_required = Column(Boolean, nullable=False, default=True)
+    exam_task_number = Column(String(16), nullable=True)

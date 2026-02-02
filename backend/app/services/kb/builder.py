@@ -70,7 +70,7 @@ async def openai_chat_async(messages: List[Dict], model: str = 'gpt-4o-mini', te
     headers = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
     payload = {'model': model, 'messages': messages, 'temperature': temperature}
     import httpx
-    async with httpx.AsyncClient(timeout=60) as client:
+    async with httpx.AsyncClient(timeout=300) as client:
         r = await client.post(url, headers=headers, json=payload)
     if r.status_code != 200:
         return {'ok': False, 'error': r.text}

@@ -35,8 +35,8 @@ def add_curriculum_nodes(code: str, nodes: List[Dict]) -> Dict:
             cid = row[0]
             for n in nodes:
                 cur.execute(
-                    "INSERT INTO curriculum_nodes(curriculum_id, kind, canonical_uid, order_index, is_required) VALUES (%s,%s,%s,%s,%s)",
-                    (cid, n.get('kind'), n.get('canonical_uid'), int(n.get('order_index', 0)), bool(n.get('is_required', True)))
+                    "INSERT INTO curriculum_nodes(curriculum_id, kind, canonical_uid, order_index, is_required, exam_task_number) VALUES (%s,%s,%s,%s,%s,%s)",
+                    (cid, n.get('kind'), n.get('canonical_uid'), int(n.get('order_index', 0)), bool(n.get('is_required', True)), n.get('exam_task_number'))
                 )
     conn.close()
     return {"ok": True}
@@ -62,14 +62,15 @@ def get_curriculum(code: str) -> Optional[Dict]:
                     "items": []
                 }
                 # Fetch nodes
-                cur.execute("SELECT kind, canonical_uid, order_index, is_required FROM curriculum_nodes WHERE curriculum_id=%s ORDER BY order_index ASC", (cid,))
+                cur.execute("SELECT kind, canonical_uid, order_index, is_required, exam_task_number FROM curriculum_nodes WHERE curriculum_id=%s ORDER BY order_index ASC", (cid,))
                 nodes = cur.fetchall()
                 for n in nodes:
                     res["items"].append({
                         "kind": n[0],
                         "canonical_uid": n[1],
                         "order_index": n[2],
-                        "is_required": n[3]
+                        "is_required": n[3],
+                        "exam_task_number": n[4]
                     })
     conn.close()
     return res

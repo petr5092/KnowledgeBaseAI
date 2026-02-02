@@ -40,12 +40,16 @@ async def generate_curriculum_llm(goal: str, audience: str, subject_uids: Option
     Task:
     Select the most relevant topics from the candidates list to achieve the goal.
     Order them logically (from basic to advanced).
+    If the goal involves a specific exam structure (e.g. EGE, OGE), assign the corresponding 'exam_task_number' (e.g. "1", "2", "19") to the topic if applicable. If not applicable, set it to null.
     
     Return JSON:
     {{
         "title": "Suggested Curriculum Title",
         "standard": "Suggested Standard (e.g. CEFR B1, Corporate Policy, etc)",
-        "selected_uids": ["uid1", "uid2", ...]
+        "selected_items": [
+            {{"uid": "uid1", "exam_task_number": "1"}},
+            {{"uid": "uid2", "exam_task_number": null}}
+        ]
     }}
     """
     
@@ -75,12 +79,25 @@ async def generate_curriculum_llm(goal: str, audience: str, subject_uids: Option
         return create_res
         
     nodes = []
-    for idx, uid in enumerate(data.get("selected_uids", [])):
+    # Support both old 'selected_uids' (list of strings) and new 'selected_items' (list of objects)
+    items = data.get("selected_items", [])
+    if not items and "selected_uids" in data:
+        items = [{"uid": uid, "exam_task_number": None} for uid in data["selected_uids"]]
+        
+    for idx, item in enumerate(items):
+        if isinstance(item, str):
+            uid = item
+            exam_task_number = None
+        else:
+            uid = item.get("uid")
+            exam_task_number = item.get("exam_task_number")
+            
         nodes.append({
             "kind": "topic",
             "canonical_uid": uid,
             "order_index": idx + 1,
-            "is_required": True
+            "is_required": True,
+            "exam_task_number": exam_task_number
         })
         
     if nodes:
