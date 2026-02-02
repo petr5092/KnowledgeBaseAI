@@ -8,22 +8,15 @@ from app.services import impact as impact_mod
 
 @pytest.fixture(autouse=True)
 def _clean_db():
-    try:
-        ensure_tables()
-        conn = get_conn()
-        if not conn:
-             raise Exception("No connection")
-        conn.autocommit = True
-        with conn.cursor() as cur:
-            cur.execute("DELETE FROM events_outbox")
-            cur.execute("DELETE FROM proposals")
-            cur.execute("DELETE FROM audit_log")
-            cur.execute("DELETE FROM graph_changes")
-            cur.execute("DELETE FROM tenant_graph_version")
-        conn.close()
-    except Exception:
-        pass
-
+    ensure_tables()
+    conn = get_conn(); conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM events_outbox")
+        cur.execute("DELETE FROM proposals")
+        cur.execute("DELETE FROM audit_log")
+        cur.execute("DELETE FROM graph_changes")
+        cur.execute("DELETE FROM tenant_graph_version")
+    conn.close()
     try:
         r = get_redis()
         r.delete("events:graph_committed")

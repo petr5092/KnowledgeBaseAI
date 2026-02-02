@@ -2,39 +2,10 @@ from fastapi import APIRouter, Depends, Header, Security
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from app.services.curriculum.repo import create_curriculum, add_curriculum_nodes, get_graph_view, list_curricula
-from app.services.curriculum.builder import generate_curriculum_llm
+from app.services.curriculum.repo import create_curriculum, add_curriculum_nodes, get_graph_view
 from app.api.deps import require_admin
 
 router = APIRouter(prefix="/v1/admin", dependencies=[Depends(require_admin), Security(HTTPBearer())], tags=["Админка: учебные планы"])
-
-@router.get("/curriculum", summary="Список учебных планов", description="Возвращает список всех учебных планов.")
-async def admin_list_curricula() -> Dict:
-    return {"ok": True, "items": list_curricula()}
-
-class GenerateCurriculumInput(BaseModel):
-    goal: str
-    audience: str
-    subject_uids: Optional[List[str]] = None
-    language: str = "ru"
-
-@router.post("/curriculum/generate", summary="Сгенерировать учебный план (AI)", description="Генерирует план через LLM на основе графа знаний.")
-async def admin_generate_curriculum(payload: GenerateCurriculumInput, x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> Dict:
-    """
-    Принимает:
-      - goal: цель (напр. "Подготовка к Python Junior")
-      - audience: аудитория (напр. "Студенты")
-      - subject_uids: фильтр по предметам (опционально)
-      - language: язык (ru)
-
-    Возвращает:
-      - ok: True/False
-      - code: код созданного плана
-      - title: название
-      - items_count: число узлов
-      - error: текст ошибки
-    """
-    return await generate_curriculum_llm(payload.goal, payload.audience, payload.subject_uids, payload.language)
 
 class CreateCurriculumInput(BaseModel):
     code: str
