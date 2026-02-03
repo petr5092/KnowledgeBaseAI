@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Dict, List, Optional, Any, Set
 from enum import Enum
 import json
+import re
 from app.services.graph.neo4j_repo import relation_context, neighbors, get_node_details, get_driver, Neo4jRepo
 from app.config.settings import settings
 from app.services.roadmap_planner import plan_route
@@ -1050,18 +1051,54 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
     
     messages = [{"role": "user", "content": prompt_text}]
     
-    try:
-        res = await openai_chat_async(messages, temperature=0.9)
-        if not res.get("ok"):
-             raise Exception("LLM generation failed")
-        
-        content = res.get("content", "")
-        if "```json" in content:
-            content = content.split("```json")[1].split("```")[0]
-        elif "```" in content:
-            content = content.split("```")[1].split("```")[0]
-        
-        data = json.loads(content.strip())
+    # Retry loop to enforce visual consistency
+    data = {}
+    content = ""
+    for attempt in range(2):
+        try:
+            res = await openai_chat_async(messages, temperature=0.9)
+            if not res.get("ok"):
+                 raise Exception("LLM generation failed")
+            
+            content = res.get("content", "")
+            raw_content = content
+            
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0]
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0]
+            
+            data = json.loads(content.strip())
+            
+            # Validation: check for visual references in text when is_visual is False
+            is_vis_gen = data.get("is_visual", False)
+            prompt_gen = data.get("prompt", "")
+            
+            # Regex for visual references
+            visual_ref_pattern = r"(?i)(на\s+)?(рисун|чертеж|схем)(к|ке|ка|е|а|ок)|(см\.|смотри)\s+рис|изображен(ы|о|а)?|shown\s+in\s+(the\s+)?figure|see\s+figure"
+            has_visual_ref = bool(re.search(visual_ref_pattern, prompt_gen))
+            
+            if not is_vis_gen and has_visual_ref:
+                if attempt < 1:
+                    print(f"Retry LLM: is_visual=False but text has visual ref: {prompt_gen[:50]}...")
+                    messages.append({"role": "assistant", "content": raw_content})
+                    messages.append({"role": "user", "content": "You set 'is_visual': false, but the text refers to a figure ('drawing', 'shown', etc.). Please regenerate the question to be PURELY textual, without any reference to an image."})
+                    continue
+                else:
+                    # Second failure: Force clean up
+                    print("LLM failed consistency check twice. Stripping visual refs.")
+                    clean_prompt = re.sub(visual_ref_pattern, "", prompt_gen).strip()
+                    if clean_prompt:
+                         clean_prompt = clean_prompt[0].upper() + clean_prompt[1:]
+                    data["prompt"] = clean_prompt
+            
+            # Success
+            break
+            
+        except Exception as e:
+            if attempt == 1: raise e
+            print(f"LLM parsing error: {e}, retrying...")
+            pass
         
         q_uid = f"Q-GEN-{uuid.uuid4().hex[:8]}"
         
