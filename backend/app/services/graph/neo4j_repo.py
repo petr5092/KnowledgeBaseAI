@@ -8,6 +8,7 @@ from app.core.logging import logger
 
 _driver_instance = None
 
+
 def get_driver():
     global _driver_instance
     if _driver_instance:
@@ -21,45 +22,49 @@ def get_driver():
             socket.gethostbyname('neo4j')
         except:
             uri = uri.replace('neo4j:7687', 'localhost:7687')
-            
+
     user = settings.neo4j_user
     password = settings.neo4j_password.get_secret_value()
     if not (uri and user and password):
         raise RuntimeError('Missing Neo4j connection environment variables')
-    
+
     _driver_instance = GraphDatabase.driver(
-        uri, 
+        uri,
         auth=(user, password),
         connection_timeout=3.0,  # Fail fast if connection is bad
         max_connection_lifetime=60.0
     )
     return _driver_instance
 
+
 class Neo4jRepo:
     def __init__(self, uri: Optional[str] = None, user: Optional[str] = None, password: Optional[str] = None, max_retries: int = 3, backoff_sec: float = 0.8):
         self.uri = uri or settings.neo4j_uri
         self.user = user or settings.neo4j_user
         self.password = password or settings.neo4j_password.get_secret_value()
-        
+
         self.max_retries = max_retries
         self.backoff_sec = backoff_sec
         self._owns_driver = False
 
         if uri or user or password:
             # Custom connection - create own driver
-             # Force localhost if neo4j hostname fails (apply logic here too if needed, but usually this is for internal use)
+            # Force localhost if neo4j hostname fails (apply logic here too if needed, but usually this is for internal use)
             target_uri = self.uri
             if 'neo4j:7687' in target_uri:
                 import socket
                 try:
                     socket.gethostbyname('neo4j')
                 except:
-                    target_uri = target_uri.replace('neo4j:7687', 'localhost:7687')
-            
+                    target_uri = target_uri.replace(
+                        'neo4j:7687', 'localhost:7687')
+
             if not self.uri or not self.user or not self.password:
-                raise RuntimeError('Missing Neo4j connection environment variables')
-                
-            self.driver = GraphDatabase.driver(target_uri, auth=(self.user, self.password))
+                raise RuntimeError(
+                    'Missing Neo4j connection environment variables')
+
+            self.driver = GraphDatabase.driver(
+                target_uri, auth=(self.user, self.password))
             self._owns_driver = True
         else:
             # Use shared driver
@@ -108,9 +113,11 @@ class Neo4jRepo:
         for chunk in self._chunks(rows, chunk_size):
             def _fn(session):
                 cid = get_correlation_id() or ""
-                logger.info("neo4j_write_unwind", correlation_id=cid, rows=len(chunk))
+                logger.info("neo4j_write_unwind",
+                            correlation_id=cid, rows=len(chunk))
                 session.execute_write(lambda tx: tx.run(query, rows=chunk))
             self._retry(_fn)
+
 
 def read_graph(subject_uid: str | None = None, tenant_id: str | None = None) -> Tuple[List[Dict], List[Dict]]:
     drv = get_driver()
@@ -130,8 +137,10 @@ def read_graph(subject_uid: str | None = None, tenant_id: str | None = None) -> 
         res = s.run(query, {"tid": tenant_id}).single()
         ns = res["ns"] if res else []
         es = res["es"] if res else []
-        nodes = [{"id": n["id"], "uid": n.get("uid"), "label": n.get("label"), "labels": n.get("labels", [])} for n in ns]
-        edges = [{"from": e.get("source"), "to": e.get("target"), "type": e.get("rel")} for e in es]
+        nodes = [{"id": n["id"], "uid": n.get("uid"), "label": n.get(
+            "label"), "labels": n.get("labels", [])} for n in ns]
+        edges = [{"from": e.get("source"), "to": e.get(
+            "target"), "type": e.get("rel")} for e in es]
     finally:
         try:
             s.close()
@@ -140,20 +149,76 @@ def read_graph(subject_uid: str | None = None, tenant_id: str | None = None) -> 
     drv.close()
     return nodes, edges
 
+
 def relation_context(from_uid: str, to_uid: str, tenant_id: str | None = None) -> Dict:
     drv = get_driver()
     ctx: Dict = {}
     s = drv.session()
     try:
+        # Fetch direct relation and node metadata
         res = s.run(
             (
                 "MATCH (a {uid:$from})-[r]->(b {uid:$to}) "
                 "WHERE ($tid IS NULL OR (a.tenant_id = $tid AND b.tenant_id = $tid)) "
-                "RETURN type(r) AS rel, properties(r) AS props, a.title AS a_title, b.title AS b_title"
+                "RETURN type(r) AS rel, properties(r) AS props, "
+                "       a.title AS a_title, a.description AS a_description, "
+                "       b.title AS b_title, b.description AS b_description"
             ), {"from": from_uid, "to": to_uid, "tid": tenant_id}
         ).single()
+
         if res:
-            ctx = {"rel": res["rel"], "props": res["props"], "from_title": res["a_title"], "to_title": res["b_title"]}
+            ctx = {
+                "rel": res["rel"],
+                "props": res["props"],
+                "from_title": res["a_title"],
+                "from_description": res["a_description"],
+                "to_title": res["b_title"],
+                "to_description": res["b_description"],
+                "direction": "forward"  # A->B
+            }
+        else:
+            # Check reverse direction
+            res = s.run(
+                (
+                    "MATCH (b {uid:$to})-[r]->(a {uid:$from}) "
+                    "WHERE ($tid IS NULL OR (a.tenant_id = $tid AND b.tenant_id = $tid)) "
+                    "RETURN type(r) AS rel, properties(r) AS props, "
+                    "       a.title AS a_title, a.description AS a_description, "
+                    "       b.title AS b_title, b.description AS b_description"
+                ), {"from": from_uid, "to": to_uid, "tid": tenant_id}
+            ).single()
+            if res:
+                ctx = {
+                    "rel": res["rel"],
+                    "props": res["props"],
+                    "from_title": res["a_title"],
+                    "from_description": res["a_description"],
+                    "to_title": res["b_title"],
+                    "to_description": res["b_description"],
+                    "direction": "reverse"  # B->A
+                }
+
+        # Fetch prerequisites for both nodes
+        if from_uid:
+            prereqs_from = s.run(
+                "MATCH (a {uid:$uid})-[:PREREQ]->(p) "
+                "WHERE ($tid IS NULL OR (a.tenant_id = $tid AND p.tenant_id = $tid)) "
+                "RETURN collect({uid: p.uid, title: p.title}) AS prereqs",
+                {"uid": from_uid, "tid": tenant_id}
+            ).single()
+            if prereqs_from and prereqs_from.get("prereqs"):
+                ctx["from_prereqs"] = prereqs_from["prereqs"]
+
+        if to_uid:
+            prereqs_to = s.run(
+                "MATCH (b {uid:$uid})-[:PREREQ]->(p) "
+                "WHERE ($tid IS NULL OR (b.tenant_id = $tid AND p.tenant_id = $tid)) "
+                "RETURN collect({uid: p.uid, title: p.title}) AS prereqs",
+                {"uid": to_uid, "tid": tenant_id}
+            ).single()
+            if prereqs_to and prereqs_to.get("prereqs"):
+                ctx["to_prereqs"] = prereqs_to["prereqs"]
+
     finally:
         try:
             s.close()
@@ -161,6 +226,7 @@ def relation_context(from_uid: str, to_uid: str, tenant_id: str | None = None) -
             ...
     drv.close()
     return ctx
+
 
 def neighbors(center_uid: str, depth: int = 1, tenant_id: str | None = None) -> Tuple[List[Dict], List[Dict]]:
     drv = get_driver()
@@ -193,14 +259,17 @@ def neighbors(center_uid: str, depth: int = 1, tenant_id: str | None = None) -> 
             seen.add(nid)
             # kind - это первая метка (например, Topic, Subject)
             kind = list(n.labels)[0] if n.labels else "Unknown"
-            nodes.append({
-                "id": nid, 
-                "uid": n.get("uid"), 
-                "name": n.get("name"), 
+            node_obj = {
+                "id": nid,
+                "uid": n.get("uid"),
+                "name": n.get("name"),
                 "title": n.get("title"),
-                "kind": kind,            # Добавили kind
+                # Added: description for tooltips
+                "description": n.get("description"),
+                "kind": kind,
                 "labels": list(n.labels)
-            })
+            }
+            nodes.append(node_obj)
         added = set()
         for rels in rs:
             for r in rels:
@@ -209,7 +278,7 @@ def neighbors(center_uid: str, depth: int = 1, tenant_id: str | None = None) -> 
                     continue
                 added.add(key)
                 edges.append({
-                    "source": r.start_node["uid"], # Было from
+                    "source": r.start_node["uid"],  # Было from
                     "target": r.end_node["uid"],   # Было to
                     "kind": r.type,                # Было type
                     "weight": r.get("weight", 1.0)
@@ -221,6 +290,7 @@ def neighbors(center_uid: str, depth: int = 1, tenant_id: str | None = None) -> 
             ...
     drv.close()
     return nodes, edges
+
 
 def node_by_uid(uid: str, tenant_id: str) -> Dict:
     drv = get_driver()
@@ -252,7 +322,8 @@ def node_by_uid(uid: str, tenant_id: str) -> Dict:
                     data = dict(r2["p"])
                     data["labels"] = r2.get("labels", [])
         if not data:
-            rows3 = s.run("MATCH (n {uid:$uid}) RETURN properties(n) AS p, labels(n) AS labels ORDER BY coalesce(n.created_at,'') DESC LIMIT 1", {"uid": uid}).data()
+            rows3 = s.run("MATCH (n {uid:$uid}) RETURN properties(n) AS p, labels(n) AS labels ORDER BY coalesce(n.created_at,'') DESC LIMIT 1", {
+                          "uid": uid}).data()
             if rows3:
                 r3 = rows3[0]
                 if r3.get("p"):
@@ -269,7 +340,8 @@ def node_by_uid(uid: str, tenant_id: str) -> Dict:
             drv2 = get_driver()
             s2 = drv2.session()
             try:
-                rows = s2.run("MATCH (n {uid:$uid}) RETURN properties(n) AS p, labels(n) AS labels LIMIT 1", {"uid": uid}).data()
+                rows = s2.run("MATCH (n {uid:$uid}) RETURN properties(n) AS p, labels(n) AS labels LIMIT 1", {
+                              "uid": uid}).data()
                 if rows:
                     r = rows[0]
                     if r.get("p"):
@@ -290,7 +362,8 @@ def node_by_uid(uid: str, tenant_id: str) -> Dict:
             drv3 = get_driver()
             s3 = drv3.session()
             try:
-                rows = s3.run("MATCH (n {uid:$uid}) RETURN coalesce(n.name,n.title) AS nm LIMIT 1", {"uid": uid}).data()
+                rows = s3.run("MATCH (n {uid:$uid}) RETURN coalesce(n.name,n.title) AS nm LIMIT 1", {
+                              "uid": uid}).data()
                 if rows and rows[0].get("nm"):
                     data["name"] = rows[0]["nm"]
             finally:
@@ -317,6 +390,7 @@ def node_by_uid(uid: str, tenant_id: str) -> Dict:
         from datetime import datetime
         data["created_at"] = datetime.utcnow().isoformat()
     return data
+
 
 def relation_by_pair(from_uid: str, to_uid: str, typ: str, tenant_id: str) -> Dict:
     drv = get_driver()
@@ -348,13 +422,15 @@ def relation_by_pair(from_uid: str, to_uid: str, typ: str, tenant_id: str) -> Di
     drv.close()
     return data
 
+
 def get_node_details(uid: str, tenant_id: str | None = None) -> Dict:
     drv = get_driver()
     data = {}
     s = drv.session()
     try:
         # Получаем свойства узла
-        res = s.run("MATCH (n {uid:$uid}) WHERE ($tid IS NULL OR n.tenant_id = $tid) RETURN n", {"uid": uid, "tid": tenant_id})
+        res = s.run("MATCH (n {uid:$uid}) WHERE ($tid IS NULL OR n.tenant_id = $tid) RETURN n", {
+                    "uid": uid, "tid": tenant_id})
         row = None
         try:
             row = res.single()
@@ -370,14 +446,18 @@ def get_node_details(uid: str, tenant_id: str | None = None) -> Dict:
         data["labels"] = list(node.labels)
         # Kind
         data["kind"] = list(node.labels)[0] if node.labels else "Unknown"
-        
+
         # Получаем входящие связи
-        in_res = s.run("MATCH (n {uid:$uid})<-[r]-(other) WHERE ($tid IS NULL OR (n.tenant_id = $tid AND other.tenant_id = $tid)) RETURN type(r) as rel, other.uid as uid, other.title as title", {"uid": uid, "tid": tenant_id})
-        data["incoming"] = [{"rel": r["rel"], "uid": r["uid"], "title": r["title"]} for r in in_res]
-        
+        in_res = s.run(
+            "MATCH (n {uid:$uid})<-[r]-(other) WHERE ($tid IS NULL OR (n.tenant_id = $tid AND other.tenant_id = $tid)) RETURN type(r) as rel, other.uid as uid, other.title as title", {"uid": uid, "tid": tenant_id})
+        data["incoming"] = [
+            {"rel": r["rel"], "uid": r["uid"], "title": r["title"]} for r in in_res]
+
         # Получаем исходящие связи
-        out_res = s.run("MATCH (n {uid:$uid})-[r]->(other) WHERE ($tid IS NULL OR (n.tenant_id = $tid AND other.tenant_id = $tid)) RETURN type(r) as rel, other.uid as uid, other.title as title", {"uid": uid, "tid": tenant_id})
-        data["outgoing"] = [{"rel": r["rel"], "uid": r["uid"], "title": r["title"]} for r in out_res]
+        out_res = s.run(
+            "MATCH (n {uid:$uid})-[r]->(other) WHERE ($tid IS NULL OR (n.tenant_id = $tid AND other.tenant_id = $tid)) RETURN type(r) as rel, other.uid as uid, other.title as title", {"uid": uid, "tid": tenant_id})
+        data["outgoing"] = [
+            {"rel": r["rel"], "uid": r["uid"], "title": r["title"]} for r in out_res]
     finally:
         try:
             s.close()

@@ -10,12 +10,15 @@ from app.api.common import ApiError
 
 router = APIRouter(prefix="/v1/assistant", tags=["ИИ ассистент"])
 
+
 class ToolInfo(BaseModel):
     name: str
     description: str
 
+
 class ToolsResponse(BaseModel):
     tools: List[ToolInfo]
+
 
 @router.get(
     "/tools",
@@ -33,7 +36,8 @@ async def tools() -> Dict:
     """
     return {
         "tools": [
-            {"name": "explain_relation", "description": "Объяснить связь между двумя узлами"},
+            {"name": "explain_relation",
+                "description": "Объяснить связь между двумя узлами"},
             {"name": "viewport", "description": "Загрузить окрестность узла"},
             {"name": "roadmap", "description": "Построить учебный план"},
             {"name": "analytics", "description": "Показать метрики графа"},
@@ -41,12 +45,15 @@ async def tools() -> Dict:
         ]
     }
 
+
 class AssistantChatInput(BaseModel):
-    action: Optional[Literal["explain_relation", "viewport", "roadmap", "analytics", "questions"]] = Field(None, description="Explicit action to trigger. If None, treats as general chat.")
+    action: Optional[Literal["explain_relation", "viewport", "roadmap", "analytics", "questions"]] = Field(
+        None, description="Explicit action to trigger. If None, treats as general chat.")
     message: str = Field(..., description="User message text.")
     from_uid: Optional[str] = Field(None, description="Context: source node.")
     to_uid: Optional[str] = Field(None, description="Context: target node.")
-    center_uid: Optional[str] = Field(None, description="Context: center node for viewport.")
+    center_uid: Optional[str] = Field(
+        None, description="Context: center node for viewport.")
     depth: int = 1
     subject_uid: Optional[str] = None
     progress: Dict[str, float] = {}
@@ -55,6 +62,7 @@ class AssistantChatInput(BaseModel):
     difficulty_min: int = 1
     difficulty_max: int = 5
     exclude: List[str] = []
+
 
 @router.post(
     "/chat",
@@ -84,16 +92,45 @@ async def chat(payload: AssistantChatInput) -> Dict:
     """
     if payload.action == "explain_relation":
         if not payload.from_uid or not payload.to_uid:
-            raise HTTPException(status_code=400, detail="from_uid/to_uid required")
+            raise HTTPException(
+                status_code=400, detail="from_uid/to_uid required")
         ctx = relation_context(payload.from_uid, payload.to_uid)
         try:
             from openai import AsyncOpenAI
-            oai = AsyncOpenAI(api_key=settings.openai_api_key.get_secret_value())
+            oai = AsyncOpenAI(
+                api_key=settings.openai_api_key.get_secret_value())
+
+            # Build comprehensive context for LLM
+            from_desc = f"\nОписание: {ctx.get('from_description', '')}" if ctx.get(
+                'from_description') else ""
+            to_desc = f"\nОписание: {ctx.get('to_description', '')}" if ctx.get(
+                'to_description') else ""
+
+            from_prereqs = ""
+            if ctx.get('from_prereqs'):
+                prereq_list = ", ".join(
+                    [f"{p.get('title', p.get('uid'))}" for p in ctx['from_prereqs']])
+                from_prereqs = f"\nПререквизиты: {prereq_list}"
+
+            to_prereqs = ""
+            if ctx.get('to_prereqs'):
+                prereq_list = ", ".join(
+                    [f"{p.get('title', p.get('uid'))}" for p in ctx['to_prereqs']])
+                to_prereqs = f"\nПререквизиты: {prereq_list}"
+
+            direction_note = ""
+            if ctx.get('direction') == 'reverse':
+                direction_note = "\n[Примечание: Связь направлена в обратную сторону - от целевого узла к исходному]"
+
             messages = [
-                {"role": "system", "content": "Ты эксперт по графу. Объясни, почему существует связь, используя метаданные."},
+                {"role": "system", "content": "Ты эксперт по графу знаний и методам обучения. Объясни, почему существует связь между двумя узлами, анализируя их описания, пререквизиты и тип связи. Предоставь глубокое объяснение педагогической целесообразности этой связи."},
                 {
                     "role": "user",
-                    "content": f"Вопрос: {payload.message}\nОт: {ctx.get('from_title','')} ({payload.from_uid})\nК: {ctx.get('to_title','')} ({payload.to_uid})\nСвязь: {ctx.get('rel','')}\nСвойства: {ctx.get('props',{})}",
+                    "content": f"Вопрос: {payload.message}\n"
+                    f"\nИСХОДНЫЙ УЗЕЛ: {ctx.get('from_title', '')} ({payload.from_uid}){from_desc}{from_prereqs}"
+                    f"\n\nЦЕЛЕВОЙ УЗЕЛ: {ctx.get('to_title', '')} ({payload.to_uid}){to_desc}{to_prereqs}"
+                    f"\n\nТИП СВЯЗИ: {ctx.get('rel', '')}"
+                    f"\nСВОЙСТВА СВЯЗИ: {ctx.get('props', '{}')}{direction_note}",
                 },
             ]
             resp = await oai.chat.completions.create(model="gpt-4o-mini", messages=messages)
@@ -110,15 +147,18 @@ async def chat(payload: AssistantChatInput) -> Dict:
         return {"nodes": ns, "edges": es, "center_uid": payload.center_uid, "depth": payload.depth}
 
     if payload.action == "roadmap":
-        items = plan_route(payload.subject_uid, payload.progress, limit=payload.limit)
+        items = plan_route(payload.subject_uid,
+                           payload.progress, limit=payload.limit)
         return {"items": items}
 
     if payload.action == "analytics":
-        return await analytics_stats()
+        return await analytics_stats(progress=payload.progress if payload.progress else None)
 
     if payload.action == "questions":
-        roadmap = plan_route(payload.subject_uid, payload.progress, limit=payload.count * 3)
-        topic_uids = [it["uid"] for it in roadmap] or all_topic_uids_from_examples()
+        roadmap = plan_route(payload.subject_uid,
+                             payload.progress, limit=payload.count * 3)
+        topic_uids = [it["uid"]
+                      for it in roadmap] or all_topic_uids_from_examples()
         examples = select_examples_for_topics(
             topic_uids=topic_uids,
             limit=payload.count,

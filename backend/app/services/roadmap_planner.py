@@ -2,11 +2,12 @@ from typing import Dict, List
 from app.services.graph import neo4j_repo
 from app.services.curriculum.repo import get_graph_view
 
+
 def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int = 30, penalty_factor: float = 0.15, tenant_id: str | None = None, curriculum_code: str | None = None) -> List[Dict]:
     drv = neo4j_repo.get_driver()
     items: List[Dict] = []
     s = drv.session()
-    
+
     # Curriculum filter set
     allowed_topics = set()
     if curriculum_code:
@@ -24,7 +25,7 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
     # Define query filter
     tid_filter_sub = "WHERE sub.tenant_id = $tid" if tenant_id else ""
     tid_filter_node = "WHERE ($tid IS NULL OR t.tenant_id = $tid)"
-    
+
     if subject_uid:
         query = (
             "MATCH (sub:Subject {uid:$su})-[:CONTAINS]->(sec:Section)-[:CONTAINS]->(t:Topic) "
@@ -42,24 +43,54 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
             "RETURN t.uid AS uid, t.title AS title, collect(pre.uid) AS prereqs",
             {"tid": tenant_id}
         ).data()
-    
+
     for r in rows:
         tuid = r["uid"]
         if tuid.startswith("TOP-"):
             continue
-        
+
         # PRISM FILTER
         if curriculum_code and tuid not in allowed_topics:
             continue
-            
+
         mastered = float(progress.get(tuid, 0.0) or 0.0)
         missing = 0
+        missing_prereq_titles = []
         for pre in (r.get("prereqs") or []):
             mastered_pre = float(progress.get(pre, 0.0) or 0.0)
             if mastered_pre < 0.3:
                 missing += 1
+                # Fetch title for this prereq for reason field
+                try:
+                    pre_info = s.run("MATCH (p:Topic {uid:$uid}) RETURN p.title AS title", {
+                                     "uid": pre}).single()
+                    if pre_info and pre_info.get("title"):
+                        missing_prereq_titles.append(pre_info["title"])
+                except:
+                    missing_prereq_titles.append(pre)
+
         priority = max(0.0, (1.0 - mastered) + penalty_factor * missing)
-        items.append({"uid": tuid, "title": r["title"], "mastered": mastered, "missing_prereqs": missing, "priority": priority})
+
+        # Generate reason
+        reason = ""
+        if mastered < 0.3:
+            reason = "Тема пропущена (низкий прогресс)"
+        elif missing > 0:
+            prereq_names = ", ".join(missing_prereq_titles[:3])
+            if len(missing_prereq_titles) > 3:
+                prereq_names += f", и еще {len(missing_prereq_titles) - 3}"
+            reason = f"Необходимый пререквизит для следующих тем: {prereq_names}"
+        else:
+            reason = "Следующий шаг в программе обучения"
+
+        items.append({
+            "uid": tuid,
+            "title": r["title"],
+            "mastered": mastered,
+            "missing_prereqs": missing,
+            "priority": priority,
+            "reason": reason
+        })
     try:
         s.close()
     except Exception:
@@ -68,7 +99,7 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
     items.sort(key=lambda x: x["priority"], reverse=True)
     if len(items) >= limit:
         return items[:limit]
-    
+
     # Fallback search if not enough items
     if subject_uid:
         s2 = neo4j_repo.get_driver().session()
@@ -93,12 +124,40 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
                 continue
             mastered = float(progress.get(tuid, 0.0) or 0.0)
             missing = 0
+            missing_prereq_titles = []
             for pre in (r.get("prereqs") or []):
                 mastered_pre = float(progress.get(pre, 0.0) or 0.0)
                 if mastered_pre < 0.3:
                     missing += 1
+                    try:
+                        pre_info = s2.run("MATCH (p:Topic {uid:$uid}) RETURN p.title AS title", {
+                                          "uid": pre}).single()
+                        if pre_info and pre_info.get("title"):
+                            missing_prereq_titles.append(pre_info["title"])
+                    except:
+                        missing_prereq_titles.append(pre)
             priority = max(0.0, (1.0 - mastered) + penalty_factor * missing)
-            items.append({"uid": tuid, "title": r["title"], "mastered": mastered, "missing_prereqs": missing, "priority": priority})
+
+            # Generate reason
+            reason = ""
+            if mastered < 0.3:
+                reason = "Тема пропущена (низкий прогресс)"
+            elif missing > 0:
+                prereq_names = ", ".join(missing_prereq_titles[:3])
+                if len(missing_prereq_titles) > 3:
+                    prereq_names += f", и еще {len(missing_prereq_titles) - 3}"
+                reason = f"Необходимый пререквизит для следующих тем: {prereq_names}"
+            else:
+                reason = "Следующий шаг в программе обучения"
+
+            items.append({
+                "uid": tuid,
+                "title": r["title"],
+                "mastered": mastered,
+                "missing_prereqs": missing,
+                "priority": priority,
+                "reason": reason
+            })
         items.sort(key=lambda x: x["priority"], reverse=True)
         if items and len(items) >= limit:
             return items[:limit]
@@ -112,7 +171,15 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
                     mastered_f = float(mastered or 0.0)
                 except Exception:
                     mastered_f = 0.0
-                items.append({"uid": tuid, "title": tuid, "mastered": mastered_f, "missing_prereqs": 0, "priority": max(0.0, 1.0 - mastered_f)})
+                reason = "Тема пропущена (низкий прогресс)" if mastered_f < 0.3 else "Следующий шаг в программе обучения"
+                items.append({
+                    "uid": tuid,
+                    "title": tuid,
+                    "mastered": mastered_f,
+                    "missing_prereqs": 0,
+                    "priority": max(0.0, 1.0 - mastered_f),
+                    "reason": reason
+                })
                 if len(items) >= limit:
                     break
             items.sort(key=lambda x: x["priority"], reverse=True)
@@ -127,7 +194,15 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
             except Exception:
                 mastered_f = 0.0
             priority = max(0.0, (1.0 - mastered_f))
-            fallback.append({"uid": tuid, "title": tuid, "mastered": mastered_f, "missing_prereqs": 0, "priority": priority})
+            reason = "Тема пропущена (низкий прогресс)" if mastered_f < 0.3 else "Следующий шаг в программе обучения"
+            fallback.append({
+                "uid": tuid,
+                "title": tuid,
+                "mastered": mastered_f,
+                "missing_prereqs": 0,
+                "priority": priority,
+                "reason": reason
+            })
             if len(fallback) >= limit:
                 break
         fallback.sort(key=lambda x: x["priority"], reverse=True)
@@ -135,5 +210,12 @@ def plan_route(subject_uid: str | None, progress: Dict[str, float], limit: int =
     # Fallback 2: synthesize starter topics
     for i in range(limit):
         tuid = f"TOP-STUB-{i+1}"
-        fallback.append({"uid": tuid, "title": f"Стартовая тема {i+1}", "mastered": 0.0, "missing_prereqs": 0, "priority": 1.0})
+        fallback.append({
+            "uid": tuid,
+            "title": f"Стартовая тема {i+1}",
+            "mastered": 0.0,
+            "missing_prereqs": 0,
+            "priority": 1.0,
+            "reason": "Рекомендуемая стартовая тема"
+        })
     return fallback[:limit]

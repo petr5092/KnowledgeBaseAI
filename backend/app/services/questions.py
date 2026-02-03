@@ -8,6 +8,7 @@ from app.services.graph.neo4j_repo import Neo4jRepo
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 KB_DIR = os.path.join(os.path.dirname(BASE_DIR), 'kb')
 
+
 def load_jsonl(filename: str) -> List[Dict]:
     path = os.path.join(KB_DIR, filename)
     data: List[Dict] = []
@@ -19,7 +20,7 @@ def load_jsonl(filename: str) -> List[Dict]:
                 break
         else:
             return data
-            
+
     with open(path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.strip()
@@ -31,6 +32,7 @@ def load_jsonl(filename: str) -> List[Dict]:
                 continue
     return data
 
+
 @lru_cache(maxsize=1)
 def get_examples_indexed():
     ex = load_jsonl('examples.jsonl')
@@ -41,6 +43,7 @@ def get_examples_indexed():
             continue
         by_topic.setdefault(tuid, []).append(e)
     return {"all": ex, "by_topic": by_topic}
+
 
 def select_examples_for_topics(
     topic_uids: List[str],
@@ -72,10 +75,13 @@ def select_examples_for_topics(
                     "       q.type AS type, "
                     "       q.options AS options, "
                     "       q.is_visual AS is_visual, "
-                    "       q.visualization AS visualization"
+                    "       q.visualization AS visualization, "
+                    "       coalesce(q.explanation, ex.explanation) AS explanation, "
+                    "       coalesce(q.hints, ex.hints) AS hints"
                 ),
                 {"t": topic_uids, "tid": tenant_id}
             )
+
             def _norm(x):
                 try:
                     xf = float(x)
@@ -93,19 +99,35 @@ def select_examples_for_topics(
                 if r.get('uid') in exclude:
                     continue
                 r['difficulty'] = _norm(d_raw)
-                
+
                 # Deserialize JSON fields if they are strings
                 if isinstance(r.get('options'), str):
                     try:
                         r['options'] = json.loads(r['options'])
                     except:
                         r['options'] = []
-                
+
                 if isinstance(r.get('visualization'), str):
                     try:
                         r['visualization'] = json.loads(r['visualization'])
                     except:
                         r['visualization'] = None
+
+                # Deserialize explanation if it's a string
+                if isinstance(r.get('explanation'), str):
+                    try:
+                        r['explanation'] = json.loads(r['explanation'])
+                    except:
+                        pass  # Keep as string if not JSON
+
+                # Deserialize hints if it's a string
+                if isinstance(r.get('hints'), str):
+                    try:
+                        r['hints'] = json.loads(r['hints'])
+                    except:
+                        # Try splitting by comma if not JSON
+                        r['hints'] = [h.strip()
+                                      for h in r['hints'].split(',') if h.strip()]
 
                 pool.append(r)
             repo.close()
@@ -114,6 +136,7 @@ def select_examples_for_topics(
     if not pool:
         try:
             idx = get_examples_indexed()
+
             def _norm(x):
                 try:
                     xf = float(x)
@@ -167,7 +190,7 @@ def select_examples_for_topics(
     seen_by_topic: Dict[str, int] = {tu: 0 for tu in topic_uids}
     for e in pool:
         tu = e.get('topic_uid')
-        if len(selected) >= limit:
+        if len(selected) >= limit or not tu:
             break
         if seen_by_topic.get(tu, 0) <= 1:
             selected.append(e)
@@ -180,6 +203,7 @@ def select_examples_for_topics(
             if len(selected) >= limit:
                 break
     return selected
+
 
 def all_topic_uids_from_examples() -> List[str]:
     idx = get_examples_indexed()
