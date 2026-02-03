@@ -24,6 +24,7 @@ from app.services.graph.neo4j_repo import Neo4jRepo
 from app.services.questions import select_examples_for_topics
 from app.events.publisher import get_redis
 from app.services.kb.builder import openai_chat_async
+from app.services.visualization.geometry import GeometryEngine
 import random
 import uuid
 
@@ -140,32 +141,14 @@ async def chat(payload: ChatInput) -> Dict:
 
 # --- Roadmap ---
 
-class LessonUnit(BaseModel):
-    uid: str
-    type: str  # i_do, we_do, you_do, test
-    title: str
-    payload: Dict[str, Any]
-
-class MicroLesson(BaseModel):
-    order: int
-    title: str
-    i_do: Optional[LessonUnit] = None
-    we_do: Optional[LessonUnit] = None
-    you_do: Optional[LessonUnit] = None
-
 class RoadmapNode(BaseModel):
     topic_uid: str
     title: str
     description: Optional[str] = None
     status: str = "locked"  # locked, available, completed
-    max_score: int = 0
-    current_score: float = 0.0
     progress_percentage: float = 0.0
-    units: List[MicroLesson] = []
-    final_test: Optional[LessonUnit] = None
 
 class RoadmapResponse(BaseModel):
-    max_score: int = 0
     nodes: List[RoadmapNode]
 
 @router.post("/roadmap", summary="Build adaptive roadmap", response_model=RoadmapResponse)
@@ -190,22 +173,23 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             MATCH (sub)-[:CONTAINS*]->(t:Topic)
             
             OPTIONAL MATCH path = shortestPath((t)-[:PREREQ*..3]-(f:Topic {uid: $focus}))
+            WHERE t <> f
             WITH t, path
             
             WITH t, path,
                  CASE 
                    WHEN t.uid = $focus THEN 'self'
-                   WHEN path IS NOT NULL AND startNode(path) = t THEN 'prerequisite'
-                   WHEN path IS NOT NULL AND endNode(path) = t THEN 'dependent'
+                   WHEN path IS NOT NULL AND nodes(path)[0] = t THEN 'prerequisite'
+                   WHEN path IS NOT NULL AND nodes(path)[-1] = t THEN 'dependent'
                    ELSE 'related'
                  END AS rel_type,
                  length(path) as dist
             
-            OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
             OPTIONAL MATCH (t)-[:PREREQ]->(p:Topic)
-            WITH t, rel_type, dist, collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units, collect(p.uid) as prereqs
+            OPTIONAL MATCH (t)-[:REQUIRES_SKILL]->(s:Skill)
+            WITH t, rel_type, dist, collect(DISTINCT p.uid) as prereqs, collect(DISTINCT s.title) as skills
             
-            RETURN t.uid AS uid, t.title AS title, t.description AS description, units, prereqs, rel_type, dist
+            RETURN t.uid AS uid, t.title AS title, t.description AS description, prereqs, skills, rel_type, dist
             ORDER BY (CASE WHEN dist IS NULL THEN 100 ELSE dist END) ASC, t.title ASC
             LIMIT 50
             """
@@ -216,10 +200,10 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             query = """
             MATCH (sub:Subject {uid: $su})
             MATCH (sub)-[:CONTAINS*]->(t:Topic)
-            OPTIONAL MATCH (t)-[:HAS_UNIT]->(u:ContentUnit)
             OPTIONAL MATCH (t)-[:PREREQ]->(p:Topic)
-            WITH t, collect({uid: u.uid, type: u.type, payload: u.payload, complexity: u.complexity}) AS units, collect(p.uid) as prereqs
-            RETURN t.uid AS uid, t.title AS title, t.description AS description, units, prereqs
+            OPTIONAL MATCH (t)-[:REQUIRES_SKILL]->(s:Skill)
+            WITH t, collect(DISTINCT p.uid) as prereqs, collect(DISTINCT s.title) as skills
+            RETURN t.uid AS uid, t.title AS title, t.description AS description, prereqs, skills
             ORDER BY t.title ASC
             LIMIT 50
             """
@@ -253,7 +237,8 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             "current_score": score,
             "relationship": r.get("rel_type", "unknown"),
             "distance": r.get("dist", 100),
-            "prerequisites": r.get("prereqs", [])
+            "prerequisites": r.get("prereqs", []),
+            "skills": r.get("skills", [])
         })
 
     used_llm = False
@@ -263,16 +248,15 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             client = AsyncOpenAI(api_key=settings.openai_api_key.get_secret_value())
             
             prompt = (
-                "You are an adaptive learning AI. Select the best 8 topics for a student roadmap from the list below.\n"
+                "You are an adaptive learning AI. Select the best 5-8 topics for a student roadmap from the list below.\n"
                 f"The student is currently focusing on topic: '{focus_title}' (UID: {focus_uid}).\n"
                 "Rules for Roadmap Construction:\n"
-                "1. **REMEDIATION (Score < 0.6)**: If the focus topic is failed or new, select 'prerequisite' topics.\n"
-                "   - **CRITICAL**: Prioritize IMMEDIATE prerequisites (distance=1). DO NOT jump to distant/basic topics (distance > 1) unless immediate ones are also failed.\n"
-                "   - Example: If 'Quadratic Equations' is failed, choose 'Polynomials' (dist=1), NOT 'Addition' (dist=3).\n"
-                "2. **FOCUS LOOP (Score 0.6 - 0.85)**: If score is 0.6-0.85, prioritize THE FOCUS TOPIC ITSELF ('self') to close gaps.\n"
-                "3. **PROGRESSION (Score > 0.85)**: Only if the focus topic is FULLY MASTERED (>0.85), suggest 'dependent' topics (next steps).\n"
-                "4. If no focus topic is provided, prioritize Remediation -> Foundation -> New Topics.\n"
-                "5. GENERATE a short, engaging description (in Russian) for any topic that has an empty description.\n"
+                "1. **GOAL**: The roadmap MUST help the student master the focus topic.\n"
+                "2. **REMEDIATION (Score < 0.6)**: If the focus topic score is low, include immediate prerequisites (distance=1) AND the focus topic itself (as the target).\n"
+                "3. **FOCUS LOOP (Score 0.6 - 0.85)**: Prioritize the focus topic and closely related topics (shared skills/methods).\n"
+                "4. **PROGRESSION (Score > 0.85)**: If mastered, suggest dependent topics.\n"
+                "5. **Skills**: Use 'skills' field to find relevant topics even if 'distance' is high (e.g. topics sharing 'Graph Analysis').\n"
+                "6. GENERATE a short, engaging description (in Russian) for any topic that has an empty description.\n"
                 "Return a valid JSON object with a key 'selected_topics' containing a list of objects: {'uid': '...', 'description': '...'}.\n"
                 "The list must be ordered by priority (highest priority first).\n\n"
                 f"Candidates: {json.dumps(candidates_info, ensure_ascii=False)}"
@@ -349,89 +333,6 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
         if count == 0 and status == "locked":
             status = "available"
             
-        # Categorize units
-        raw_units = r.get("units", [])
-        
-        # Helper to parse payload
-        def get_payload(u):
-            p = u.get("payload")
-            if isinstance(p, str):
-                try:
-                    return json.loads(p)
-                except:
-                    return {}
-            return p if p else {}
-
-        # Group units into MicroLessons
-        lessons_map: Dict[int, Dict[str, Any]] = {} # order -> {title: "", i_do: ..., we_do: ..., you_do: ...}
-        final_test_unit = None
-        
-        for u in raw_units:
-            u_type = u.get("type")
-            p = get_payload(u)
-            
-            if u_type == "lesson_test":
-                final_test_unit = LessonUnit(
-                    uid=u["uid"],
-                    type="lesson_test",
-                    title="Финальный тест",
-                    payload=p
-                )
-                continue
-                
-            if u_type in ["lesson_i_do", "lesson_we_do", "lesson_you_do"]:
-                order = p.get("order", 1)
-                
-                if order not in lessons_map:
-                    # Try to find a title from any unit in this group, usually I_DO has the main title
-                    lessons_map[order] = {"order": order, "title": f"Урок {order}"}
-                
-                # Update title if present in micro_lesson_title
-                if "micro_lesson_title" in p:
-                    lessons_map[order]["title"] = p["micro_lesson_title"]
-                
-                l_unit = LessonUnit(
-                    uid=u["uid"],
-                    type=u_type,
-                    title="", # Will be set by frontend or implied by field
-                    payload=p
-                )
-                # Assign friendly title based on type
-                if u_type == "lesson_i_do":
-                    l_unit.title = "Изучение (I Do)"
-                    lessons_map[order]["i_do"] = l_unit
-                elif u_type == "lesson_we_do":
-                    l_unit.title = "Практика (We Do)"
-                    lessons_map[order]["we_do"] = l_unit
-                elif u_type == "lesson_you_do":
-                    l_unit.title = "Задание (You Do)"
-                    lessons_map[order]["you_do"] = l_unit
-
-        # Convert map to list and sort
-        lessons_list = []
-        for order, data in lessons_map.items():
-            lessons_list.append(MicroLesson(
-                order=order,
-                title=data["title"],
-                i_do=data.get("i_do"),
-                we_do=data.get("we_do"),
-                you_do=data.get("you_do")
-            ))
-        
-        lessons_list.sort(key=lambda x: x.order)
-        
-        # Calculate max_score
-        # 1 point per micro-lesson (if fully completed i/we/you? or 1 per unit?)
-        # Let's keep 1 point per unit for simplicity, so max_score = sum of units
-        node_score = 0
-        if final_test_unit:
-            node_score += 3
-        for l in lessons_list:
-            if l.i_do: node_score += 1
-            if l.we_do: node_score += 1
-            if l.you_do: node_score += 1
-        
-        current_score = p_val * node_score
         progress_percentage = p_val * 100.0
 
         topics.append(RoadmapNode(
@@ -439,16 +340,11 @@ async def roadmap(payload: RoadmapRequest) -> Dict:
             title=r["title"],
             description=r.get("description"),
             status=status,
-            max_score=node_score,
-            current_score=current_score,
-            progress_percentage=progress_percentage,
-            units=lessons_list,
-            final_test=final_test_unit
+            progress_percentage=progress_percentage
         ))
         count += 1
 
-    total_roadmap_score = sum(n.max_score for n in topics)
-    return {"nodes": topics, "max_score": total_roadmap_score}
+    return {"nodes": topics}
 
 # --- Knowledge / Topics ---
 
@@ -515,15 +411,40 @@ def _filter_rows(rows: List[Dict], allowed_topics: Optional[Set[str]], payload: 
         
         if include:
             # Goal / Class Filtering
-            # Ignore exam_type, always filter by user_class
             
-            # Filter by resolved user class
             try:
-                # FIX: Force cast to int to handle string inputs from DB (e.g. "5")
-                if mn is not None and resolved < int(mn):
-                    include = False
-                if mx is not None and resolved > int(mx):
-                    include = False
+                mn_val = int(mn) if mn is not None else None
+                mx_val = int(mx) if mx is not None else None
+                
+                is_exam = payload.goal_type == GoalType.exam
+                
+                if is_exam:
+                    # Memory 01KG0022Y97B03DEJ3W11AA854: 
+                    # Filters topics by curriculum grade limits for exams (OGE<=9, EGE<=11).
+                    exam_limit = 11 # Default to 11
+                    if payload.exam_type == ExamType.oge:
+                        exam_limit = 9
+                    
+                    # Filter 1: Exclude topics that start AFTER the exam limit
+                    if mn_val is not None and mn_val > exam_limit:
+                        include = False
+                    
+                    # Filter 2: Exclude topics that start AFTER the user's current class
+                    # (Prevent 3rd grader from seeing 7th grade topics, even if for OGE)
+                    # Skip this check if resolved class is 0 (undefined/admin)
+                    if mn_val is not None and resolved > 0 and resolved < mn_val:
+                        include = False
+                        
+                    # Note: We intentionally ALLOW topics where resolved > mx_val (Reviewing past material)
+                    
+                else:
+                    # Default logic (study_topics, homework, improve_grade)
+                    # Filters topics by user class
+                    if mn_val is not None and resolved > 0 and resolved < mn_val:
+                        include = False
+                    if mx_val is not None and resolved > 0 and resolved > mx_val:
+                        include = False
+                        
             except (ValueError, TypeError):
                 pass
         
@@ -800,8 +721,10 @@ class VisualizationData(BaseModel):
 
 class StartRequest(BaseModel):
     subject_uid: str
-    topic_uid: str
+    topic_uid: Optional[str] = None
     user_context: UserContext
+    goal_type: Optional[GoalType] = None
+    curriculum_code: Optional[str] = None
 
 class OptionDTO(BaseModel):
     option_uid: str
@@ -884,7 +807,7 @@ def _resolve_level(uc: UserContext) -> int:
         return a - 6
     return 7
 
-def _topic_accessible(subject_uid: str, topic_uid: str, resolved_level: int) -> bool:
+def _topic_accessible(subject_uid: str, topic_uid: str, resolved_level: int, goal_type: Optional[str] = None) -> bool:
     # If resolved_level is 0 (or negative), treat as Admin/Test mode -> Allow all
     if resolved_level <= 0:
         return True
@@ -914,28 +837,57 @@ def _topic_accessible(subject_uid: str, topic_uid: str, resolved_level: int) -> 
         ok = True
         if isinstance(mn, (int, float)):
             ok = ok and resolved_level >= int(mn)
-        if isinstance(mx, (int, float)):
-            ok = ok and resolved_level <= int(mx)
+        
+        # If goal is exam, we allow reviewing past material (ignore mx check)
+        if goal_type != "exam":
+            if isinstance(mx, (int, float)):
+                ok = ok and resolved_level <= int(mx)
         return ok
     except Exception:
         return True
 
 
 async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: bool = False, previous_prompts: List[str] = [], difficulty: int = 5) -> Dict:
-    # 1. Get Topic Title
+    # 1. Get Topic Context (Title, Description, Prerequisites, Subject, Skills)
     repo = None
-    topic_title = topic_uid
+    topic_context = {
+        "title": topic_uid,
+        "description": "",
+        "prereqs": [],
+        "subject": "",
+        "skills": []
+    }
+    
     try:
         repo = Neo4jRepo()
-        def _get_title(tx):
-            res = tx.run("MATCH (t:Topic {uid: $uid}) RETURN t.title as title", uid=topic_uid)
+        def _get_context(tx):
+            query = """
+            MATCH (t:Topic {uid: $uid})
+            OPTIONAL MATCH (t)-[:PREREQ]->(p:Topic)
+            OPTIONAL MATCH (t)-[:REQUIRES_SKILL]->(s:Skill)
+            OPTIONAL MATCH (sub:Subject)-[:CONTAINS*]->(t)
+            RETURN 
+                t.title as title, 
+                t.description as description, 
+                collect(DISTINCT p.title) as prereqs, 
+                collect(DISTINCT {title: s.title, definition: s.definition}) as skills,
+                head(collect(sub.title)) as subject
+            """
+            res = tx.run(query, uid=topic_uid)
             rec = res.single()
-            return rec["title"] if rec else None
+            if rec:
+                return {
+                    "title": rec["title"] or topic_uid,
+                    "description": rec["description"] or "",
+                    "prereqs": [p for p in rec["prereqs"] if p],
+                    "subject": rec["subject"] or "",
+                    "skills": [s for s in rec["skills"] if s and s.get("title")]
+                }
+            return None
         
-        # Use sync retry since it's robust, running in async context is acceptable for MVP
-        title = repo._retry(lambda s: s.read_transaction(_get_title))
-        if title:
-            topic_title = title
+        ctx = repo._retry(lambda s: s.read_transaction(_get_context))
+        if ctx:
+            topic_context = ctx
     except Exception:
         pass
     finally:
@@ -945,6 +897,8 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
             except Exception:
                 pass
 
+    topic_title = topic_context["title"]
+    
     # Auto-detect visual topics
     if not is_visual and topic_title:
         visual_keywords = [
@@ -979,34 +933,31 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
     Visualization Requirements:
     - You MUST set "is_visual": true.
     - You MUST include a "visualization" object.
+    - Canvas: 8x8 grid. Coordinates x:[0,8], y:[0,8].
+    - Center objects at (5,5). Max 3 objects.
     - "visualization" structure:
       {
-        "type": "geometric_shape" | "graph" | "diagram" | "chart",
-        "coordinates": [ ... ], // Array of points {x,y} for shapes, or Array of series for multiple graphs
-        "params": { "color": "...", "label": "...", ... } // Optional global parameters
+        "type": "geometric_shape" | "graph" | "diagram",
+        "coordinates": [ 
+            // Array of shape objects. ALWAYS use array of objects.
+            { "type": "polygon", "points": [{"x":..., "y":...}], "label": "ABC", "color": "..." },
+            { "type": "line", "points": [{"x":..., "y":...}], "label": "a" },
+            { "type": "point", "x": ..., "y": ..., "label": "B", "color": "red" }
+        ],
+        "indicators": [
+            { "type": "dimension", "start": {"x":..., "y":...}, "end": {"x":..., "y":...}, "text": "5 cm" }
+        ]
       }
-    - Coordinate formats:
-      * geometric_shape (single shape): [{"x": 0, "y": 0}, {"x": 10, "y": 0}, {"x": 5, "y": 10}]
-      * geometric_shape (multiple shapes) - USE THIS FOR COMPARISONS OR MULTIPLE FIGURES:
-        [
-          {"type": "polygon", "label": "Figure A", "color": "blue", "points": [{"x": 0, "y": 0}, {"x": 4, "y": 0}, {"x": 0, "y": 3}]},
-          {"type": "line", "label": "Segment B", "color": "red", "points": [{"x": 5, "y": 0}, {"x": 9, "y": 0}]}
-        ]
-        CRITICAL FOR GEOMETRY: 
-        - For SEGMENTS ("отрезки") or LINES: Use "type": "line" and provide EXACTLY 2 points (start and end). DO NOT use "polygon" for lines.
-        - For POLYGONS (triangles, squares): Use "type": "polygon" and provide 3+ points.
-        - The coordinates MUST be mathematically consistent with the problem statement values (scale 1:1). 
-        If a side is length 5, the distance between its points must be 5. If a base is 8, the x-difference must be 8.
-        Do not provide arbitrary coordinates. Calculate them to match the problem data exactly.
-      * graph (single line): [{"x": -10, "y": ...}, ...]
-      * graph (multiple lines/functions) - USE THIS IF PROMPT MENTIONS MULTIPLE FUNCTIONS:
-        [
-          {"type": "line", "label": "y=2x+3", "color": "blue", "points": [{"x": -10, "y": -17}, {"x": 10, "y": 23}]},
-          {"type": "line", "label": "y=-x+1", "color": "red", "points": [{"x": -10, "y": 11}, {"x": 10, "y": -9}]}
-        ]
-        CRITICAL: If the prompt mentions multiple functions (e.g. f(x) and g(x)), you MUST provide an array of objects for "coordinates".
-        Do not provide a single array of points if you are describing multiple functions.
-      * diagram/chart: appropriate JSON representation
+    - CRITICAL: For single points (like "Point B"), USE "type": "point" with "x", "y" directly. DO NOT use "type": "line" for a point!
+    - CRITICAL: For FUNCTIONS and CURVES (e.g. parabolas, circles, sine waves):
+      - USE "type": "line" (or "path").
+      - MUST generate AT LEAST 10-20 points to make the curve look smooth. 
+      - DO NOT use "type": "polygon" for open curves (like parabolas).
+      - Example Parabola: [{"x": -3, "y": 9}, {"x": -2, "y": 4}, {"x": -1, "y": 1}, {"x": 0, "y": 0}, {"x": 1, "y": 1}, {"x": 2, "y": 4}, {"x": 3, "y": 9}]
+    - CRITICAL: Coordinates MUST be mathematically consistent with the problem statement values.
+    - ACCURACY RULE: If the problem involves a function (e.g. y = 2x - 1), YOU MUST CALCULATE the y-coordinates correctly for the given x-coordinates.
+      Example: If y = 2x - 1 and x = 3, then y MUST be 5.
+    - PREFERENCE: Use integer coordinates (e.g. x=2, y=3) or simple decimals (x=2.5) to avoid precision errors. DO NOT use long random floats.
     """
 
     avoid_context = ""
@@ -1040,8 +991,22 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
     }}
     """
 
+    # Enhanced Context for LLM
+    description_text = f"Topic Description: {topic_context['description']}" if topic_context['description'] else ""
+    prereqs_text = f"Prerequisites: {', '.join(topic_context['prereqs'])}" if topic_context['prereqs'] else ""
+    subject_text = f"Subject/Domain: {topic_context['subject']}" if topic_context['subject'] else ""
+    
+    skills_text = ""
+    if topic_context['skills']:
+        skills_text = "Related Skills/Methods:\n" + "\n".join([f"- {s['title']}: {s.get('definition', '')}" for s in topic_context['skills']])
+
     prompt_text = f"""
     Generate a unique assessment question for the topic "{topic_title}" (UID: {topic_uid}).
+    {subject_text}
+    {description_text}
+    {prereqs_text}
+    {skills_text}
+    
     Context: Adaptive learning platform.
     Target Audience: High school / University students.
     Language: Russian.
@@ -1051,6 +1016,14 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
     - Level 4-7: Standard problems, application of formula, 2-step reasoning.
     - Level 8-10: Complex problems, synthesis of concepts, edge cases, multi-step.
     
+    CRITICAL INSTRUCTION:
+    If the topic is simple (e.g. "Multiplication Table") but the Difficulty Level is High (8-10), DO NOT generate simple questions (like "2*2"). 
+    Instead, generate complex problems involving the topic, such as:
+    - Word problems applying the concept.
+    - Reverse problems (find factors).
+    - Multi-step equations.
+    - Conceptual questions about properties (distributivity, etc.).
+    
     Question Type: {q_type}
     Is Visual Task: {is_visual}
     {visual_instruction}
@@ -1058,6 +1031,9 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
     
     IMPORTANT: If "Is Visual Task" is True, you MUST provide a valid "visualization" object in the JSON.
     The "visualization" object MUST have a "type" (one of: geometric_shape, graph, diagram, chart) and "coordinates".
+    
+    IMPORTANT: If "Is Visual Task" is False, you MUST NOT refer to any pictures, figures, or drawings in the question text.
+    The question must be purely textual and solvable without any visual aid.
     
     Requirements:
     - Output valid JSON only.
@@ -1100,37 +1076,48 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
         visualization_data = None
         if data.get("is_visual") and data.get("visualization"):
             try:
-                # Basic validation or casting if needed
                 vis = data["visualization"]
+                vis_type = vis.get("type")
                 
+                # Check if type is valid
+                valid_type = VisualizationType.GEOMETRIC_SHAPE # Default
+                try:
+                    if vis_type:
+                        valid_type = VisualizationType(vis_type)
+                except ValueError:
+                    # Fallback for common mismatches
+                    if vis_type == "chart": valid_type = VisualizationType.CHART
+                    elif vis_type == "diagram": valid_type = VisualizationType.DIAGRAM
+                    elif vis_type == "graph": valid_type = VisualizationType.GRAPH
+                
+                vis["type"] = valid_type.value
+
                 # Integrations with GeometryEngine for valid coordinates
-                if vis.get("type") == "geometric_shape":
+                if valid_type in [VisualizationType.GEOMETRIC_SHAPE, VisualizationType.GRAPH, VisualizationType.DIAGRAM]:
                     try:
-                        from app.services.geometry import GeometryEngine
-                        # Initialize engine with default canvas (assuming frontend uses ~400x400)
-                        engine = GeometryEngine(canvas_width=400, canvas_height=400, min_distance=20)
-                        
                         coords = vis.get("coordinates")
+                        
+                        # 1. Standardize input to list of shape objects
                         if isinstance(coords, list) and len(coords) > 0:
-                            # Check if it's single shape (list of points) or multiple (list of shape objects)
-                            # Single shape: [{"x": 1, "y": 2}, ...] -> dicts have "x"
-                            # Multi shape: [{"type": "...", "points": [...]}, ...] -> dicts have "points"
-                            
-                            is_multi = "points" in coords[0]
-                            
-                            if is_multi:
-                                # Repack multiple shapes to avoid overlap
-                                new_shapes = engine.repack_shapes(coords)
-                                vis["coordinates"] = new_shapes
-                            elif "x" in coords[0]:
-                                # Single shape (points list)
-                                # Wrap as one shape, repack (centers it), unwrap
-                                wrapped = [{"type": "polygon", "points": coords}]
-                                repacked = engine.repack_shapes(wrapped)
-                                if repacked:
-                                    vis["coordinates"] = repacked[0]["points"]
+                            first_elem = coords[0]
+                            # Detect "Mode 1" (list of points) and convert to "Mode 2" (list of shapes)
+                            if isinstance(first_elem, dict) and "x" in first_elem and "y" in first_elem and "points" not in first_elem:
+                                coords = [{"type": "polygon", "points": coords, "label": "Generated"}]
+                        
+                        # 2. Normalize to 10x10 canvas
+                        # GeometryEngine.normalize handles list of shapes
+                        normalized_coords = GeometryEngine.normalize(coords)
+                        
+                        # 3. Validate
+                        GeometryEngine.validate(normalized_coords)
+                        
+                        # 4. Update visualization object
+                        vis["coordinates"] = normalized_coords
+                        
                     except Exception as geo_err:
                         print(f"GeometryEngine error (using original coords): {geo_err}")
+                        # If normalization fails, we attempt to use original coordinates if they are somewhat valid
+                        pass
 
                 # Ensure type is valid enum or string
                 vis_obj = VisualizationData(
@@ -1240,9 +1227,24 @@ async def _select_question(topic_uid: str, difficulty_min: int, difficulty_max: 
 )
 async def start(payload: StartRequest) -> Dict:
     try:
+        # Resolve topic_uid if missing (e.g. for Exam mode starting from first topic)
+        if not payload.topic_uid:
+            if payload.curriculum_code:
+                cv = get_graph_view(payload.curriculum_code)
+                if cv.get("ok") and cv.get("nodes"):
+                    # Pick the first topic from the curriculum
+                    # nodes are ordered by order_index
+                    for n in cv["nodes"]:
+                        if n.get("canonical_uid"):
+                            payload.topic_uid = n["canonical_uid"]
+                            break
+            
+            if not payload.topic_uid:
+                raise HTTPException(status_code=400, detail="topic_uid is required (or valid curriculum_code with topics)")
+
         uc = payload.user_context or UserContext()
         resolved = _resolve_level(uc)
-        if not _topic_accessible(payload.subject_uid, payload.topic_uid, resolved):
+        if not _topic_accessible(payload.subject_uid, payload.topic_uid, resolved, payload.goal_type):
             raise HTTPException(status_code=404, detail="Topic not available")
         import uuid
         sid = uuid.uuid4().hex
@@ -1254,6 +1256,8 @@ async def start(payload: StartRequest) -> Dict:
             "subject_uid": payload.subject_uid,
             "topic_uid": payload.topic_uid,
             "resolved_user_class": resolved,
+            "goal_type": payload.goal_type,
+            "curriculum_code": payload.curriculum_code,
             "asked": [],
             "asked_prompts": [first_q["prompt"]],
             "last_question_uid": first_q["question_uid"],
@@ -1580,6 +1584,9 @@ async def next_question(payload: NextRequest):
                     # Use LLM calculated level if reasonable, else fallback to raw score
                     llm_level = llm_analytics.get("knowledge_level_percent")
                     final_percentage = llm_level if isinstance(llm_level, (int, float)) else int(score * 100)
+                    
+                    # Normalized score for mastery consistency
+                    normalized_score = final_percentage / 100.0
 
                     # Detailed analytics
                     detailed_analytics = {
@@ -1588,9 +1595,9 @@ async def next_question(payload: NextRequest):
                         "strength": "Хорошая скорость ответов" if score > 0.8 else "Внимательность к деталям",
                         "current_percentage": final_percentage,
                         "topic_breakdown": [
-                            {"subtopic": "Theory", "mastery": min(100, int(score * 110))},
-                            {"subtopic": "Practice", "mastery": int(score * 100)},
-                            {"subtopic": "Application", "mastery": max(0, int(score * 90))}
+                            {"subtopic": "Theory", "mastery": min(100, int(final_percentage * 1.1))},
+                            {"subtopic": "Practice", "mastery": int(final_percentage)},
+                            {"subtopic": "Application", "mastery": int(final_percentage * 0.9)}
                         ],
                         "questions_review": llm_analytics.get("questions_analytics", []),
                         "tutor_comment": llm_analytics.get("overall_comment", "")
@@ -1602,7 +1609,7 @@ async def next_question(payload: NextRequest):
                             {
                                 "topic_uid": sess["topic_uid"],
                                 "level": "intermediate" if sess["good"] >= sess["bad"] else "basic",
-                                "mastery": {"score": score},
+                                "mastery": {"score": round(normalized_score, 2)},
                                 "analytics": detailed_analytics
                             }
                         ],

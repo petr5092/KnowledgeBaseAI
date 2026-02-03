@@ -1,6 +1,11 @@
 import sys
-from src.services.graph.utils import sync_from_jsonl
-from src.services.kb.jsonl_io import load_jsonl, get_path
+import os
+
+# Add project root to sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.services.graph.utils import sync_from_jsonl
+from app.services.kb.jsonl_io import load_jsonl, get_path
 
 def main() -> int:
     print("Starting fast import from JSONL to Graph/DB...")
