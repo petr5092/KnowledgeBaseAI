@@ -952,13 +952,21 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
     - CRITICAL: For single points (like "Point B"), USE "type": "point" with "x", "y" directly. DO NOT use "type": "line" for a point!
     - CRITICAL: For FUNCTIONS and CURVES (e.g. parabolas, circles, sine waves):
       - USE "type": "line" (or "path").
-      - MUST generate AT LEAST 10-20 points to make the curve look smooth. 
+      - MUST generate AT LEAST 8 points to make the curve look smooth. 
       - DO NOT use "type": "polygon" for open curves (like parabolas).
       - Example Parabola: [{"x": -3, "y": 9}, {"x": -2, "y": 4}, {"x": -1, "y": 1}, {"x": 0, "y": 0}, {"x": 1, "y": 1}, {"x": 2, "y": 4}, {"x": 3, "y": 9}]
+    - CRITICAL: Use Standard Cartesian Coordinate System centered at (0,0).
+      - X range: [-5, 5] (Left to Right)
+      - Y range: [-5, 5] (Bottom to Top)
+      - The system will automatically map your (0,0) to the visual center.
     - CRITICAL: Coordinates MUST be mathematically consistent with the problem statement values.
     - ACCURACY RULE: If the problem involves a function (e.g. y = 2x - 1), YOU MUST CALCULATE the y-coordinates correctly for the given x-coordinates.
       Example: If y = 2x - 1 and x = 3, then y MUST be 5.
-    - PREFERENCE: Use integer coordinates (e.g. x=2, y=3) or simple decimals (x=2.5) to avoid precision errors. DO NOT use long random floats.
+    - PREFERENCE: Use INTEGER coordinates (e.g. x=2, y=-3) whenever possible. Avoid decimals.
+    - VISUALIZATION CONSISTENCY:
+      1. Every labeled point in the text (e.g., "Point A") MUST exist in the visualization with a matching label.
+      2. If you describe a property (e.g., "AB = 6"), the visual distance between A and B must be proportional to 6.
+      3. Use 'math_consistency_proof' field in JSON to explain why your coordinates match the text.
     """
 
     avoid_context = ""
@@ -977,7 +985,8 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
         ],
         "explanation": "Brief explanation",
         "is_visual": {"true" if is_visual else "false"},
-        "visualization": {{ ... }}
+        "visualization": {{ ... }},
+        "math_consistency_proof": "Brief explanation of coordinate correctness"
     }}
     """
     else:
@@ -988,7 +997,8 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
         "correct_value": "Answer value",
         "explanation": "Brief explanation",
         "is_visual": {"true" if is_visual else "false"},
-        "visualization": {{ ... }}
+        "visualization": {{ ... }},
+        "math_consistency_proof": "Brief explanation of coordinate correctness"
     }}
     """
 
@@ -1051,54 +1061,101 @@ async def _generate_question_llm(topic_uid: str, exclude_uids: set, is_visual: b
     
     messages = [{"role": "user", "content": prompt_text}]
     
-    # Retry loop to enforce visual consistency
-    data = {}
-    content = ""
-    for attempt in range(2):
-        try:
-            res = await openai_chat_async(messages, temperature=0.9)
-            if not res.get("ok"):
-                 raise Exception("LLM generation failed")
-            
-            content = res.get("content", "")
-            raw_content = content
-            
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0]
-            elif "```" in content:
-                content = content.split("```")[1].split("```")[0]
-            
-            data = json.loads(content.strip())
-            
-            # Validation: check for visual references in text when is_visual is False
-            is_vis_gen = data.get("is_visual", False)
-            prompt_gen = data.get("prompt", "")
-            
-            # Regex for visual references
-            visual_ref_pattern = r"(?i)(на\s+)?(рисун|чертеж|схем)(к|ке|ка|е|а|ок)|(см\.|смотри)\s+рис|изображен(ы|о|а)?|shown\s+in\s+(the\s+)?figure|see\s+figure"
-            has_visual_ref = bool(re.search(visual_ref_pattern, prompt_gen))
-            
-            if not is_vis_gen and has_visual_ref:
-                if attempt < 1:
-                    print(f"Retry LLM: is_visual=False but text has visual ref: {prompt_gen[:50]}...")
-                    messages.append({"role": "assistant", "content": raw_content})
-                    messages.append({"role": "user", "content": "You set 'is_visual': false, but the text refers to a figure ('drawing', 'shown', etc.). Please regenerate the question to be PURELY textual, without any reference to an image."})
-                    continue
-                else:
-                    # Second failure: Force clean up
-                    print("LLM failed consistency check twice. Stripping visual refs.")
-                    clean_prompt = re.sub(visual_ref_pattern, "", prompt_gen).strip()
-                    if clean_prompt:
-                         clean_prompt = clean_prompt[0].upper() + clean_prompt[1:]
-                    data["prompt"] = clean_prompt
-            
-            # Success
-            break
-            
-        except Exception as e:
-            if attempt == 1: raise e
-            print(f"LLM parsing error: {e}, retrying...")
-            pass
+    try:
+        # Retry loop to enforce visual consistency
+        data = {}
+        content = ""
+        for attempt in range(2):
+            try:
+                res = await openai_chat_async(messages, temperature=0.9)
+                if not res.get("ok"):
+                     raise Exception("LLM generation failed")
+                
+                content = res.get("content", "")
+                raw_content = content
+                
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0]
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0]
+                
+                data = json.loads(content.strip())
+                
+                # Validation: check for visual references in text when is_visual is False
+                is_vis_gen = data.get("is_visual", False)
+                prompt_gen = data.get("prompt", "")
+                
+                # Regex for visual references - UPDATED: more robust, handles 'ё', clean match
+                # Pattern parts:
+                # 1. "На рисунке/чертеже/схеме..."
+                # 2. "см. рис/смотри рисунок..."
+                # 3. "изображен(о|ы|а)..." (handles ё via character class or unicode fallback, but here we explicitly list variants)
+                # 4. English "shown in figure", "see figure"
+                
+                # Note: We use [\w]* to match word endings generously.
+                visual_ref_pattern = r"(?i)(на\s+)?(рисун|чертеж|схем)[\w]*|(см\.|смотри)\s+рис[\w]*|изображ[её]н[\w]*|shown\s+in\s+(the\s+)?figure|see\s+figure"
+                has_visual_ref = bool(re.search(visual_ref_pattern, prompt_gen))
+                
+                if not is_vis_gen and has_visual_ref:
+                    if attempt < 1:
+                        print(f"Retry LLM: is_visual=False but text has visual ref: {prompt_gen[:50]}...")
+                        messages.append({"role": "assistant", "content": raw_content})
+                        messages.append({"role": "user", "content": "You set 'is_visual': false, but the text refers to a figure ('drawing', 'shown', etc.). Please regenerate the question to be PURELY textual, without any reference to an image."})
+                        continue
+                    else:
+                        # Second failure: Force clean up
+                        print("LLM failed consistency check twice. Stripping visual refs.")
+                        # Remove the visual reference phrase
+                        clean_prompt = re.sub(visual_ref_pattern, "", prompt_gen)
+                        # Clean up any double spaces or leading punctuation/spaces left behind
+                        clean_prompt = re.sub(r'\s+', ' ', clean_prompt).strip()
+                        # If start with non-capital letter (after removal), fix it
+                        if clean_prompt and clean_prompt[0].islower():
+                             clean_prompt = clean_prompt[0].upper() + clean_prompt[1:]
+                        data["prompt"] = clean_prompt
+                
+                # LABEL CONSISTENCY CHECK
+                # If is_visual=True, ensure that if the text mentions a single Latin letter (like "point A", "triangle ABC"),
+                # those labels exist in the visualization.
+                if is_vis_gen and data.get("visualization"):
+                    vis_data = data["visualization"]
+                    vis_coords = vis_data.get("coordinates", [])
+                    
+                    # 1. Collect existing labels from visualization
+                    existing_labels = set()
+                    if isinstance(vis_coords, list):
+                        for item in vis_coords:
+                            if isinstance(item, dict):
+                                lbl = item.get("label")
+                                if lbl: existing_labels.add(lbl)
+                    
+                    # 2. Extract potential labels from text (simple heuristic: capital latin letters A-Z)
+                    # We look for patterns like "точка A", "треугольник ABC", "прямая l"
+                    # For simplicity, we just find all capital single letters that look like point names.
+                    # Excluding common single letters that might be words (I, A in English). In Russian context A is fine.
+                    text_labels = set(re.findall(r'\b[A-Z]\b', prompt_gen))
+                    
+                    # Filter out likely false positives if needed (e.g. "I", "V" if roman numerals?)
+                    # For now, we assume [A-Z] are points.
+                    
+                    missing_labels = text_labels - existing_labels
+                    
+                    if missing_labels:
+                        if attempt < 1:
+                            print(f"Retry LLM: Missing labels in visualization: {missing_labels}")
+                            messages.append({"role": "assistant", "content": raw_content})
+                            messages.append({"role": "user", "content": f"The question text mentions points {list(missing_labels)}, but they are missing from the 'visualization' labels. Please add these labeled points to the visualization object."})
+                            continue
+                        else:
+                             print(f"LLM failed label consistency. Missing: {missing_labels}. Proceeding anyway to avoid loop.")
+
+                # Success
+                break
+                
+            except Exception as e:
+                if attempt == 1: raise e
+                print(f"LLM parsing error: {e}, retrying...")
+                pass
         
         q_uid = f"Q-GEN-{uuid.uuid4().hex[:8]}"
         

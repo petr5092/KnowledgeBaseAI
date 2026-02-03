@@ -5,10 +5,10 @@ from typing import List, Dict, Any, Tuple
 logger = logging.getLogger(__name__)
 
 class GeometryEngine:
-    CANVAS_MIN = -5.0
-    CANVAS_MAX = 5.0
+    CANVAS_MIN = 0.0
+    CANVAS_MAX = 10.0
     CANVAS_SIZE = 10.0
-    CENTER = 0.0
+    CENTER = 5.0
     MAX_OBJECTS = 3
     MIN_DISTANCE = 1.0
     TARGET_SIZE = 8.0  # Leave 1.0 margin on each side
@@ -32,13 +32,14 @@ class GeometryEngine:
     @staticmethod
     def normalize(shapes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Scales and centers the entire scene (collection of shapes) to fit within the 10x10 canvas.
-        Preserves relative positions of shapes within the scene.
+        Transforms coordinates from a logical Cartesian system [-5, 5] to the canvas system [0, 10].
+        Logical (0,0) maps to Canvas (5,5).
+        Preserves the aspect ratio and integer nature of coordinates where possible.
         """
         if not shapes:
             return []
 
-        # 1. Collect all points to find bounding box of the entire scene
+        # 1. Collect all points to check bounds
         all_points = []
         for shape in shapes:
             points = shape.get("points", shape.get("coordinates", []))
@@ -50,37 +51,25 @@ class GeometryEngine:
         if not all_points:
             return shapes
 
-        min_x = min(p["x"] for p in all_points)
-        max_x = max(p["x"] for p in all_points)
-        min_y = min(p["y"] for p in all_points)
-        max_y = max(p["y"] for p in all_points)
-
-        width = max_x - min_x
-        height = max_y - min_y
-
-        # 2. Calculate scale to fit in TARGET_SIZE x TARGET_SIZE
-        # Avoid division by zero
-        scale_x = GeometryEngine.TARGET_SIZE / width if width > 1e-6 else 1.0
-        scale_y = GeometryEngine.TARGET_SIZE / height if height > 1e-6 else 1.0
+        # 2. Determine Scale
+        # We want to map logical [-5, 5] to canvas [0, 10].
+        # If points exceed [-5, 5], we scale them down to fit.
+        # If they are within range, we keep scale = 1.0 to preserve "integer-ness" as requested.
+        max_abs_coord = 0.0
+        for p in all_points:
+            max_abs_coord = max(max_abs_coord, abs(p["x"]), abs(p["y"]))
         
-        # Use the smaller scale to fit both dimensions (uniform scaling)
-        # If one dimension is 0 (e.g. horizontal line), use the other scale
-        if width <= 1e-6:
-            scale = scale_y
-        elif height <= 1e-6:
-            scale = scale_x
-        else:
-            scale = min(scale_x, scale_y)
+        # Default logical limit is 5.0. If points go beyond (e.g. 10), we scale down.
+        # We allow a small epsilon for floating point noise.
+        limit = 5.0
+        scale = 1.0
+        if max_abs_coord > limit + 0.01:
+            scale = limit / max_abs_coord
             
-        # If both are 0 (single point), scale doesn't matter, set to 1
-        if width <= 1e-6 and height <= 1e-6:
-            scale = 1.0
+        # 3. Transform
+        # Formula: physical = logical * scale + center_offset
+        center_offset = GeometryEngine.CENTER # 5.0
 
-        # 3. Calculate current centroid of the bounding box
-        center_x = (min_x + max_x) / 2
-        center_y = (min_y + max_y) / 2
-
-        # 4. Transform points
         normalized_shapes = []
         for shape in shapes:
             # Deep copy to avoid modifying original
@@ -97,13 +86,27 @@ class GeometryEngine:
                 is_flat_point = True
             
             for p in points_source:
-                # Translate to 0,0 relative to bbox center, then scale, then translate to canvas center
-                nx = (p["x"] - center_x) * scale + GeometryEngine.CENTER
-                ny = (p["y"] - center_y) * scale + GeometryEngine.CENTER
+                # Apply transformation: Logical (0,0) -> Physical (5,5)
+                # Note: We do NOT flip Y here. We assume the frontend handles coordinate systems (or Y is up).
+                # If Y needs to be flipped for standard screen coords (y-down), it should be done here:
+                # ny = center_offset - (p["y"] * scale)
+                # But usually math graphs assume Y-up. Let's stick to simple translation for now unless broken.
                 
-                # Clamp to [-5, 5] just in case of float errors, though logic should keep it inside [-4, 4]
+                nx = (p["x"] * scale) + center_offset
+                ny = (p["y"] * scale) + center_offset
+                
+                # Clamp to [CANVAS_MIN, CANVAS_MAX]
                 nx = max(GeometryEngine.CANVAS_MIN, min(GeometryEngine.CANVAS_MAX, nx))
                 ny = max(GeometryEngine.CANVAS_MIN, min(GeometryEngine.CANVAS_MAX, ny))
+                
+                # Round to nearest integer (or 0.5) as requested
+                # User wants integers mostly.
+                # If we didn't scale (scale=1), we try to round to int/0.5
+                if scale > 0.99:
+                     nx = round(nx * 2) / 2.0
+                     ny = round(ny * 2) / 2.0
+                     if abs(nx - round(nx)) < 0.01: nx = int(round(nx))
+                     if abs(ny - round(ny)) < 0.01: ny = int(round(ny))
                 
                 new_points.append({"x": nx, "y": ny})
             
