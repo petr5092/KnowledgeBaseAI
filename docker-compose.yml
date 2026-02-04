@@ -230,6 +230,36 @@ services:
     labels:
       - "traefik.enable=false"
 
+  adminer:
+    platform: linux/amd64
+    profiles: ["dev", "prod"]
+    image: adminer:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_started
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha-dark
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.adminer-svc.loadbalancer.server.port=8080"
+      - "traefik.http.routers.adminer-stud.rule=Host(`adminer.${KB_DOMAIN}`)"
+      - "traefik.http.routers.adminer-stud.entrypoints=web"
+      - "traefik.http.routers.adminer-stud.service=adminer-svc"
+      - "traefik.http.routers.adminer-stud-sec.rule=Host(`adminer.${KB_DOMAIN}`)"
+      - "traefik.http.routers.adminer-stud-sec.entrypoints=websecure"
+      - "traefik.http.routers.adminer-stud-sec.service=adminer-svc"
+      - "traefik.http.routers.adminer-stud-sec.tls=true"
+      - "traefik.http.routers.adminer-stud-sec.tls.certresolver=le"
+      - "traefik.http.routers.adminer-xteam.rule=Host(`adminer.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.adminer-xteam.entrypoints=web"
+      - "traefik.http.routers.adminer-xteam.service=adminer-svc"
+      - "traefik.http.routers.adminer-xteam-sec.rule=Host(`adminer.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.adminer-xteam-sec.entrypoints=websecure"
+      - "traefik.http.routers.adminer-xteam-sec.service=adminer-svc"
+      - "traefik.http.routers.adminer-xteam-sec.tls=true"
+      - "traefik.http.routers.adminer-xteam-sec.tls.certresolver=le"
   qdrant:
     env_file:
       - ${ENV_FILE:-.env.prod}
@@ -240,4 +270,23 @@ services:
     volumes:
       - /var/lib/qdrant:/qdrant/storage
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      - "traefik.http.services.qdrant-svc.loadbalancer.server.port=6333"
+      - "traefik.http.routers.qdrant-stud.rule=Host(`qdrant.${KB_DOMAIN}`)"
+      - "traefik.http.routers.qdrant-stud.entrypoints=web"
+      - "traefik.http.routers.qdrant-stud.service=qdrant-svc"
+      - "traefik.http.routers.qdrant-stud-sec.rule=Host(`qdrant.${KB_DOMAIN}`)"
+      - "traefik.http.routers.qdrant-stud-sec.entrypoints=websecure"
+      - "traefik.http.routers.qdrant-stud-sec.service=qdrant-svc"
+      - "traefik.http.routers.qdrant-stud-sec.tls=true"
+      - "traefik.http.routers.qdrant-stud-sec.tls.certresolver=le"
+      - "traefik.http.routers.qdrant-xteam.rule=Host(`qdrant.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.qdrant-xteam.entrypoints=web"
+      - "traefik.http.routers.qdrant-xteam.service=qdrant-svc"
+      - "traefik.http.routers.qdrant-xteam-sec.rule=Host(`qdrant.${KB_ALT_DOMAIN}`)"
+      - "traefik.http.routers.qdrant-xteam-sec.entrypoints=websecure"
+      - "traefik.http.routers.qdrant-xteam-sec.service=qdrant-svc"
+      - "traefik.http.routers.qdrant-xteam-sec.tls=true"
+      - "traefik.http.routers.qdrant-xteam-sec.tls.certresolver=le"
+      - "traefik.http.routers.qdrant-stud-sec.middlewares=dashboard-auth"
+      - "traefik.http.routers.qdrant-xteam-sec.middlewares=dashboard-auth"
